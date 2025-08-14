@@ -50,7 +50,8 @@ public enum UserRole
 
     CANDIDATE(Set.of(
             Permission.CAN_CREATE_USER,
-            Permission.CAN_UPDATE_USER
+            Permission.CAN_UPDATE_USER,
+            Permission.CAN_READ_USER
     )),
     INTERVIEWER(Set.of(
             Permission.CAN_CREATE_INTERVIEW,

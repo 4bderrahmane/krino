@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import javax.net.ssl.SSLSession;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -72,4 +73,8 @@ public class UserPrincipal implements UserDetails
         // You could add logic here to check if the user is approved
         return enabled;
     }
+
+//    public SSLSession getUser()
+//    {
+//    }
 }
