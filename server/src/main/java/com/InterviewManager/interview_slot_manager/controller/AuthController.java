@@ -1,6 +1,7 @@
 package com.InterviewManager.interview_slot_manager.controller;
 
 import com.InterviewManager.interview_slot_manager.service.AuthService;
+import com.InterviewManager.interview_slot_manager.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
@@ -14,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-//    private AuthenticationManager authenticationManager;
-//    private JwtUtil jwtUtil;
+    private AuthenticationManager authenticationManager;
+    private JwtUtil jwtUtil;
 //
 //
 //    @Autowired

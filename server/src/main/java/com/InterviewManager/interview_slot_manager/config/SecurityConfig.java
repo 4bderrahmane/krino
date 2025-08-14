@@ -2,6 +2,7 @@
 package com.InterviewManager.interview_slot_manager.config;
 
 import com.InterviewManager.interview_slot_manager.security.JwtAuthenticationFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -23,7 +24,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import java.time.Instant;
 
 @Configuration
 @EnableWebSecurity
@@ -32,6 +34,7 @@ public class SecurityConfig
 {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
+    private final ObjectMapper objectMapper;
 
 
     @Bean
@@ -54,11 +57,12 @@ public class SecurityConfig
         return http.build();
     }
 
-    // CORS configuration to allow requests from any origin (customize as needed)
     @Bean
     public CorsConfigurationSource corsConfigurationSource()
     {
         CorsConfiguration configuration = new CorsConfiguration();
+        // IMPORTANT: In production, replace "*" with your specific frontend domain
+        // e.g., configuration.setAllowedOrigins(List.of("https://your-frontend.com"));
         configuration.addAllowedOriginPattern("*"); // Adjust for production!
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
@@ -69,13 +73,21 @@ public class SecurityConfig
     }
 
     @Bean
-    public AuthenticationEntryPoint customAuthenticationEntryPoint()
-    {
-        return (request, response, authException) ->
-        {
+    public AuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return (request, response, authException) -> {
+
+            ErrorResponse errorResponse = new ErrorResponse(
+                    Instant.now().toEpochMilli(),
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Unauthorized",
+                    "Full authentication is required to access this resource.",
+                    request.getRequestURI()
+            );
+
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+
+            response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
         };
     }
 
@@ -100,3 +112,11 @@ public class SecurityConfig
         return new BCryptPasswordEncoder();
     }
 }
+
+record ErrorResponse(
+        long timestamp,
+        int status,
+        String error,
+        String message,
+        String path
+) {}
