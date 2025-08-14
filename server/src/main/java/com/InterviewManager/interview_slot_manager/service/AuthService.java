@@ -30,11 +30,14 @@ public class AuthService
     private final AuthenticationManager authenticationManager;
     private final ModelMapper modelMapper;
 
-    public AuthenticationResponseDTO register(UserRegistrationDTO request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+    public AuthenticationResponseDTO register(UserRegistrationDTO request)
+    {
+        if (userRepository.findByEmail(request.getEmail()).isPresent())
+        {
             throw new EmailAlreadyExistsException("An account with this email already exists: " + request.getEmail());
         }
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+        if (userRepository.findByUsername(request.getUsername()).isPresent())
+        {
             throw new UserAlreadyExistsException("An account with this username already exists: " + request.getUsername());
         }
 
@@ -55,16 +58,8 @@ public class AuthService
         return new AuthenticationResponseDTO(jwtToken, userResponse);
     }
 
-    public AuthenticationResponseDTO login(UserLoginDTO request) {
-        // The UsernamePasswordAuthenticationToken holds the user's login attempt details.
-        // 1. The "principal" is the unique identifier for the user. Here, we use the email.
-        // 2. The "credentials" is the proof of identity. Here, it's the plain-text password.
-        //
-        // The AuthenticationManager (configured by Spring Security) delegates to a provider that will:
-        // - Call the loadUserByUsername() method on your CustomUserDetailsService bean, passing the principal (email).
-        //   This connection is not visible here; it's part of the underlying Spring Security configuration.
-        // - Use the PasswordEncoder to compare the credentials (password) with the stored hash.
-        // If authentication fails, an AuthenticationException is thrown.
+    public AuthenticationResponseDTO login(UserLoginDTO request)
+    {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
