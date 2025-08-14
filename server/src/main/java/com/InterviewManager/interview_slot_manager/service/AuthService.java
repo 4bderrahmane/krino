@@ -48,6 +48,7 @@ public class AuthService
                 request.getFirstName(),
                 request.getLastName()
         );
+        user.setPhoneNumber(request.getPhoneNumber());
         user.addRole(UserRole.CANDIDATE);
         userRepository.save(user);
 
