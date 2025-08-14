@@ -2,16 +2,15 @@ package com.InterviewManager.interview_slot_manager.entity;
 
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Getter
 @AllArgsConstructor
 
-public enum UserRole {
+public enum UserRole
+{
     ADMIN(Set.of(
             Permission.CAN_CREATE_USER,
             Permission.CAN_READ_USER,
@@ -47,12 +46,12 @@ public enum UserRole {
             Permission.CAN_CREATE_SLOT,
             Permission.CAN_UPDATE_SLOT,
             Permission.CAN_DELETE_SLOT
-            )),
+    )),
 
     CANDIDATE(Set.of(
             Permission.CAN_CREATE_USER,
             Permission.CAN_UPDATE_USER
-            )),
+    )),
     INTERVIEWER(Set.of(
             Permission.CAN_CREATE_INTERVIEW,
             Permission.CAN_UPDATE_INTERVIEW,
@@ -60,12 +59,11 @@ public enum UserRole {
             Permission.CAN_READ_INTERVIEW
     ));
 
-
     private final Set<Permission> permissions;
 
 
-
-    public Set<SimpleGrantedAuthority> getAuthorities() {
+    public Set<SimpleGrantedAuthority> getAuthorities()
+    {
         Set<SimpleGrantedAuthority> authorities = getPermissions()
                 .stream()
                 .map(permission -> new SimpleGrantedAuthority(permission.name()))
@@ -75,7 +73,8 @@ public enum UserRole {
         return authorities;
     }
 
-    public String getName() {
+    public String getName()
+    {
         return this.name();
     }
 }

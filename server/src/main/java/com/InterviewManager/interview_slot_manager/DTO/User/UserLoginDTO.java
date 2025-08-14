@@ -17,6 +17,6 @@ public class UserLoginDTO {
     private String email;
 
     @NotBlank
-    @Size(min = 6, max = 100)
+//    @Size(min = 6, max = 100)
     private String password;
 }

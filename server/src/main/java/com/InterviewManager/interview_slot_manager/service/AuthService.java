@@ -1,16 +1,22 @@
 package com.InterviewManager.interview_slot_manager.service;
 
+import com.InterviewManager.interview_slot_manager.DTO.Authentication.AuthenticationResponseDTO;
 import com.InterviewManager.interview_slot_manager.DTO.User.UserLoginDTO;
 import com.InterviewManager.interview_slot_manager.DTO.User.UserRegistrationDTO;
 import com.InterviewManager.interview_slot_manager.DTO.User.UserResponseDTO;
 import com.InterviewManager.interview_slot_manager.entity.User;
+import com.InterviewManager.interview_slot_manager.entity.UserPrincipal;
+import com.InterviewManager.interview_slot_manager.entity.UserRole;
+import com.InterviewManager.interview_slot_manager.exception.EmailAlreadyExistsException;
+import com.InterviewManager.interview_slot_manager.exception.UserAlreadyExistsException;
 import com.InterviewManager.interview_slot_manager.repository.UserRepository;
 import com.InterviewManager.interview_slot_manager.util.JwtUtil;
-import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,32 +28,55 @@ public class AuthService
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
-    private final CustomUserDetailsService userDetailsService;
+    private final ModelMapper modelMapper;
 
+    public AuthenticationResponseDTO register(UserRegistrationDTO request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException("An account with this email already exists: " + request.getEmail());
+        }
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new UserAlreadyExistsException("An account with this username already exists: " + request.getUsername());
+        }
 
-    public UserResponseDTO register(UserRegistrationDTO request)
-    {
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        // Set other user details and roles here
+        User user = new User(
+                request.getEmail(),
+                request.getUsername(),
+                passwordEncoder.encode(request.getPassword()),
+                request.getFirstName(),
+                request.getLastName()
+        );
+        user.addRole(UserRole.CANDIDATE);
         userRepository.save(user);
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        UserDetails userDetails = new UserPrincipal(user);
         String jwtToken = jwtUtil.generateToken(userDetails);
+        UserResponseDTO userResponse = modelMapper.map(user, UserResponseDTO.class);
 
-        // Assuming your UserResponseDTO has a constructor or setter for the token
-        return new UserResponseDTO(jwtToken);
+        return new AuthenticationResponseDTO(jwtToken, userResponse);
     }
 
-    public UserResponseDTO login(UserLoginDTO request)
-    {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+    public AuthenticationResponseDTO login(UserLoginDTO request) {
+        // The UsernamePasswordAuthenticationToken holds the user's login attempt details.
+        // 1. The "principal" is the unique identifier for the user. Here, we use the email.
+        // 2. The "credentials" is the proof of identity. Here, it's the plain-text password.
+        //
+        // The AuthenticationManager (configured by Spring Security) delegates to a provider that will:
+        // - Call the loadUserByUsername() method on your CustomUserDetailsService bean, passing the principal (email).
+        //   This connection is not visible here; it's part of the underlying Spring Security configuration.
+        // - Use the PasswordEncoder to compare the credentials (password) with the stored hash.
+        // If authentication fails, an AuthenticationException is thrown.
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found after authentication"));
+
+        UserDetails userDetails = new UserPrincipal(user);
         String jwtToken = jwtUtil.generateToken(userDetails);
+        UserResponseDTO userResponse = modelMapper.map(user, UserResponseDTO.class);
 
-        // Assuming your UserResponseDTO has a constructor or setter for the token
-        return new UserResponseDTO(jwtToken);
+        return new AuthenticationResponseDTO(jwtToken, userResponse);
     }
+
 }

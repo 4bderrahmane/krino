@@ -18,7 +18,8 @@ import java.util.HashSet;
 @AllArgsConstructor
 @Entity
 @Table(name = "users")
-public class User {
+public class User
+{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -43,89 +44,70 @@ public class User {
 
     private boolean isApproved = false;
 
+    public User(String email, String username, String password, String firstName, String lastName) {
+        this.email = email;
+        this.username = username;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
     @ElementCollection(targetClass = UserRole.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
-    private Set<UserRole> roles;
-    
+    private Set<UserRole> roles = new HashSet<>();
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    public boolean hasRole(UserRole role) {
+    public boolean hasPermission(Permission permission) {
+        return roles.stream().anyMatch(role -> role.getPermissions().contains(permission));
+    }
+
+    public boolean hasRole(UserRole role)
+    {
         return this.roles.contains(role);
     }
 
-    public boolean isAdmin() {
-        return this.roles.contains(UserRole.ADMIN);
-    }
-
-    public boolean isHrManager() {
-        return this.roles.contains(UserRole.HR_MANAGER);
-    }
-
-    public boolean isInterviewer() {
-        return this.roles.contains(UserRole.INTERVIEWER);
-    }
-
-    public boolean isCandidate() {
-        return this.roles.contains(UserRole.CANDIDATE);
-    }
-
-    public boolean canManageUsers() {
-        return this.roles.contains(UserRole.ADMIN);
-    }
-
-    public boolean canManageSlots() {
-        return this.roles.contains(UserRole.ADMIN) || this.roles.contains(UserRole.HR_MANAGER);
-    }
-
-    public boolean canConductInterviews() {
-        return this.roles.contains(UserRole.ADMIN) ||
-                this.roles.contains(UserRole.HR_MANAGER) ||
-                this.roles.contains(UserRole.INTERVIEWER);
-    }
-
-    public boolean canViewReports() {
-        return this.roles.contains(UserRole.ADMIN) || this.roles.contains(UserRole.HR_MANAGER);
-    }
-
-    public boolean canBookSlots() {
-        return this.roles.contains(UserRole.CANDIDATE);
-    }
-
-    public void addRole(UserRole role) {
+    public void addRole(UserRole role)
+    {
         this.roles.add(role);
     }
 
-    public void removeRole(UserRole role) {
+    public void removeRole(UserRole role)
+    {
         this.roles.remove(role);
     }
 
-    public void clearRoles() {
+    public void clearRoles()
+    {
         this.roles.clear();
     }
 
-    public boolean hasManagementRole() {
-        return this.roles.contains(UserRole.ADMIN) || this.roles.contains(UserRole.HR_MANAGER);
-    }
 
-    public UserRole getPrimaryRole() {
-        if (this.roles.contains(UserRole.ADMIN)) {
+    public UserRole getPrimaryRole()
+    {
+        if (this.roles.contains(UserRole.ADMIN))
+        {
             return UserRole.ADMIN;
-        } else if (this.roles.contains(UserRole.HR_MANAGER)) {
+        } else if (this.roles.contains(UserRole.HR_MANAGER))
+        {
             return UserRole.HR_MANAGER;
-        } else if (this.roles.contains(UserRole.INTERVIEWER)) {
+        } else if (this.roles.contains(UserRole.INTERVIEWER))
+        {
             return UserRole.INTERVIEWER;
-        } else if (this.roles.contains(UserRole.CANDIDATE)) {
+        } else if (this.roles.contains(UserRole.CANDIDATE))
+        {
             return UserRole.CANDIDATE;
         }
         return null;
     }
 
-    public String getRolesAsString() {
+    public String getRolesAsString()
+    {
         return String.join(", ", this.roles.stream().map(Enum::name).toList());
     }
 }

@@ -1,62 +1,75 @@
 package com.InterviewManager.interview_slot_manager.entity;
 
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
-import lombok.*;
-
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class UserPrincipal implements UserDetails {
+public class UserPrincipal implements UserDetails
+{
 
-    private User user;
+    private final Long userId;
+    private final String email;
+    private final String password;
+    private final boolean enabled;
+    private final Collection<? extends GrantedAuthority> authorities;
 
-    @Override
-    public String getUsername() {
-        return user.getEmail();
+    public UserPrincipal(User user)
+    {
+        this.userId = user.getId();
+        this.email = user.getEmail();
+        this.password = user.getPassword();
+        this.enabled = user.isApproved();
+        this.authorities = user.getRoles()
+                .stream()
+                .flatMap(role -> role.getAuthorities()
+                        .stream())
+                .collect(Collectors.toSet());
     }
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toList());
+    public String getUsername()
+    {
+        return email;
     }
 
     @Override
-    public String getPassword() {
-        return user.getPassword();
+    public Collection<? extends GrantedAuthority> getAuthorities()
+    {
+        return authorities;
     }
 
     @Override
-    public boolean isAccountNonExpired() {
+    public String getPassword()
+    {
+        return password;
+    }
+
+    @Override
+    public boolean isAccountNonExpired()
+    {
         return true;
     }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
+    public boolean isAccountNonLocked()
+    {
+        return true;
     }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return UserDetails.super.isCredentialsNonExpired();
+    public boolean isCredentialsNonExpired()
+    {
+        return true;
     }
 
     @Override
-    public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+    public boolean isEnabled()
+    {
+        // You could add logic here to check if the user is approved
+        return enabled;
     }
-
-    public Long getUserId() {
-        return user.getId();
-    }
-
 }
