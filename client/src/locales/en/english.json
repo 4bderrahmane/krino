@@ -1,4 +1,19 @@
 {
-  "welcome": "Welcome to our application!",
-  "greeting": "Hello, {{name}}."
+  "auth": {
+    "login": "Login",
+    "username": "Username",
+    "password": "Password",
+    "enterUsername": "Enter username",
+    "enterPassword": "Enter password",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Sign up",
+    "usernameRequired": "Username is required",
+    "passwordRequired": "Password is required",
+    "passwordLength": "Password must be at least 6 characters",
+    "loginFailed": "Login failed. Please try again."
+  },
+  "app": {
+    "loading": "Loading..."
+  }
 }
