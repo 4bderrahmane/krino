@@ -7,10 +7,11 @@ import {useTranslation} from "react-i18next";
 function App() {
     const {t} = useTranslation();
     return (
+
+            <div>{t('auth.welcomeMessage')}</div>
         // <div className="app">
         //     <LoginForm onLogin={handleLogin}/>
         // </div>
-        <div>{t('welcomeMessage')}</div>
     )
 }
 

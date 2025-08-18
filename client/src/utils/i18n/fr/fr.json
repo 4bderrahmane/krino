@@ -1,3 +1,20 @@
 {
-  "welcomeMessage": "Bonjour!"
+  "auth": {
+    "welcomeMessage": "Bonjour et bienvenue !",
+    "login": "Connexion",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "enterUsername": "Entrez le nom d'utilisateur",
+    "enterPassword": "Entrez le mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "createAccount": "S'inscrire",
+    "usernameRequired": "Le nom d'utilisateur est requis",
+    "passwordRequired": "Le mot de passe est requis",
+    "passwordLength": "Le mot de passe doit comporter au moins 6 caractères",
+    "loginFailed": "Échec de la connexion. Veuillez réessayer."
+  },
+  "app": {
+    "loading": "Chargement..."
+  }
 }
