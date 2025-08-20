@@ -61,7 +61,7 @@ public class AuthService
 
         UserResponseDTO userResponse = modelMapper.map(user, UserResponseDTO.class);
 
-        return new RegistrationResponseDTO(userResponse, "User registered successfully. Please login to get your access token.");
+        return new RegistrationResponseDTO(userResponse, "User registered successfully.");
     }
 
     @Transactional
@@ -74,14 +74,9 @@ public class AuthService
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        // Blacklist all existing tokens for this user before issuing a new one
-        jwtBlacklistService.blacklistUserTokens(user.getEmail());
-
         UserDetails userDetails = new UserPrincipal(user);
         String jwtToken = jwtUtil.generateToken(userDetails);
 
-        // Add new token to user's active tokens
-        jwtBlacklistService.addUserToken(user.getEmail(), jwtToken);
 
         UserResponseDTO userResponse = modelMapper.map(user, UserResponseDTO.class);
 
@@ -90,22 +85,29 @@ public class AuthService
 
     public String logout(@NonNull final String authHeader)
     {
-        if (authHeader != null && authHeader.startsWith("Bearer"))
-        {
-            String token = authHeader.substring(7);
+        String token;
+        if (authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        } else {
+            token = authHeader;
+        }
+
+        try {
             String username = jwtUtil.extractUsername(token);
 
-            System.out.println("This is the auth header: " + authHeader + "");
+            if (username != null) {
+                // Simply blacklist the token
+                jwtBlacklistService.blacklistToken(token);
 
-            jwtBlacklistService.blacklistToken(token);
-
-            if (username != null)
-            {
-                jwtBlacklistService.removeUserToken(username, token);
+                log.info("User {} logged out successfully", username);
+                return "Logged out successfully";
+            } else {
+                log.warn("Invalid token provided for logout");
+                return "Invalid token";
             }
-
-            return "Successfully logged out";
+        } catch (Exception e) {
+            log.error("Error during logout: {}", e.getMessage());
+            return "Logout failed: " + e.getMessage();
         }
-        return "Invalid token format";
     }
 }
