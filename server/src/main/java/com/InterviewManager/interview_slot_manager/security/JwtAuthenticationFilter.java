@@ -1,5 +1,6 @@
 package com.InterviewManager.interview_slot_manager.security;
 
+import com.InterviewManager.interview_slot_manager.service.JwtBlacklistService;
 import com.InterviewManager.interview_slot_manager.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
 {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final JwtBlacklistService jwtBlacklistService;
 
 
     @Override
@@ -39,6 +41,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
         }
 
         jwt = authHeader.substring(7);
+
+        if (jwtBlacklistService.isTokenBlacklisted(jwt))
+        {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\": \"Token has been invalidated\"}");
+            response.setContentType("application/json");
+            return;
+        }
+
         userEmail = jwtUtil.extractUsername(jwt);
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null)

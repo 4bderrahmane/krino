@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.UUID;
 
 @Component
 public class JwtUtil
@@ -45,6 +46,8 @@ public class JwtUtil
     public String generateToken(UserDetails userDetails)
     {
         Map<String, Object> claims = new HashMap<>();
+        // Add unique token ID for tracking
+        claims.put("jti", UUID.randomUUID().toString());
         // You can add custom claims here, e.g., user roles
         claims.put("roles", userDetails.getAuthorities());
         return createToken(claims, userDetails.getUsername());
@@ -75,6 +78,11 @@ public class JwtUtil
     public Date extractExpiration(String token)
     {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    public String extractTokenId(String token)
+    {
+        return extractClaim(token, claims -> claims.get("jti", String.class));
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver)
