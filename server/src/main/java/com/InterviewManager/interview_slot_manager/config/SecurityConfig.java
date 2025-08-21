@@ -4,6 +4,7 @@ import com.InterviewManager.interview_slot_manager.security.JwtAuthenticationFil
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,13 +19,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.web.AuthenticationEntryPoint;
+
 import java.time.Instant;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -32,19 +35,23 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class SecurityConfig
 {
+
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
     private final ObjectMapper objectMapper;
 
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/api/auth/**",
+    };
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception
     {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**")
+                        .requestMatchers(PUBLIC_ENDPOINTS)
                         .permitAll()
                         .anyRequest()
                         .authenticated())
@@ -58,24 +65,25 @@ public class SecurityConfig
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource()
+    public CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origins}") List<String> allowedOrigins)
     {
         CorsConfiguration configuration = new CorsConfiguration();
-        // IMPORTANT: In production, replace "*" with your specific frontend domain
-        // e.g., configuration.setAllowedOrigins(List.of("https://your-frontend.com"));
-        configuration.addAllowedOriginPattern("*"); // Adjust for production!
-        configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
+
+        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Auth-Token"));
         configuration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
     @Bean
-    public AuthenticationEntryPoint customAuthenticationEntryPoint() {
-        return (request, response, authException) -> {
-
+    public AuthenticationEntryPoint customAuthenticationEntryPoint()
+    {
+        return (request, response, authException) ->
+        {
             ErrorResponse errorResponse = new ErrorResponse(
                     Instant.now().toEpochMilli(),
                     HttpServletResponse.SC_UNAUTHORIZED,
@@ -112,10 +120,11 @@ public class SecurityConfig
     }
 }
 
-record ErrorResponse(
-        long timestamp,
-        int status,
-        String error,
-        String message,
-        String path
-) {}
+record ErrorResponse
+        (long timestamp,
+         int status,
+         String error,
+         String message,
+         String path)
+{
+}

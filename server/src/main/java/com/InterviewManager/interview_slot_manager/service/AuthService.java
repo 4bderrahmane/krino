@@ -86,26 +86,32 @@ public class AuthService
     public String logout(@NonNull final String authHeader)
     {
         String token;
-        if (authHeader.startsWith("Bearer ")) {
+        if (authHeader.startsWith("Bearer "))
+        {
             token = authHeader.substring(7);
-        } else {
+        } else
+        {
             token = authHeader;
         }
 
-        try {
+        try
+        {
             String username = jwtUtil.extractUsername(token);
 
-            if (username != null) {
+            if (username != null)
+            {
                 // Simply blacklist the token
                 jwtBlacklistService.blacklistToken(token);
 
                 log.info("User {} logged out successfully", username);
                 return "Logged out successfully";
-            } else {
+            } else
+            {
                 log.warn("Invalid token provided for logout");
                 return "Invalid token";
             }
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             log.error("Error during logout: {}", e.getMessage());
             return "Logout failed: " + e.getMessage();
         }

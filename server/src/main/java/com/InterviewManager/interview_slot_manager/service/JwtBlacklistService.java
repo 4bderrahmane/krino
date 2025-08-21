@@ -16,7 +16,7 @@ public class JwtBlacklistService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final JwtUtil jwtUtil;
-
+    
     private static final String BLACKLIST_PREFIX = "jwt_blacklist:";
     private static final String USER_TOKENS_PREFIX = "user_tokens:";
 
