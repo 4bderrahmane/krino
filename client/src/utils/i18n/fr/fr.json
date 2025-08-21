@@ -1,18 +1,29 @@
 {
   "auth": {
     "welcomeMessage": "Bonjour et bienvenue !",
+    "signIn": "Se connecter",
     "login": "Connexion",
+    "logout": "Déconnexion",
+    "welcome": "Bienvenue !",
     "username": "Nom d'utilisateur",
+    "email": "Adresse e-mail",
     "password": "Mot de passe",
     "enterUsername": "Entrez le nom d'utilisateur",
-    "enterPassword": "Entrez le mot de passe",
+    "enterEmail": "jean.dupont@exemple.com",
+    "enterPassword": "••••••••",
     "forgotPassword": "Mot de passe oublié ?",
     "noAccount": "Vous n'avez pas de compte ?",
+    "signUpHere": "Inscrivez-vous ici",
     "createAccount": "S'inscrire",
     "usernameRequired": "Le nom d'utilisateur est requis",
+    "emailRequired": "L'adresse e-mail est requise",
     "passwordRequired": "Le mot de passe est requis",
     "passwordLength": "Le mot de passe doit comporter au moins 6 caractères",
-    "loginFailed": "Échec de la connexion. Veuillez réessayer."
+    "loginFailed": "Échec de la connexion. Veuillez vérifier vos identifiants.",
+    "loginSuccess": "Connexion réussie",
+    "loggedInAs": "Connecté avec succès en tant que :",
+    "forgotPasswordMessage": "La fonctionnalité de mot de passe oublié serait implémentée ici. Cela redirigerait généralement vers une page de réinitialisation de mot de passe ou afficherait une modal.",
+    "signUpMessage": "La fonctionnalité d'inscription serait implémentée ici. Cela redirigerait généralement vers une page d'inscription ou afficherait un formulaire d'inscription."
   },
   "app": {
     "loading": "Chargement..."

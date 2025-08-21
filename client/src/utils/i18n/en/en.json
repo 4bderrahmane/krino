@@ -1,18 +1,21 @@
 {
   "auth": {
-    "welcomeMessage": "Hello and welcome!",
-    "login": "Login",
-    "username": "Username",
+    "signIn": "Sign in",
+    "stayUpdated": "Stay updated on your professional world",
+    "emailOrPhone": "Email",
     "password": "Password",
-    "enterUsername": "Enter username",
-    "enterPassword": "Enter password",
+    "show": "show",
+    "hide": "hide",
     "forgotPassword": "Forgot password?",
+    "or": "or",
+    "signInWithApple": "Sign in with Apple",
+    "loginFailed": "Login failed. Please check your credentials.",
+    "welcome": "Welcome!",
+    "loggedInAs": "Successfully logged in as:",
+    "logout": "Logout",
+    "login": "Sign in",
     "noAccount": "Don't have an account?",
-    "createAccount": "Sign up",
-    "usernameRequired": "Username is required",
-    "passwordRequired": "Password is required",
-    "passwordLength": "Password must be at least 6 characters",
-    "loginFailed": "Login failed. Please try again."
+    "signUp": "Sign up"
   },
   "app": {
     "loading": "Loading..."

@@ -12,13 +12,11 @@ export interface UserLoginDTO {
 export interface LoginResponse {
     user: UserResponseDTO;
     token: string;
-    expiresIn: number;
 }
 
 export type Role = 'ADMIN' | 'CANDIDATE' | 'INTERVIEWER' | 'HR_MANAGER';
 
-export interface UserRegistrationDTO
-{
+export interface UserRegistrationDTO {
     email: string;
     password: string;
     name: string;
@@ -59,4 +57,8 @@ export interface ApiError {
     error: string;
     details?: string[];
     statusCode: number;
+}
+
+export interface LoginComponentProps {
+    onLoginSuccess: (credentials: UserLoginDTO) => void;
 }

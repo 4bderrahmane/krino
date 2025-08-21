@@ -1,139 +1,129 @@
 import React, {useState, type FormEvent} from 'react';
-import {Link} from 'react-router-dom';
-import type {User, UserLoginDTO} from '../types/api.types';
+import {useTranslation} from 'react-i18next';
+import type {UserLoginDTO, LoginComponentProps} from '../types/api.types';
 import '../styles/LoginForm.css';
+// import { login } from "../services/authService";
 
-interface LoginFormProps {
-    onLogin: (user: Partial<User>) => void;
-}
-
-const LoginForm: React.FC<LoginFormProps> = ({onLogin}) => {
+const LoginComponent: React.FC<LoginComponentProps> = ({onLoginSuccess}) => {
+    const {t} = useTranslation();
     const [credentials, setCredentials] = useState<UserLoginDTO>({
         email: '',
         password: '',
     });
-    const [errors, setErrors] = useState<Partial<UserLoginDTO>>({});
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = e.target;
-        setCredentials({
-            ...credentials,
+        setCredentials((prev) => ({
+            ...prev,
             [name]: value,
-        });
-
-        // Clear error when user types
-        if (errors[name as keyof UserLoginDTO]) {
-            setErrors({
-                ...errors,
-                [name]: '',
-            });
-        }
+        }));
     };
 
-    const validate = (): boolean => {
-        const newErrors: Partial<UserLoginDTO> = {};
-
-        if (!credentials.email) {
-            newErrors.email = 'Email is required';
-        }
-
-        if (!credentials.password) {
-            newErrors.password = 'Password is required';
-        } else if (credentials.password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-        if (!validate()) {
-            return;
-        }
-
-        setIsLoading(true);
+        setLoading(true);
+        setError(null);
 
         try {
-            console.log('Logging in with:', credentials);
-
-            // Simulate API call
+            // Simulate an async API call
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            // Create a mock user for demonstration
-            const mockUser: Partial<User> = {
-                name: credentials.email.split('@')[0],
-                email: credentials.email,
-            };
-
-            onLogin(mockUser);
-        } catch (error) {
-            console.error('Login failed:', error);
-            alert('Login failed. Please try again.');
+            // Call the success callback with the credentials.
+            onLoginSuccess(credentials);
+        } catch (err) {
+            console.error('Login failed:', err);
+            setError(t('auth.loginFailed'));
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
+    };
+
+    const handleForgotPassword = () => {
+        alert('Forgot Password clicked');
     };
 
     return (
-        <div className="login-container">
+        <>
             <div className="login-card">
-                <h2>Login</h2>
-                <form onSubmit={handleSubmit}>
+                <h2>{t('auth.signIn')}</h2>
+                <form onSubmit={handleSubmit} className="login-form">
                     <div className="form-group">
-                        <label htmlFor="email">Email</label>
                         <input
-                            type="email"
                             id="email"
                             name="email"
+                            type="email"
                             value={credentials.email}
                             onChange={handleChange}
-                            className={`form-input ${errors.email ? 'input-error' : ''}`}
-                            placeholder="Enter your email"
-                            disabled={isLoading}
+                            required
+                            className="form-input"
+                            placeholder={t('auth.emailOrPhone')}
                         />
-                        {errors.email && (
-                            <div className="error-message">{errors.email}</div>
-                        )}
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="password">Password</label>
                         <input
-                            type="password"
                             id="password"
                             name="password"
+                            type="password"
                             value={credentials.password}
                             onChange={handleChange}
-                            className={`form-input ${errors.password ? 'input-error' : ''}`}
-                            placeholder="Enter your password"
-                            disabled={isLoading}
+                            required
+                            className="form-input"
+                            placeholder={t('auth.password')}
                         />
-                        {errors.password && (
-                            <div className="error-message">{errors.password}</div>
-                        )}
+                        <a
+                            href="#"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleForgotPassword();
+                            }}
+                            className="forgot-password-link"
+                        >
+                            {t('auth.forgotPassword')}
+                        </a>
                     </div>
 
-                    <button type="submit" className="login-button" disabled={isLoading}>
-                        {isLoading ? 'Loading...' : 'Login'}
+                    {error && <div className="error-message">{error}</div>}
+
+                    <button type="submit" disabled={loading} className="login-button">
+                        {loading ? (
+                            <svg
+                                className="spinner-icon"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                ></circle>
+                                <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                        ) : (
+                            t('auth.signIn')
+                        )}
                     </button>
                 </form>
-
-                <div className="login-footer">
-                    <Link to="/forgot-password">Forgot password?</Link>
-                    <p>
-                        Don't have an account?{' '}
-                        <Link to="/signup" className="signup-link">
-                            Sign up
-                        </Link>
-                    </p>
-                </div>
             </div>
-        </div>
+            <div className="login-footer">
+                <p>
+                    {t('auth.noAccount')}{' '}
+                    <a href="/register">{t('auth.signUp')}</a>
+                </p>
+            </div>
+        </>
     );
 };
 
-export default LoginForm;
+export default LoginComponent;
