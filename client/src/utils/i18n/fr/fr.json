@@ -1,31 +1,29 @@
 {
   "auth": {
-    "welcomeMessage": "Bonjour et bienvenue !",
     "signIn": "Se connecter",
-    "login": "Connexion",
-    "logout": "Déconnexion",
-    "welcome": "Bienvenue !",
-    "username": "Nom d'utilisateur",
-    "email": "Adresse e-mail",
-    "password": "Mot de passe",
-    "enterUsername": "Entrez le nom d'utilisateur",
-    "enterEmail": "jean.dupont@exemple.com",
-    "enterPassword": "••••••••",
+    "stayUpdated": "Restez à jour sur votre monde professionnel",
+    "emailOrPhone": "Entrez l'e-mail",
+    "password": "Entrez le mot de passe",
+    "show": "afficher",
+    "hide": "cacher",
     "forgotPassword": "Mot de passe oublié ?",
-    "noAccount": "Vous n'avez pas de compte ?",
-    "signUpHere": "Inscrivez-vous ici",
-    "createAccount": "S'inscrire",
-    "usernameRequired": "Le nom d'utilisateur est requis",
-    "emailRequired": "L'adresse e-mail est requise",
-    "passwordRequired": "Le mot de passe est requis",
-    "passwordLength": "Le mot de passe doit comporter au moins 6 caractères",
+    "or": "ou",
     "loginFailed": "Échec de la connexion. Veuillez vérifier vos identifiants.",
-    "loginSuccess": "Connexion réussie",
+    "welcome": "Bienvenue !",
     "loggedInAs": "Connecté avec succès en tant que :",
-    "forgotPasswordMessage": "La fonctionnalité de mot de passe oublié serait implémentée ici. Cela redirigerait généralement vers une page de réinitialisation de mot de passe ou afficherait une modal.",
-    "signUpMessage": "La fonctionnalité d'inscription serait implémentée ici. Cela redirigerait généralement vers une page d'inscription ou afficherait un formulaire d'inscription."
+    "logout": "Déconnexion",
+    "login": "S'identifier",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "signUp": "S'inscrire",
+    "firstName": "Prénom",
+    "lastName": "Nom de famille",
+    "phoneNumber": "Numéro de téléphone",
+    "email": "Entrez l'e-mail",
+    "username": "Nom d'utilisateur",
+    "haveAccount": "Vous avez déjà un compte ?"
   },
   "app": {
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "welcome": "Bienvenue à KRINO !"
   }
 }

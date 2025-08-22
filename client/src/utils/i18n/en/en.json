@@ -1,23 +1,29 @@
 {
   "auth": {
-    "signIn": "Sign in",
+    "signIn": "Login",
     "stayUpdated": "Stay updated on your professional world",
-    "emailOrPhone": "Email",
-    "password": "Password",
+    "emailOrPhone": "Enter email",
+    "password": "Enter password",
     "show": "show",
     "hide": "hide",
     "forgotPassword": "Forgot password?",
     "or": "or",
-    "signInWithApple": "Sign in with Apple",
     "loginFailed": "Login failed. Please check your credentials.",
     "welcome": "Welcome!",
     "loggedInAs": "Successfully logged in as:",
     "logout": "Logout",
     "login": "Sign in",
     "noAccount": "Don't have an account?",
-    "signUp": "Sign up"
+    "signUp": "Sign up",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phoneNumber": "Phone number",
+    "email": "Enter email",
+    "username": "Username",
+    "haveAccount": "Already have an account?"
   },
   "app": {
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "welcome": "Welcome to KRINO!"
   }
 }
