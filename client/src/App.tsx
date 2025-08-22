@@ -1,9 +1,10 @@
 import React, {useState} from "react";
 import {useTranslation} from 'react-i18next';
 import {Routes, Route, Navigate, useNavigate} from 'react-router-dom';
-import type {UserLoginDTO} from "./features/authentication/types/api.types.ts";
+import type {UserLoginDTO, UserRegistrationDTO} from "./features/authentication/types/api.types.ts";
 import LoginComponent from "./features/authentication/components/LoginForm.tsx";
 import "./features/authentication/styles/LoginForm.css";
+import RegistrationForm from "./features/authentication/components/RegistrationForm.tsx";
 
 const Dashboard: React.FC<{user: UserLoginDTO, onLogout: () => void}> = ({user, onLogout}) => {
     const {t} = useTranslation();
@@ -34,6 +35,14 @@ const LoginPage: React.FC<{onLoginSuccess: (credentials: UserLoginDTO) => void}>
     );
 };
 
+const RegistrationPage: React.FC<{onRegistrationSuccess: (credentials: UserRegistrationDTO) => void}> = ({onRegistrationSuccess}) => {
+    return (
+        <div className="login-page-container">
+            <RegistrationForm onRegistrationSuccess={onRegistrationSuccess}/>
+        </div>
+    );
+};
+
 const App: React.FC = () => {
     const {t} = useTranslation();
     const navigate = useNavigate();
@@ -53,6 +62,11 @@ const App: React.FC = () => {
         navigate('/login');
     };
 
+    const handleRegistration = (credentials: UserRegistrationDTO) => {
+        console.log(t('auth.registrationSuccess'), credentials);
+        navigate('/login');
+    };
+
     return (
         <Routes>
             <Route
@@ -61,6 +75,14 @@ const App: React.FC = () => {
                     isLoggedIn ?
                     <Navigate to="/dashboard" replace /> :
                     <LoginPage onLoginSuccess={handleLogin} />
+                }
+            />
+            <Route
+                path="/register"
+                element={
+                    isLoggedIn ?
+                    <Navigate to="/dashboard" replace /> :
+                    <RegistrationPage onRegistrationSuccess={handleRegistration} />
                 }
             />
             <Route

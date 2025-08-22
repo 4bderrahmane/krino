@@ -1,8 +1,8 @@
 /*
-  LOGIN FORM SPECIFIC STYLES
+  CLEANED UP REGISTRATION FORM CSS
 
-  This file contains only styles for the LoginForm component.
-  Uses login-specific class names to avoid conflicts.
+  - Removed duplicated login styles
+  - Created proper registration-specific class names
 */
 
 .language-switcher-fixed {
@@ -12,7 +12,7 @@
     z-index: 1000;
 }
 
-.login-page-container {
+.registration-page-container {
     --control-height: 56px;
     --control-radius: 9999px;
 
@@ -25,45 +25,40 @@
     background-color: #ffffff;
 }
 
-/* Keep form and links above overlay - simplified since no overlay needed */
-.login-page-container .login-form,
-.login-page-container .forgot-password-link,
-.login-page-container .signup-cta,
-.login-page-container .welcome-block {
+/* Keep form and footer above overlay - simplified since no overlay needed */
+.registration-page-container .registration-form,
+.registration-page-container .signup-footer-cta {
     position: relative;
     z-index: 1;
 }
 
-/* Welcome text above the form */
-.login-page-container .welcome-block {
-    margin-bottom: 1rem;
-    text-align: center;
-    color: #111827;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.login-form {
+.registration-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
     width: 100%;
-    max-width: 420px; /* keep inputs and button at a nice readable width */
+    max-width: 620px; /* wider for two-column layout */
     box-sizing: border-box;
     padding: 0 20px;
 }
 
-.form-group {
-    position: relative;
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
 }
 
-/* Icon input wrappers */
-.input-wrapper {
+.form-row .form-group {
+    flex: 1; /* Each form group takes equal space */
+}
+
+.form-group {
     position: relative;
     min-height: var(--control-height); /* Ensure consistent height */
 }
 
-.login-form .form-input {
+.registration-form .form-input {
     width: 100%;
     height: var(--control-height) !important; /* Force consistent height */
     padding: 0 1.25rem;
@@ -72,44 +67,28 @@
     font-size: 1rem;
     color: #374151;
     box-sizing: border-box;
-    max-width: 100%;
     transition: border-color 0.2s, box-shadow 0.2s;
+    max-width: 100%;
     line-height: normal; /* Prevent line-height changes */
 }
 
-.login-form .form-input:focus {
+.registration-form .form-input:focus {
     outline: none;
     border-color: #0a66c2;
     box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.1);
 }
 
-.login-form .form-input::placeholder {
+.registration-form .form-input::placeholder {
     color: #9ca3af;
 }
 
-.login-form .form-input.with-icon {
-    padding-left: 2.75rem; /* space for the icon */
-    padding-right: 1.25rem;
-}
-
-.input-icon {
-    position: absolute;
-    left: 0.95rem;
-    top: 50%;
-    transform: translateY(-50%);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-}
-
-.form-input[type="password"]:not(:placeholder-shown) {
+.registration-form .form-input[type="password"]:not(:placeholder-shown) {
     letter-spacing: 0.02rem; /* Reduced from 0.08rem to make bullets smaller */
     font-family: 'Courier New', monospace; /* Use monospace font for smaller, more consistent bullets */
     font-size: 0.9rem; /* Slightly smaller font size for password bullets */
 }
 
-.login-button {
+.registration-button {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -127,12 +106,12 @@
     margin-top: 1rem;
 }
 
-.login-button:disabled {
+.registration-button:disabled {
     background-color: #9ca3af;
     cursor: not-allowed;
 }
 
-.login-button:not(:disabled):hover {
+.registration-button:not(:disabled):hover {
     background-color: #1a1a1a;
 }
 
@@ -159,37 +138,50 @@
     border-radius: 0.375rem;
     font-size: 0.875rem;
     text-align: center;
-}
-
-.forgot-password-link {
-    display: block;
-    text-align: center;
-    font-size: 1rem;
-    font-weight: 600;
-    color: black;
-    text-decoration: none;
-    margin-top: 0.75rem;
-}
-
-.forgot-password-link:hover {
-    text-decoration: underline;
-}
-
-/* Sign-up callout under Forgot Password */
-.signup-cta {
     margin-top: 0.5rem;
+}
+
+.signup-footer-cta {
+    margin-top: 1.5rem;
     text-align: center;
     color: #111827;
     font-size: 1rem;
     font-weight: 700;
 }
 
-.signup-cta a {
+.signup-footer-cta a {
     color: #0a66c2;
     font-weight: 700;
     text-decoration: none;
 }
 
-.signup-cta a:hover {
+.signup-footer-cta a:hover {
     text-decoration: underline;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .registration-form {
+        max-width: 420px;
+        padding: 0 10px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .form-row .form-group {
+        flex: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .registration-page-container {
+        padding: 1rem;
+    }
+
+    .registration-form {
+        padding: 0;
+    }
 }

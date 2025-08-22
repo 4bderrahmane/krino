@@ -1,56 +1,181 @@
-import React, { useState } from 'react';
+import React, {useState, type FormEvent, useEffect} from 'react';
+import {useTranslation} from 'react-i18next';
+import type {RegistrationComponentProps, UserRegistrationDTO} from '../types/api.types';
+import '../styles/RegistrationForm.css';
+import {register} from "../services/authService.ts";
+import LanguageSwitcher from "../../../shared/components/LanguageSwitcher.tsx";
 
-const RegistrationForm: React.FC = () => {
-
-    const [formData, setFormData] = useState({
-        username: '',
+const RegistrationForm: React.FC<RegistrationComponentProps> = ({onRegistrationSuccess}) => {
+    const {t, i18n} = useTranslation();
+    const [credentials, setCredentials] = useState<UserRegistrationDTO>({
         email: '',
+        username: '',
+        firstName: '',
+        lastName: '',
+        phoneNumber: '',
         password: '',
     });
 
-    // 3. A single handler to update the state object dynamically
+    const [loading, setLoading] = useState(false);
+    const [hasError, setHasError] = useState(false);
+
+    useEffect(() => {
+        // This effect will trigger re-render when language changes
+        // The error message will be re-translated in the JSX
+    }, [i18n.language]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prevState => ({
-            ...prevState, // Keep the existing values
-            [name]: value,  // Update the specific field that changed
+        const {name, value} = e.target;
+        setCredentials((prev) => ({
+            ...prev,
+            [name]: value,
         }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // The complete form data is available here for submission
-        console.log('Submitting Registration:', formData);
-        // Example: send formData to your API endpoint
+        setLoading(true);
+        setHasError(false);
+
+        try {
+            const data = await register(credentials);
+            console.log('User Response: ', data);
+
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            onRegistrationSuccess(credentials);
+        } catch (err) {
+            console.error('registration failed:', err);
+            setHasError(true);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <h2>Register</h2>
-            <input
-                type="text"
-                name="username" // The 'name' attribute must match the state property
-                placeholder="Username"
-                // 2. Link the input value to the state
-                value={formData.username}
-                onChange={handleChange}
-            />
-            <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleChange}
-            />
-            <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-            />
-            <button type="submit">Register</button>
-        </form>
+        <>
+            <div className="language-switcher-fixed">
+                <LanguageSwitcher />
+            </div>
+            <div className="registration-page-container">
+                <form onSubmit={handleSubmit} className="registration-form">
+                    <div className="form-row">
+                        <div className="form-group">
+                            <input
+                                id="firstName"
+                                name="firstName"
+                                type="text"
+                                value={credentials.firstName}
+                                onChange={handleChange}
+                                required
+                                className="form-input"
+                                placeholder={t('auth.firstName')}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <input
+                                id="lastName"
+                                name="lastName"
+                                type="text"
+                                value={credentials.lastName}
+                                onChange={handleChange}
+                                required
+                                className="form-input"
+                                placeholder={t('auth.lastName')}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <input
+                                id="username"
+                                name="username"
+                                type="text"
+                                value={credentials.username}
+                                onChange={handleChange}
+                                required
+                                className="form-input"
+                                placeholder={t('auth.username')}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                value={credentials.email}
+                                onChange={handleChange}
+                                required
+                                className="form-input"
+                                placeholder={t('auth.email')}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <input
+                                id="phoneNumber"
+                                name="phoneNumber"
+                                type="tel"
+                                value={credentials.phoneNumber}
+                                onChange={handleChange}
+                                required
+                                className="form-input"
+                                placeholder={t('auth.phoneNumber')}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                value={credentials.password}
+                                onChange={handleChange}
+                                required
+                                className="form-input"
+                                placeholder={t('auth.password')}
+                            />
+                        </div>
+                    </div>
+
+                    {hasError && <div className="error-message">{t('auth.registrationFailed')}</div>}
+
+                    <button type="submit" disabled={loading} className="registration-button">
+                        {loading ? (
+                            <svg
+                                className="spinner-icon"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                ></circle>
+                                <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                        ) : (
+                            t('auth.signUp')
+                        )}
+                    </button>
+                </form>
+
+                <p className="signup-footer-cta">
+                    {t('auth.haveAccount')}{' '}
+                    <a href="/login">{t('auth.signIn')}</a>
+                </p>
+            </div>
+        </>
     );
 };
 

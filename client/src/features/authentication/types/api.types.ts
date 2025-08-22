@@ -19,7 +19,10 @@ export type Role = 'ADMIN' | 'CANDIDATE' | 'INTERVIEWER' | 'HR_MANAGER';
 export interface UserRegistrationDTO {
     email: string;
     password: string;
-    name: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
 }
 
 export interface UserResponseDTO {
@@ -61,4 +64,7 @@ export interface ApiError {
 
 export interface LoginComponentProps {
     onLoginSuccess: (credentials: UserLoginDTO) => void;
+}
+export interface RegistrationComponentProps {
+    onRegistrationSuccess: (credentials: UserRegistrationDTO) => void;
 }
