@@ -12,3 +12,7 @@ export const register = async (userData: UserRegistrationDTO): Promise<UserRespo
     const response = await axios.post(`${API_URL}/register`, userData);
     return response.data;
 };
+
+export const logout = async () => {
+    await axios.post(`${API_URL}/logout`);
+};
