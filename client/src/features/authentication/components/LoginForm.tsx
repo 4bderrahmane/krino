@@ -2,7 +2,7 @@ import React, {useState, type FormEvent, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
 import type {UserLoginDTO, LoginComponentProps} from '../types/api.types';
 import '../styles/LoginForm.css';
-import {login} from "../services/authService.ts";
+import {login} from "../services/AuthService.ts";
 import {Link} from "react-router-dom";
 import Welcome from './Welcome.tsx';
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher.tsx";

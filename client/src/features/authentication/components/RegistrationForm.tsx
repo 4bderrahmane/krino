@@ -2,7 +2,7 @@ import React, {useState, type FormEvent, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
 import type {RegistrationComponentProps, UserRegistrationDTO} from '../types/api.types';
 import '../styles/RegistrationForm.css';
-import {register} from "../services/authService.ts";
+import {register} from "../services/AuthService.ts";
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher.tsx";
 
 const RegistrationForm: React.FC<RegistrationComponentProps> = ({onRegistrationSuccess}) => {
