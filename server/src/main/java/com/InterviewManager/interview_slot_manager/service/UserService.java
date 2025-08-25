@@ -152,4 +152,11 @@ public class UserService
 
         user.setApproved(true);
     }
+
+    public List<UserResponseDTO> getNonApprovedUsers() {
+        List<User> nonApprovedUsers = userRepository.findByIsApprovedFalse();
+        return nonApprovedUsers.stream()
+                .map(user -> modelMapper.map(user, UserResponseDTO.class))
+                .collect(Collectors.toList());
+    }
 }

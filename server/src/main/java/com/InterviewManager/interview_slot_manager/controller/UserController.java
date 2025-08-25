@@ -104,4 +104,11 @@ public class UserController
         UserResponseDTO updatedUser = userService.changePassword(id, userUpdateDTO);
         return ResponseEntity.ok(updatedUser);
     }
+
+
+    @GetMapping("/non-approved")
+    public ResponseEntity<List<UserResponseDTO>> getNonApprovedUsers() {
+        List<UserResponseDTO> nonApprovedUsers = userService.getNonApprovedUsers();
+        return ResponseEntity.ok(nonApprovedUsers);
+    }
 }

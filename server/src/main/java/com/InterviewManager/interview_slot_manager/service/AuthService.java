@@ -43,14 +43,14 @@ public class AuthService
         {
             throw new EmailAlreadyExistsException("An account with this email already exists: " + request.getEmail());
         }
-        if (userRepository.findByUsername(request.getUsername()).isPresent())
+        if (userRepository.findByUsername(request.getUsername().toLowerCase()).isPresent())
         {
             throw new UserAlreadyExistsException("An account with this username already exists: " + request.getUsername());
         }
 
         User user = new User(
                 request.getEmail(),
-                request.getUsername(),
+                request.getUsername().toLowerCase(),
                 passwordEncoder.encode(request.getPassword()),
                 request.getFirstName(),
                 request.getLastName()
