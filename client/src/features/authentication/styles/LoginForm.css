@@ -105,7 +105,7 @@
 
 .form-input[type="password"]:not(:placeholder-shown) {
     letter-spacing: 0.02rem; /* Reduced from 0.08rem to make bullets smaller */
-    font-family: 'Courier New', monospace; /* Use monospace font for smaller, more consistent bullets */
+    /*font-family: 'Courier New', monospace; !* Use monospace font for smaller, more consistent bullets *!*/
     font-size: 0.9rem; /* Slightly smaller font size for password bullets */
 }
 

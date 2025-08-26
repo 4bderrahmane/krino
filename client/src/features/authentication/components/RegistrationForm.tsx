@@ -1,12 +1,18 @@
 import React, {useState, type FormEvent, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
-import type {RegistrationComponentProps, UserRegistrationDTO} from '../types/api.types';
+import {useNavigate, Link} from 'react-router-dom';
+import type {UserRegistrationDTO, AuthErrorCode} from '../types/api.types';
 import '../styles/RegistrationForm.css';
 import {register} from "../services/AuthService.ts";
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher.tsx";
+import SuccessToast from "../../../shared/components/SuccessToast.tsx";
+import {useSuccessToast} from "../../../shared/hooks/useSuccessToast.ts";
 
-const RegistrationForm: React.FC<RegistrationComponentProps> = ({onRegistrationSuccess}) => {
+const RegistrationForm: React.FC = () => {
     const {t, i18n} = useTranslation();
+    const navigate = useNavigate();
+    const {isVisible, message, showSuccess, hideSuccess} = useSuccessToast();
+
     const [credentials, setCredentials] = useState<UserRegistrationDTO>({
         email: '',
         username: '',
@@ -17,11 +23,11 @@ const RegistrationForm: React.FC<RegistrationComponentProps> = ({onRegistrationS
     });
 
     const [loading, setLoading] = useState(false);
-    const [hasError, setHasError] = useState(false);
+    const [errorCode, setErrorCode] = useState<AuthErrorCode | null>(null);
 
     useEffect(() => {
-        // This effect will trigger re-render when language changes
-        // The error message will be re-translated in the JSX
+        // Clear error when language changes to allow re-translation
+        setErrorCode(null);
     }, [i18n.language]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,32 +36,66 @@ const RegistrationForm: React.FC<RegistrationComponentProps> = ({onRegistrationS
             ...prev,
             [name]: value,
         }));
+        // Clear error when user starts typing
+        if (errorCode) {
+            setErrorCode(null);
+        }
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
-        setHasError(false);
+        setErrorCode(null);
 
         try {
             const data = await register(credentials);
             console.log('User Response: ', data);
 
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            // Show success toast
+            showSuccess(t('auth.success.registrationSuccess'));
 
-            onRegistrationSuccess(credentials);
-        } catch (err) {
+            // Wait for toast to show before navigating
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
+            navigate('/login');
+        } catch (err: any) {
             console.error('registration failed:', err);
-            setHasError(true);
+
+            // Extract the errorCode from the enhanced error
+            if (err.errorCode) {
+                setErrorCode(err.errorCode as AuthErrorCode);
+            } else {
+                setErrorCode('UNEXPECTED_ERROR');
+            }
         } finally {
             setLoading(false);
         }
     };
 
+    const getErrorMessage = (): string => {
+        if (!errorCode) return '';
+
+        const registrationErrorPath = `auth.errors.registration.${errorCode}`;
+        const registrationError = t(registrationErrorPath);
+
+        if (registrationError !== registrationErrorPath) {
+            return registrationError;
+        }
+
+        const commonErrorPath = `auth.errors.common.${errorCode}`;
+        const commonError = t(commonErrorPath);
+
+        if (commonError !== commonErrorPath) {
+            return commonError;
+        }
+
+        return t('auth.errors.common.UNEXPECTED_ERROR');
+    };
+
     return (
         <>
             <div className="language-switcher-fixed">
-                <LanguageSwitcher />
+                <LanguageSwitcher/>
             </div>
             <div className="registration-page-container">
                 <form onSubmit={handleSubmit} className="registration-form">
@@ -140,7 +180,7 @@ const RegistrationForm: React.FC<RegistrationComponentProps> = ({onRegistrationS
                         </div>
                     </div>
 
-                    {hasError && <div className="error-message">{t('auth.registrationFailed')}</div>}
+                    {errorCode && <div className="error-message">{getErrorMessage()}</div>}
 
                     <button type="submit" disabled={loading} className="registration-button">
                         {loading ? (
@@ -172,9 +212,17 @@ const RegistrationForm: React.FC<RegistrationComponentProps> = ({onRegistrationS
 
                 <p className="signup-footer-cta">
                     {t('auth.haveAccount')}{' '}
-                    <a href="/login">{t('auth.signIn')}</a>
+                    <Link to="/login">{t('auth.signIn')}</Link>
                 </p>
             </div>
+
+            {/* Success Toast */}
+            <SuccessToast
+                isVisible={isVisible}
+                message={message}
+                onClose={hideSuccess}
+                duration={3000}
+            />
         </>
     );
 };

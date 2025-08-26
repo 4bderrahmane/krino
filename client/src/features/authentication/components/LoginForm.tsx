@@ -1,23 +1,33 @@
 import React, {useState, type FormEvent, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
-import type {UserLoginDTO, LoginComponentProps} from '../types/api.types';
+import {useNavigate} from 'react-router-dom';
+import type {UserLoginDTO, AuthErrorCode} from '../types/api.types';
 import '../styles/LoginForm.css';
 import {login} from "../services/AuthService.ts";
 import {Link} from "react-router-dom";
 import Welcome from './Welcome.tsx';
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher.tsx";
+import SuccessToast from "../../../shared/components/SuccessToast.tsx";
+import {useAuth} from "../../../shared/contexts/AuthContext";
+import {useSuccessToast} from "../../../shared/hooks/useSuccessToast.ts";
 
-const LoginForm: React.FC<LoginComponentProps> = ({onLoginSuccess}) => {
+const LoginForm: React.FC = () => {
     const {t, i18n} = useTranslation();
+    const navigate = useNavigate();
+    const {login: authLogin} = useAuth();
+    const {isVisible, message, showSuccess, hideSuccess} = useSuccessToast();
+
     const [credentials, setCredentials] = useState<UserLoginDTO>({
         email: '',
         password: '',
     });
 
     const [loading, setLoading] = useState(false);
-    const [hasError, setHasError] = useState(false);
+    const [errorCode, setErrorCode] = useState<AuthErrorCode | null>(null);
 
     useEffect(() => {
+
+        setErrorCode(null);
     }, [i18n.language]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,27 +36,64 @@ const LoginForm: React.FC<LoginComponentProps> = ({onLoginSuccess}) => {
             ...prev,
             [name]: value,
         }));
+        // Clear error when user starts typing
+        if (errorCode) {
+            setErrorCode(null);
+        }
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
-        setHasError(false);
+        setErrorCode(null);
 
         try {
             const data = await login(credentials);
             console.log('User Response: ', data.user);
             console.log('JWT: ', data.token);
 
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            // Show success toast
+            showSuccess(t('auth.success.loginSuccess'));
 
-            onLoginSuccess(credentials);
-        } catch (err) {
+            // Wait for toast to show before navigating
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
+            // Use AuthContext instead of localStorage
+            authLogin(data.user, data.token);
+            navigate('/dashboard');
+
+        } catch (err: any) {
             console.error('Login failed:', err);
-            setHasError(true);
+
+            if (err.errorCode) {
+                setErrorCode(err.errorCode as AuthErrorCode);
+            } else {
+                setErrorCode('UNEXPECTED_ERROR');
+            }
         } finally {
             setLoading(false);
         }
+    };
+
+    const getErrorMessage = (): string => {
+        if (!errorCode) return '';
+
+        const loginErrorPath = `auth.errors.login.${errorCode}`;
+        const loginError = t(loginErrorPath);
+
+        if (loginError !== loginErrorPath) {
+            return loginError;
+        }
+
+        const commonErrorPath = `auth.errors.common.${errorCode}`;
+        const commonError = t(commonErrorPath);
+
+        if (commonError !== commonErrorPath) {
+            return commonError;
+        }
+
+        // Final fallback
+        return t('auth.errors.common.UNEXPECTED_ERROR');
     };
 
     const handleForgotPassword = () => {
@@ -103,7 +150,7 @@ const LoginForm: React.FC<LoginComponentProps> = ({onLoginSuccess}) => {
                         />
                     </div>
 
-                    {hasError && <div className="error-message">{t('auth.loginFailed')}</div>}
+                    {errorCode && <div className="error-message">{getErrorMessage()}</div>}
 
                     <button type="submit" disabled={loading} className="login-button">
                         {loading ? (
@@ -149,6 +196,14 @@ const LoginForm: React.FC<LoginComponentProps> = ({onLoginSuccess}) => {
                     <Link to="/register">{t('auth.signUp')}</Link>
                 </p>
             </div>
+
+            {/* Success Toast */}
+            <SuccessToast
+                isVisible={isVisible}
+                message={message}
+                onClose={hideSuccess}
+                duration={3000}
+            />
         </>
     );
 };

@@ -1,6 +1,6 @@
 {
   "auth": {
-    "signIn": "Login",
+    "signIn": "Sign In",
     "stayUpdated": "Stay updated on your professional world",
     "emailOrPhone": "Enter email",
     "password": "Enter password",
@@ -9,21 +9,79 @@
     "forgotPassword": "Forgot password?",
     "or": "or",
     "loginFailed": "Login failed. Please check your credentials.",
+    "registrationFailed": "Registration failed. Please try again.",
     "welcome": "Welcome!",
     "loggedInAs": "Successfully logged in as:",
     "logout": "Logout",
-    "login": "Sign in",
+    "login": "Login",
     "noAccount": "Don't have an account?",
-    "signUp": "Sign up",
-    "firstName": "First name",
-    "lastName": "Last name",
-    "phoneNumber": "Phone number",
+    "signUp": "Sign Up",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "phoneNumber": "Phone Number",
     "email": "Enter email",
     "username": "Username",
-    "haveAccount": "Already have an account?"
+    "haveAccount": "Already have an account?",
+    "success": {
+      "loginSuccess": "Successfully logged in! Welcome back.",
+      "registrationSuccess": "Account created successfully! Please log in with your new credentials.",
+      "logoutSuccess": "You have been logged out successfully."
+    },
+    "errors": {
+      "login": {
+        "INVALID_CREDENTIALS": "Invalid email or password. Please try again.",
+        "USER_NOT_FOUND": "User not found. Please check your email address.",
+
+        "ACCOUNT_DISABLED": "Your account has been disabled. Please contact support.",
+        "ACCOUNT_LOCKED": "Your account has been locked due to multiple failed login attempts. Please try again later.",
+        "ACCOUNT_NOT_VERIFIED": "Please verify your account before logging in. Check your email for verification instructions.",
+
+        "AUTHENTICATION_FAILED": "Authentication failed. Please log in again.",
+        "AUTHENTICATION_REQUIRED": "Authentication is required to access this resource.",
+
+        "INVALID_TOKEN": "Invalid or expired authentication token.",
+        "ACCESS_DENIED": "Access denied. You don't have permission to perform this action."
+      },
+      "registration": {
+        "USERNAME_ALREADY_EXISTS": "This username is already taken. Please choose another.",
+        "EMAIL_ALREADY_IN_USE": "An account with this email already exists.",
+        "EMAIL_ALREADY_EXISTS": "This email address is already registered.",
+        "USER_ALREADY_EXISTS": "A user with this information already exists.",
+        "PASSWORD_TOO_WEAK": "Password is too weak. Please use a stronger password with at least 8 characters, including uppercase, lowercase, and numbers.",
+        "INVALID_EMAIL_FORMAT": "Please enter a valid email address.",
+        "INVALID_USERNAME_FORMAT": "Username must be 3-20 characters long and contain only letters, numbers, and underscores.",
+        "VALIDATION_FAILED": "Validation failed. Please check your input and try again.",
+        "INVALID_REQUEST_BODY": "Invalid request data. Please check your input."
+      },
+      "common": {
+        "UNEXPECTED_ERROR": "An unexpected error occurred. Please try again later.",
+        "RESOURCE_NOT_FOUND": "The requested resource was not found.",
+        "PASSWORD_CHANGE_FAILED": "Failed to change password. Please try again.",
+        "PASSWORD_RESET_TOKEN_EXPIRED": "Password reset token has expired. Please request a new one.",
+        "INVALID_PASSWORD_RESET_TOKEN": "Invalid password reset token. Please request a new password reset.",
+        "NEW_PASSWORD_SAME_AS_OLD": "New password must be different from your current password.",
+        "INTERNAL_SERVER_ERROR": "An internal server error occurred. Please try again later."
+      }
+    }
   },
   "app": {
     "loading": "Loading...",
     "welcome": "Welcome to KRINO!"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "reserve": "Reserve",
+    "bookings": "Bookings",
+    "profile": "Profile",
+    "settings": "Settings",
+    "availability": "Availability",
+    "jobs": "Jobs",
+    "applications": "Applications"
+  },
+  "common": {
+    "pageNotFound": "Page Not Found",
+    "pageNotFoundDescription": "The page you are looking for does not exist or has been moved.",
+    "goToDashboard": "Go to Dashboard",
+    "goToLogin": "Go to Login"
   }
 }

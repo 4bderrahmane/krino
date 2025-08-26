@@ -65,6 +65,56 @@ export interface ApiError {
 export interface LoginComponentProps {
     onLoginSuccess: (credentials: UserLoginDTO) => void;
 }
+
 export interface RegistrationComponentProps {
     onRegistrationSuccess: (credentials: UserRegistrationDTO) => void;
 }
+
+export interface ApiErrorResponse {
+    message: string;
+    errorCode: string;
+    details?: string[];
+}
+
+export interface ValidationErrorResponse extends ApiErrorResponse {
+    field: string;
+}
+
+export interface BackendErrorResponse {
+    timestamp: string;
+    status: number;
+    errorCode: string;
+    data?: Record<string, any>;
+}
+
+export interface EnhancedError extends Error {
+    errorCode?: AuthErrorCode;
+    backendError?: BackendErrorResponse;
+}
+
+export type AuthErrorCode =
+    | 'UNEXPECTED_ERROR'
+    | 'INVALID_REQUEST_BODY'
+    | 'RESOURCE_NOT_FOUND'
+    | 'INVALID_TOKEN'
+    | 'ACCESS_DENIED'
+    | 'USERNAME_ALREADY_EXISTS'
+    | 'EMAIL_ALREADY_IN_USE'
+    | 'EMAIL_ALREADY_EXISTS'
+    | 'PASSWORD_TOO_WEAK'
+    | 'INVALID_EMAIL_FORMAT'
+    | 'INVALID_USERNAME_FORMAT'
+    | 'INVALID_CREDENTIALS'
+    | 'ACCOUNT_DISABLED'
+    | 'ACCOUNT_LOCKED'
+    | 'ACCOUNT_NOT_VERIFIED'
+    | 'PASSWORD_CHANGE_FAILED'
+    | 'PASSWORD_RESET_TOKEN_EXPIRED'
+    | 'INVALID_PASSWORD_RESET_TOKEN'
+    | 'NEW_PASSWORD_SAME_AS_OLD'
+    | 'AUTHENTICATION_REQUIRED'
+    | 'AUTHENTICATION_FAILED'
+    | 'USER_NOT_FOUND'
+    | 'USER_ALREADY_EXISTS'
+    | 'VALIDATION_FAILED'
+    | 'INTERNAL_SERVER_ERROR';
