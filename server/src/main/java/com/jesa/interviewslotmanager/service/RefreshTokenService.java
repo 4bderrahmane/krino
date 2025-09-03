@@ -79,6 +79,7 @@ public class RefreshTokenService
         refreshToken.setDeviceInfo(deviceInfo);
         refreshToken.setIpAddress(ipAddress);
         refreshToken.setIsRevoked(false);
+        refreshToken.setLastUsedAt(now);
 
         refreshTokenRepository.save(refreshToken);
 
@@ -150,7 +151,7 @@ public class RefreshTokenService
     {
         LocalDateTime now = LocalDateTime.now();
 
-        // Get all valid tokens and check each one
+
         List<RefreshToken> validTokens = refreshTokenRepository.findAllValidTokens(now);
 
         for (RefreshToken refreshToken : validTokens)
