@@ -1,21 +1,10 @@
-import {createBrowserRouter, Navigate} from 'react-router-dom';
+import {createBrowserRouter} from 'react-router-dom';
 import LoginForm from '../features/authentication/components/LoginForm';
 import RegistrationForm from '../features/authentication/components/RegistrationForm';
-import DashboardPage from '../shared/components/DashboardPage';
+import Dashboard from '../shared/components/Dashboard';
 import NotFoundPage from '../shared/components/NotFoundPage';
-import {useAuth} from '../shared/contexts/AuthContext';
-
-// eslint-disable-next-line react-refresh/only-export-components
-const RootRedirect = () => {
-    const {isAuthenticated} = useAuth();
-    return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />;
-};
-
-// eslint-disable-next-line react-refresh/only-export-components
-const ProtectedDashboard = () => {
-    const {isAuthenticated} = useAuth();
-    return isAuthenticated ? <DashboardPage /> : <Navigate to="/login" replace />;
-};
+import ProtectedRoute from '../shared/components/ProtectedRoute';
+import RootRedirect from '../shared/components/RootRedirect';
 
 const router = createBrowserRouter([
     {
@@ -32,7 +21,11 @@ const router = createBrowserRouter([
     },
     {
         path: '/dashboard',
-        element: <ProtectedDashboard/>
+        element: (
+            <ProtectedRoute>
+                <Dashboard/>
+            </ProtectedRoute>
+        )
     },
     {
         path: '*',

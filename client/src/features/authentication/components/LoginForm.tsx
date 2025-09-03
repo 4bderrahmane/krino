@@ -3,19 +3,16 @@ import {useTranslation} from 'react-i18next';
 import {useNavigate} from 'react-router-dom';
 import type {UserLoginDTO, AuthErrorCode} from '../types/api.types';
 import '../styles/LoginForm.css';
-import {login} from "../services/AuthService.ts";
+import {login} from "../services/AuthenticationService.ts";
 import {Link} from "react-router-dom";
 import Welcome from './Welcome.tsx';
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher.tsx";
-import SuccessToast from "../../../shared/components/SuccessToast.tsx";
-import {useAuth} from "../../../shared/contexts/AuthContext";
-import {useSuccessToast} from "../../../shared/hooks/useSuccessToast.ts";
+import {useAuth} from "../../../shared/hooks/useAuth.ts";
 
 const LoginForm: React.FC = () => {
     const {t, i18n} = useTranslation();
     const navigate = useNavigate();
     const {login: authLogin} = useAuth();
-    const {isVisible, message, showSuccess, hideSuccess} = useSuccessToast();
 
     const [credentials, setCredentials] = useState<UserLoginDTO>({
         email: '',
@@ -36,7 +33,6 @@ const LoginForm: React.FC = () => {
             ...prev,
             [name]: value,
         }));
-        // Clear error when user starts typing
         if (errorCode) {
             setErrorCode(null);
         }
@@ -50,23 +46,17 @@ const LoginForm: React.FC = () => {
         try {
             const data = await login(credentials);
             console.log('User Response: ', data.user);
-            console.log('JWT: ', data.token);
 
-            // Show success toast
-            showSuccess(t('auth.success.loginSuccess'));
+            authLogin(data.user);
 
-            // Wait for toast to show before navigating
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            // Use AuthContext instead of localStorage
-            authLogin(data.user, data.token);
+            // Navigate immediately to dashboard where toast will appear
             navigate('/dashboard');
-
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Login failed:', err);
 
-            if (err.errorCode) {
-                setErrorCode(err.errorCode as AuthErrorCode);
+            const maybeCode = (err as { errorCode?: AuthErrorCode }).errorCode;
+            if (maybeCode) {
+                setErrorCode(maybeCode);
             } else {
                 setErrorCode('UNEXPECTED_ERROR');
             }
@@ -196,14 +186,6 @@ const LoginForm: React.FC = () => {
                     <Link to="/register">{t('auth.signUp')}</Link>
                 </p>
             </div>
-
-            {/* Success Toast */}
-            <SuccessToast
-                isVisible={isVisible}
-                message={message}
-                onClose={hideSuccess}
-                duration={3000}
-            />
         </>
     );
 };

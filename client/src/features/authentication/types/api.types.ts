@@ -80,11 +80,16 @@ export interface ValidationErrorResponse extends ApiErrorResponse {
     field: string;
 }
 
+export interface AuthResponse {
+    user: UserResponseDTO;
+    message?: string;
+}
+
 export interface BackendErrorResponse {
     timestamp: string;
     status: number;
     errorCode: string;
-    data?: Record<string, any>;
+    data?: Record<string, unknown>;
 }
 
 export interface EnhancedError extends Error {

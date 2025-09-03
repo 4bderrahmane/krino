@@ -3,7 +3,7 @@ import {useTranslation} from 'react-i18next';
 import {useNavigate, Link} from 'react-router-dom';
 import type {UserRegistrationDTO, AuthErrorCode} from '../types/api.types';
 import '../styles/RegistrationForm.css';
-import {register} from "../services/AuthService.ts";
+import {register} from "../services/AuthenticationService.ts";
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher.tsx";
 import SuccessToast from "../../../shared/components/SuccessToast.tsx";
 import {useSuccessToast} from "../../../shared/hooks/useSuccessToast.ts";
@@ -26,7 +26,6 @@ const RegistrationForm: React.FC = () => {
     const [errorCode, setErrorCode] = useState<AuthErrorCode | null>(null);
 
     useEffect(() => {
-        // Clear error when language changes to allow re-translation
         setErrorCode(null);
     }, [i18n.language]);
 
@@ -36,7 +35,6 @@ const RegistrationForm: React.FC = () => {
             ...prev,
             [name]: value,
         }));
-        // Clear error when user starts typing
         if (errorCode) {
             setErrorCode(null);
         }
@@ -51,17 +49,14 @@ const RegistrationForm: React.FC = () => {
             const data = await register(credentials);
             console.log('User Response: ', data);
 
-            // Show success toast
             showSuccess(t('auth.success.registrationSuccess'));
 
-            // Wait for toast to show before navigating
             await new Promise((resolve) => setTimeout(resolve, 2000));
 
             navigate('/login');
         } catch (err: any) {
             console.error('registration failed:', err);
 
-            // Extract the errorCode from the enhanced error
             if (err.errorCode) {
                 setErrorCode(err.errorCode as AuthErrorCode);
             } else {

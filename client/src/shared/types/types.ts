@@ -1,3 +1,5 @@
+import type {UserResponseDTO} from "../../features/authentication/types/api.types.ts";
+
 export type Language = {
     code: string;
     name: string;
@@ -27,4 +29,19 @@ export interface SuccessToastProps {
     isVisible: boolean;
     onClose: () => void;
     duration?: number;
+}
+
+export interface ToastState {
+    key: number;
+    message: string;
+    duration: number;
+}
+export interface AuthContextType {
+    user: UserResponseDTO | null;
+    login: (user: UserResponseDTO) => void;
+    logout: () => void;
+    isAuthenticated: boolean;
+    isLoading: boolean; // Add loading state for initial auth check
+    justLoggedIn: boolean; // Add flag to track fresh logins
+    clearJustLoggedIn: () => void; // Function to clear the flag
 }

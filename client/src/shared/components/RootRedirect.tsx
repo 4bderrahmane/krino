@@ -1,11 +1,11 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import {Navigate} from 'react-router-dom';
+import {useAuth} from '../hooks/useAuth';
 
 const RootRedirect: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+    const {isAuthenticated} = useAuth();
 
-  return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />;
+    return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace/>;
 };
 
 export default RootRedirect;

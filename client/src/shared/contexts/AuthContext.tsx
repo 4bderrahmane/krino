@@ -1,75 +1,68 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { UserResponseDTO } from '../../features/authentication/types/api.types';
+import React, {useState, useEffect} from 'react';
+import type {UserResponseDTO} from '../../features/authentication/types/api.types';
+import type {AuthContextType} from "../types/types.ts";
+import {checkAuthStatus} from '../../features/authentication/services/AuthenticationService.ts';
+import { AuthContext } from './authContext';
 
-interface AuthContextType {
-  user: UserResponseDTO | null;
-  token: string | null;
-  login: (user: UserResponseDTO, token: string) => void;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
 
 interface AuthProviderProps {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<UserResponseDTO | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
+    const [user, setUser] = useState<UserResponseDTO | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [justLoggedIn, setJustLoggedIn] = useState(false);
 
-  // Only check localStorage on initial load for persistence across browser sessions
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const userData = await checkAuthStatus();
+                if (userData) {
+                    setUser(userData);
+                    // Don't set justLoggedIn to true for existing sessions
+                }
+            } catch (error) {
+                console.error('Failed to check auth status:', error);
+                // This is expected since /auth/me doesn't exist - just continue
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-      }
-    }
-  }, []);
+        checkAuth();
+    }, []);
 
-  const login = (userData: UserResponseDTO, authToken: string) => {
-    setUser(userData);
-    setToken(authToken);
-    // Store for persistence across browser sessions
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', authToken);
-  };
+    const login = (userData: UserResponseDTO) => {
+        console.log('AuthContext login called with:', userData);
+        setUser(userData);
+        setJustLoggedIn(true); // Set flag when user logs in
+        console.log('AuthContext - justLoggedIn set to true');
+    };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-  };
+    const logout = () => {
+        setUser(null);
+        setJustLoggedIn(false);
+    };
 
-  const value = {
-    user,
-    token,
-    login,
-    logout,
-    isAuthenticated: !!user && !!token,
-  };
+    const clearJustLoggedIn = () => {
+        console.log('Clearing justLoggedIn flag');
+        setJustLoggedIn(false);
+    };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+    const value: AuthContextType = {
+        user,
+        login,
+        logout,
+        isAuthenticated: !!user,
+        isLoading,
+        justLoggedIn,
+        clearJustLoggedIn,
+    };
+
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
 };

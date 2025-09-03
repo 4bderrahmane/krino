@@ -7,9 +7,9 @@ import SuccessToast from './SuccessToast';
 import type {NavbarProps} from "../types/types.ts";
 import Welcome from "./Welcome.tsx";
 import {useSuccessToast} from '../hooks/useSuccessToast';
-import {useAuth} from '../contexts/AuthContext';
+import {useAuth} from '../hooks/useAuth';
 
-const Navbar: React.FC<NavbarProps> = ({username = 'User', onLogout}) => {
+const Navbar: React.FC<NavbarProps> = ({username = 'User'}) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
@@ -55,11 +55,11 @@ const Navbar: React.FC<NavbarProps> = ({username = 'User', onLogout}) => {
                     <li className={isCurrentPage('/dashboard') ? 'active' : ''}>
                         <Link to="/dashboard">{t('nav.dashboard')}</Link>
                     </li>
-                    <li className={isCurrentPage('/bookings') ? 'active' : ''}>
-                        <Link to="/bookings">{t('nav.bookings')}</Link>
+                    <li className={isCurrentPage('/applications') ? 'active' : ''}>
+                        <Link to="/bookings">{t('nav.applications')}</Link>
                     </li>
-                    <li className={isCurrentPage('/reserve') ? 'active' : ''}>
-                        <Link to="/reserve">{t('nav.reserve')}</Link>
+                    <li className={isCurrentPage('/jobs') ? 'active' : ''}>
+                        <Link to="/reserve">{t('nav.jobs')}</Link>
                     </li>
                     <li className={isCurrentPage('/timeslots') ? 'active' : ''}>
                         <Link to="/timeslots">
