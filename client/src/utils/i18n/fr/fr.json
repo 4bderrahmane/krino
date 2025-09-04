@@ -80,5 +80,23 @@
     "pageNotFoundDescription": "La page que vous recherchez n'existe pas ou a été déplacée.",
     "goToDashboard": "Aller au tableau de bord",
     "goToLogin": "Aller à la connexion"
+  },
+  "profile": {
+    "id": "Id:",
+    "firstName": "Prénom:",
+    "lastName": "Nom de famille:",
+    "email": "Email:",
+    "phoneNumber": "Numéro de téléphone:",
+    "username": "Nom d'utilisateur:",
+    "editProfile": "Modifier le profil",
+    "saveChanges": "Enregistrer les modifications",
+    "changePassword": "Changer le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmNewPassword": "Confirmer le nouveau mot de passe",
+    "profileUpdated": "Profil mis à jour avec succès.",
+    "passwordChanged": "Mot de passe changé avec succès.",
+    "updateFailed": "Échec de la mise à jour du profil. Veuillez réessayer.",
+    "changePasswordFailed": "Échec du changement de mot de passe. Veuillez réessayer."
   }
 }

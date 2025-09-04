@@ -83,5 +83,23 @@
     "pageNotFoundDescription": "The page you are looking for does not exist or has been moved.",
     "goToDashboard": "Go to Dashboard",
     "goToLogin": "Go to Login"
+  },
+  "profile": {
+    "id": "Id:",
+    "firstName": "First Name:",
+    "lastName": "Last Name:",
+    "email": "Email:",
+    "phoneNumber": "Phone Number:",
+    "username": "Username:",
+    "editProfile": "Edit Profile:",
+    "saveChanges": "Save Changes",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "profileUpdated": "Profile updated successfully.",
+    "passwordChanged": "Password changed successfully.",
+    "updateFailed": "Failed to update profile. Please try again.",
+    "changePasswordFailed": "Failed to change password. Please try again."
   }
 }
