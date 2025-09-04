@@ -82,22 +82,30 @@
 .dropdown-menu {
     position: absolute;
     right: 0;
-    top: 100%;
-    width: 200px;
+    top: calc(100% + 10px); /* Position below the user profile with a small gap */
+    min-width: 180px; /* Set a minimum width */
     background-color: white;
     border-radius: 4px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     z-index: 10;
-    margin-top: 0.5rem;
     padding: 0.5rem 0;
+    width: auto; /* Allow width to be determined by content */
 }
 
 .dropdown-item {
-    display: block;
+    display: flex;
+    align-items: center;
     padding: 0.5rem 1rem;
     color: #4b5563;
     text-decoration: none;
     transition: background-color 0.3s;
+}
+
+.dropdown-item .dropdown-icon-svg {
+    vertical-align: middle;
+    font-size: 1.2em;
+    margin-bottom: 2px;
+    margin-right: 0.5em;
 }
 
 .dropdown-item:hover {

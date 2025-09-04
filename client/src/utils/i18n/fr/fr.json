@@ -82,6 +82,7 @@
     "goToLogin": "Aller à la connexion"
   },
   "profile": {
+    "myProfile": "Mon Profile",
     "id": "Id:",
     "firstName": "Prénom:",
     "lastName": "Nom de famille:",

@@ -85,6 +85,7 @@
     "goToLogin": "Go to Login"
   },
   "profile": {
+    "myProfile": "My Profile",
     "id": "Id:",
     "firstName": "First Name:",
     "lastName": "Last Name:",

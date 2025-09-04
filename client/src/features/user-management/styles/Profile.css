@@ -100,15 +100,13 @@
 .info-label {
   font-weight: 600;
   color: #374151;
-  min-width: 120px;
-  margin-right: 16px;
+  margin-right: 6px;
   font-size: 0.95rem;
 }
 
 .info-value {
   color: #1f2937;
   font-size: 0.95rem;
-  flex: 1;
 }
 
 .info-note {

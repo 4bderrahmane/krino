@@ -7,8 +7,11 @@ import SuccessToast from './SuccessToast';
 import Welcome from "./Welcome.tsx";
 import {useSuccessToast} from '../hooks/useSuccessToast';
 import {useAuth} from '../hooks/useAuth';
+import useOutsideClick from '../hooks/useOutsideClick';
+import {MdSettings, MdPerson, MdLogout} from "react-icons/md";
 
 const Navbar: React.FC = () => {
+
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
@@ -20,9 +23,15 @@ const Navbar: React.FC = () => {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
+    const closeDropdown = () => {
+        setIsDropdownOpen(false);
+    };
+
+    const dropdownRef = useOutsideClick(closeDropdown);
+
     const handleLogout = async () => {
         // Close dropdown first
-        setIsDropdownOpen(false);
+        closeDropdown();
 
         // Show success toast
         showSuccess(t('auth.success.logoutSuccess'));
@@ -77,7 +86,7 @@ const Navbar: React.FC = () => {
                 <div className="navbar-actions">
                     <LanguageSwitcher/>
 
-                    <div className="navbar-user">
+                    <div className="navbar-user" ref={dropdownRef}>
                         <div className="user-profile" onClick={toggleDropdown}>
                             <span className="user-name">{username}</span>
                             <span className="dropdown-icon">▼</span>
@@ -85,18 +94,23 @@ const Navbar: React.FC = () => {
 
                         {isDropdownOpen && (
                             <div className="dropdown-menu">
-                                <Link to="/me" className="dropdown-item">
-                                    {t('nav.profile')}
+                                <Link to="/me" className="dropdown-item flex items-center gap-2"
+                                      onClick={closeDropdown}>
+                                    <MdPerson className="dropdown-icon-svg"/> <span>{t('nav.profile')}</span>
                                 </Link>
-                                <Link to="/settings" className="dropdown-item">
-                                    {t('nav.settings')}
+
+                                <Link to="/settings" className="dropdown-item flex items-center gap-2"
+                                      onClick={closeDropdown}>
+                                    <MdSettings className="dropdown-icon-svg"/> <span>{t('nav.settings')}</span>
                                 </Link>
+
                                 <div className="dropdown-divider"></div>
+
                                 <button
-                                    className="dropdown-item logout-button"
+                                    className="dropdown-item flex items-center gap-2 logout-button"
                                     onClick={handleLogout}
                                 >
-                                    {t('auth.logout')}
+                                    <MdLogout className="dropdown-icon-svg"/> <span>{t('auth.logout')}</span>
                                 </button>
                             </div>
                         )}
