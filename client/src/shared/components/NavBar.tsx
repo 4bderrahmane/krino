@@ -4,17 +4,16 @@ import {useTranslation} from 'react-i18next';
 import '../styles/NavBar.css';
 import LanguageSwitcher from './LanguageSwitcher';
 import SuccessToast from './SuccessToast';
-import type {NavbarProps} from "../types/types.ts";
 import Welcome from "./Welcome.tsx";
 import {useSuccessToast} from '../hooks/useSuccessToast';
 import {useAuth} from '../hooks/useAuth';
 
-const Navbar: React.FC<NavbarProps> = ({username = 'User'}) => {
+const Navbar: React.FC = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const {t} = useTranslation();
-    const {logout: authLogout} = useAuth();
+    const {user, logout: authLogout} = useAuth();
     const {isVisible, message, showSuccess, hideSuccess} = useSuccessToast();
 
     const toggleDropdown = () => {
@@ -28,10 +27,17 @@ const Navbar: React.FC<NavbarProps> = ({username = 'User'}) => {
         // Show success toast
         showSuccess(t('auth.success.logoutSuccess'));
 
-        // Wait for toast to show before logout and navigation
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        try {
+            // Call the logout service to clear cookies on the backend
+            await import('../../features/authentication/services/AuthenticationService.ts').then(
+                service => service.logout()
+            );
+        } catch (error) {
+            console.error('Logout request failed:', error);
+            // Continue with local logout even if backend call fails
+        }
 
-        // Perform logout and navigate
+        // Perform logout and navigate immediately
         authLogout();
         navigate('/login');
     };
@@ -40,7 +46,7 @@ const Navbar: React.FC<NavbarProps> = ({username = 'User'}) => {
         return location.pathname === path;
     };
 
-    // const appTitle = t('app.title');
+    const username = user?.username || 'User';
 
     return (
         <nav className="navbar">
@@ -56,10 +62,10 @@ const Navbar: React.FC<NavbarProps> = ({username = 'User'}) => {
                         <Link to="/dashboard">{t('nav.dashboard')}</Link>
                     </li>
                     <li className={isCurrentPage('/applications') ? 'active' : ''}>
-                        <Link to="/bookings">{t('nav.applications')}</Link>
+                        <Link to="/applications">{t('nav.applications')}</Link>
                     </li>
                     <li className={isCurrentPage('/jobs') ? 'active' : ''}>
-                        <Link to="/reserve">{t('nav.jobs')}</Link>
+                        <Link to="/jobs">{t('nav.jobs')}</Link>
                     </li>
                     <li className={isCurrentPage('/timeslots') ? 'active' : ''}>
                         <Link to="/timeslots">
@@ -79,7 +85,7 @@ const Navbar: React.FC<NavbarProps> = ({username = 'User'}) => {
 
                         {isDropdownOpen && (
                             <div className="dropdown-menu">
-                                <Link to="/profile" className="dropdown-item">
+                                <Link to="/me" className="dropdown-item">
                                     {t('nav.profile')}
                                 </Link>
                                 <Link to="/settings" className="dropdown-item">

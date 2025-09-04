@@ -1,55 +1,52 @@
-import {useState, useCallback, useRef, useEffect} from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
-interface UseSuccessToastReturn {
-    isVisible: boolean;
-    message: string;
-    showSuccess: (message: string, duration?: number) => void;
-    hideSuccess: () => void;
-}
+// --- Hook for easy toast usage ---
+// This hook provides a simple way to show success toasts using the context system
+export const useSuccessToast = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [message, setMessage] = useState('');
+  const timerRef = useRef<number | null>(null);
 
-const DEFAULT_SUCCESS_DURATION = 3000;
+  const hideSuccess = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsVisible(false);
+    // Clear message after animation completes
+    setTimeout(() => setMessage(''), 300);
+  }, []);
 
-export const useSuccessToast = (): UseSuccessToastReturn => {
-    const [isVisible, setIsVisible] = useState(false);
-    const [message, setMessage] = useState('');
-    const timerRef = useRef<number | null>(null);
+  const showSuccess = useCallback(
+    (messageText: string, duration: number = 3000) => {
+      // Clear any existing timer
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
 
-    const hideSuccess = useCallback(() => {
-        if (timerRef.current) {
-            clearTimeout(timerRef.current);
-            timerRef.current = null;
-        }
-        setIsVisible(false);
-        setMessage('');
-    }, []);
+      setMessage(messageText);
+      setIsVisible(true);
 
-    const showSuccess = useCallback(
-        (messageText: string, duration: number = DEFAULT_SUCCESS_DURATION) => {
-            setMessage(messageText);
-            setIsVisible(true);
+      // Auto-hide after duration
+      timerRef.current = window.setTimeout(() => {
+        hideSuccess();
+      }, duration);
+    },
+    [hideSuccess]
+  );
 
-            if (timerRef.current) {
-                clearTimeout(timerRef.current);
-            }
-            timerRef.current = window.setTimeout(() => {
-                hideSuccess();
-            }, duration);
-        },
-        [hideSuccess]
-    );
-
-    useEffect(() => {
-        return () => {
-            if (timerRef.current) {
-                clearTimeout(timerRef.current);
-            }
-        };
-    }, []);
-
-    return {
-        isVisible,
-        message,
-        showSuccess,
-        hideSuccess
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
     };
+  }, []);
+
+  return {
+    isVisible,
+    message,
+    showSuccess,
+    hideSuccess,
+  };
 };

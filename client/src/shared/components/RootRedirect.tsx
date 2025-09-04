@@ -3,9 +3,9 @@ import {Navigate} from 'react-router-dom';
 import {useAuth} from '../hooks/useAuth';
 
 const RootRedirect: React.FC = () => {
-    const {isAuthenticated} = useAuth();
+    const {user} = useAuth();
 
-    return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace/>;
+    return <Navigate to={user ? '/dashboard' : '/login'} replace/>;
 };
 
 export default RootRedirect;

@@ -1,22 +1,20 @@
-import React from 'react';
-import '../styles/LoadingSpinner.css';
+import React from "react";
+import "../styles/LoadingSpinner.css";
+import {useTranslation} from 'react-i18next';
 
-const LoadingSpinner: React.FC = () => {
+interface LoadingSpinnerProps {
+    message?: string;
+}
+
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ message }) => {
+    const {t} = useTranslation();
+
     return (
-        <div className="loading-spinner">
+        <div className="spinner-container">
             <div className="spinner"></div>
+            <p className="spinner-text">{message || t('app.loading')}</p>
         </div>
     );
 };
 
-
 export default LoadingSpinner;
-
-// export default function LoadingSpinner() {
-//     return (
-//         <div className="spinner-wrapper">
-//             <div className="spinner"></div>
-//             <p className="loading-text">Loading, please wait...</p>
-//         </div>
-//     );
-// }

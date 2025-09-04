@@ -17,8 +17,10 @@ const api = axios.create({
 
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
-// Function to refresh tokens
+const REFRESH_TIME = 14 * 60 * 1000;
+
 const refreshTokens = async (): Promise<boolean> => {
     try {
         await axios.post(`${API_BASE_URL}/auth/refresh`, {}, {
@@ -86,6 +88,35 @@ api.interceptors.request.use(
         return Promise.reject(error);
     }
 );
+
+export const setupTokenRefresh = () => {
+    if (refreshTimer) {
+        clearTimeout(refreshTimer);
+    }
+
+    const performProactiveRefresh = async () => {
+        try {
+            await api.post('/auth/refresh');
+            console.log("Proactive token refresh successful");
+            refreshTimer = setTimeout(performProactiveRefresh, REFRESH_TIME);
+        } catch (error) {
+            console.error('Proactive token refresh failed:', error);
+            refreshTimer = null;
+            window.location.href = '/login';
+        }
+    };
+
+    refreshTimer = setTimeout(performProactiveRefresh, REFRESH_TIME);
+    console.log("Token refresh timer started - will refresh in 14 minutes");
+};
+
+export const clearTokenRefresh = () => {
+    if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
+        console.log("Token refresh timer cleared");
+    }
+};
 
 export default api;
 export {API_BASE_URL};

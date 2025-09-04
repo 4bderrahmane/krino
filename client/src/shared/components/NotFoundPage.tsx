@@ -1,7 +1,6 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import LanguageSwitcher from './LanguageSwitcher';
 import '../styles/NotFoundPage.css';
 
 const NotFoundPage: React.FC = () => {
@@ -9,9 +8,6 @@ const NotFoundPage: React.FC = () => {
 
     return (
         <>
-            <div className="language-switcher-fixed">
-                <LanguageSwitcher/>
-            </div>
             <div className="login-page-container white-bg">
                 <div className="login-card">
                     <div className="not-found-container">

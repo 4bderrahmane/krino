@@ -6,15 +6,6 @@ export type Language = {
     flag: string;
 };
 
-export interface NavbarProps {
-    username?: string;
-    onLogout: () => void;
-}
-
-export interface DashboardProps {
-    currentUser: Partial<User>;
-}
-
 export interface User {
     username: string;
     email: string;
@@ -40,8 +31,7 @@ export interface AuthContextType {
     user: UserResponseDTO | null;
     login: (user: UserResponseDTO) => void;
     logout: () => void;
-    isAuthenticated: boolean;
-    isLoading: boolean; // Add loading state for initial auth check
-    justLoggedIn: boolean; // Add flag to track fresh logins
-    clearJustLoggedIn: () => void; // Function to clear the flag
+    isLoading: boolean;
+    justLoggedIn: boolean;
+    clearJustLoggedIn: () => void;
 }

@@ -1,4 +1,4 @@
-import api from '../../../shared/services/api.ts';
+import api, { setupTokenRefresh, clearTokenRefresh } from '../../../shared/services/api.ts';
 import axios from 'axios';
 import type {
     UserLoginDTO,
@@ -17,39 +17,6 @@ const AUTH_ENDPOINTS = {
     REFRESH: '/auth/refresh',
     ME: '/auth/me'
 } as const;
-
-let refreshTimer: ReturnType<typeof setTimeout> | null = null;
-
-export const setupTokenRefresh = () => {
-    if (refreshTimer) {
-        clearTimeout(refreshTimer);
-    }
-
-    const refreshTime = 14 * 60 * 1000;
-
-    const performProactiveRefresh = async () => {
-        try {
-            await api.post(AUTH_ENDPOINTS.REFRESH);
-            console.log("Proactive token refresh successful");
-            refreshTimer = setTimeout(performProactiveRefresh, refreshTime);
-        } catch (error) {
-            console.error('Proactive token refresh failed:', error);
-            refreshTimer = null;
-            window.location.href = '/login';
-        }
-    };
-
-    refreshTimer = setTimeout(performProactiveRefresh, refreshTime);
-    console.log("Token refresh timer started - will refresh in 14 minutes");
-};
-
-export const clearTokenRefresh = () => {
-    if (refreshTimer) {
-        clearTimeout(refreshTimer);
-        refreshTimer = null;
-        console.log("Token refresh timer cleared");
-    }
-};
 
 const extractErrorCode = (error: unknown): AuthErrorCode => {
     if (axios.isAxiosError(error) && error.response?.data) {

@@ -70,6 +70,7 @@
     transition: border-color 0.2s, box-shadow 0.2s;
     max-width: 100%;
     line-height: normal; /* Prevent line-height changes */
+    font-family: inherit; /* Use browser default font for written text */
 }
 
 .registration-form .form-input:focus {
@@ -80,6 +81,9 @@
 
 .registration-form .form-input::placeholder {
     color: #9ca3af;
+    font-family: 'Courier New', monospace; /*ffffff*/
+    font-size: 0.9rem;
+    letter-spacing: 0.02rem;
 }
 
 .registration-form .form-input[type="password"]:not(:placeholder-shown) {

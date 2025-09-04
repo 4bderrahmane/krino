@@ -75,6 +75,7 @@
     max-width: 100%;
     transition: border-color 0.2s, box-shadow 0.2s;
     line-height: normal; /* Prevent line-height changes */
+    font-family: inherit; /* Use browser default font for written text */
 }
 
 .login-form .form-input:focus {
@@ -85,6 +86,10 @@
 
 .login-form .form-input::placeholder {
     color: #9ca3af;
+    /*here*/
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    letter-spacing: 0.02rem;
 }
 
 .login-form .form-input.with-icon {
