@@ -9,11 +9,6 @@ export interface UserLoginDTO {
     password: string;
 }
 
-export interface LoginResponse {
-    user: UserResponseDTO;
-    token: string;
-}
-
 export type Role = 'ADMIN' | 'CANDIDATE' | 'INTERVIEWER' | 'HR_MANAGER';
 
 export interface UserRegistrationDTO {
@@ -33,20 +28,6 @@ export interface UserResponseDTO {
     email: string;
     phoneNumber: string;
     roles: Set<Role>;
-}
-
-export interface UserUpdateDTO {
-    username?: string;
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-    phoneNumber?: string;
-}
-
-export interface UserUpdatePasswordDTO {
-    currentPassword: string;
-    newPassword: string;
-    confirmNewPassword: string;
 }
 
 export interface ApiResponse<T> {

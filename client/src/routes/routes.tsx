@@ -5,6 +5,7 @@ import LoginForm from '../features/authentication/components/LoginForm';
 import ProtectedRoute from '../shared/components/ProtectedRoute';
 import RootRedirect from '../shared/components/RootRedirect';
 import LoadingSpinner from "../shared/components/LoadingSpinner.tsx";
+import Settings from "../features/user-management/components/Settings.tsx";
 
 const RegistrationForm = lazy(() => import("../features/authentication/components/RegistrationForm"));
 const Dashboard = lazy(() => import("../shared/components/Dashboard"));
@@ -45,6 +46,10 @@ const router = createBrowserRouter([
             {
                 path: "me",
                 element: withSuspense(<Profile/>),
+            },
+            {
+                path: "settings",
+                element: withSuspense(<Settings/>),
             },
             {
                 path: '*',

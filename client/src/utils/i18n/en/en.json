@@ -31,14 +31,11 @@
       "login": {
         "INVALID_CREDENTIALS": "Invalid email or password. Please try again.",
         "USER_NOT_FOUND": "User not found. Please check your email address.",
-
         "ACCOUNT_DISABLED": "Your account has been disabled. Please contact support.",
         "ACCOUNT_LOCKED": "Your account has been locked due to multiple failed login attempts. Please try again later.",
         "ACCOUNT_NOT_VERIFIED": "Please verify your account before logging in. Check your email for verification instructions.",
-
         "AUTHENTICATION_FAILED": "Authentication failed. Please log in again.",
         "AUTHENTICATION_REQUIRED": "Authentication is required to access this resource.",
-
         "INVALID_TOKEN": "Invalid or expired authentication token.",
         "ACCESS_DENIED": "Access denied. You don't have permission to perform this action."
       },
@@ -101,6 +98,20 @@
     "profileUpdated": "Profile updated successfully.",
     "passwordChanged": "Password changed successfully.",
     "updateFailed": "Failed to update profile. Please try again.",
-    "changePasswordFailed": "Failed to change password. Please try again."
+    "changePasswordFailed": "Failed to change password. Please try again.",
+    "changeDataSentence": "To change your account details, please contact your administrator or visit the"
+  },
+  "settings": {
+    "settings": "Settings"
+  },
+  "page": {
+    "settings": "Settings Page",
+    "profile": "Profile Page",
+    "dashboard": "Dashboard Page",
+    "reserve": "Reserve Page",
+    "bookings": "Bookings Page",
+    "availability": "Availability Page",
+    "jobs": "Jobs Page",
+    "applications": "Applications Page"
   }
 }

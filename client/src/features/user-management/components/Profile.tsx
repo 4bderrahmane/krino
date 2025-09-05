@@ -1,48 +1,12 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import {useAuth} from '../../../shared/hooks/useAuth';
 import '../styles/Profile.css';
 import {useTranslation} from "react-i18next";
-
-interface ActivityStats {
-    totalInterviews: number;
-    upcomingInterviews: number;
-    completedInterviews: number;
-    pendingApplications: number;
-}
+import { Link } from 'react-router-dom';
 
 const Profile: React.FC = () => {
     const {t} = useTranslation();
     const {user} = useAuth();
-    const [activityStats, setActivityStats] = useState<ActivityStats>({
-        totalInterviews: 0,
-        upcomingInterviews: 0,
-        completedInterviews: 0,
-        pendingApplications: 0,
-    });
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        if (user) {
-            fetchUserActivity();
-        }
-    }, [user]);
-
-    const fetchUserActivity = async () => {
-        try {
-            await new Promise((resolve) => setTimeout(resolve, 800));
-
-            setActivityStats({
-                totalInterviews: 8,
-                upcomingInterviews: 3,
-                completedInterviews: 5,
-                pendingApplications: 2,
-            });
-        } catch (error) {
-            console.error('Error fetching user activity:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const getUserInitials = () => {
         if (user?.firstName && user?.lastName) {
@@ -119,43 +83,15 @@ const Profile: React.FC = () => {
                             </div>
                             <div className="info-note">
                                 <p>
-                                    To change your account details, please contact your administrator or visit the{' '}
-                                    <a href="/settings" className="settings-link">Settings page</a>.
+                                    {t('profile.changeDataSentence')}
+                                    {' '}
+                                    <Link to="/settings" className="settings-link">{t('page.settings')}</Link>.
                                 </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="activity-stats">
-                    <h2 className="stats-title">Activity Summary</h2>
-                    {isLoading ? (
-                        <div className="stats-loading">Loading activity data...</div>
-                    ) : (
-                        <div className="stats-grid">
-                            <div className="stat-card">
-                                <div className="stat-icon">📊</div>
-                                <div className="stat-value">{activityStats.totalInterviews}</div>
-                                <div className="stat-label">Total Interviews</div>
-                            </div>
-                            <div className="stat-card upcoming">
-                                <div className="stat-icon">📅</div>
-                                <div className="stat-value">{activityStats.upcomingInterviews}</div>
-                                <div className="stat-label">Upcoming</div>
-                            </div>
-                            <div className="stat-card completed">
-                                <div className="stat-icon">✅</div>
-                                <div className="stat-value">{activityStats.completedInterviews}</div>
-                                <div className="stat-label">Completed</div>
-                            </div>
-                            <div className="stat-card pending">
-                                <div className="stat-icon">⏳</div>
-                                <div className="stat-value">{activityStats.pendingApplications}</div>
-                                <div className="stat-label">Pending Applications</div>
-                            </div>
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );

@@ -98,6 +98,16 @@
     "profileUpdated": "Profil mis à jour avec succès.",
     "passwordChanged": "Mot de passe changé avec succès.",
     "updateFailed": "Échec de la mise à jour du profil. Veuillez réessayer.",
-    "changePasswordFailed": "Échec du changement de mot de passe. Veuillez réessayer."
+    "changePasswordFailed": "Échec du changement de mot de passe. Veuillez réessayer.",
+    "changeDataSentence": "Pour modifier vos informations de compte, veuillez contacter votre administrateur ou visitez la"
+  },
+  "settings": {
+    "settings": "Paramètres"
+  },
+  "page": {
+    "settings": "page des paramètres",
+    "availability": "page des disponibilités",
+    "jobs": "page des emplois",
+    "applications": "page des applications"
   }
 }

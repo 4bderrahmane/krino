@@ -19,7 +19,7 @@ let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
 let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
-const REFRESH_TIME = 14 * 60 * 1000;
+const REFRESH_TIME = 14 * 60 * 1000 + 500;
 
 const refreshTokens = async (): Promise<boolean> => {
     try {

@@ -1,0 +1,70 @@
+.profile-info input.info-value {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #1f2937;
+  background: #f9fafb;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  margin-left: 0;
+  margin-right: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.profile-info input.info-value:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px #2563eb22;
+  background: #fff;
+}
+
+.settings-link[type="submit"] {
+  display: inline-block;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 28px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+  text-decoration: none;
+}
+
+.settings-link[type="submit"]:hover:not(:disabled),
+.settings-link[type="submit"]:focus:not(:disabled) {
+  background: #1746a2;
+}
+
+.settings-link[type="submit"]:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+
+/* Feedback messages */
+.settings-success {
+  color: #16a34a;
+  margin-top: 12px;
+  font-weight: 500;
+}
+.settings-error {
+  color: #dc2626;
+  margin-top: 12px;
+  font-weight: 500;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .profile-info input.info-value {
+    font-size: 0.95rem;
+    padding: 8px 8px;
+  }
+  .settings-link[type="submit"] {
+    width: 100%;
+    padding: 10px 0;
+  }
+}
+
