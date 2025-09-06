@@ -9,8 +9,10 @@ import {useSuccessToast} from '../hooks/useSuccessToast';
 import {useAuth} from '../hooks/useAuth';
 import useOutsideClick from '../hooks/useOutsideClick';
 import {MdSettings, MdPerson, MdLogout} from "react-icons/md";
+import {logout as logoutService} from '../../features/authentication/services/AuthenticationService';
+import SettingsDropDown from "../../features/user-management/components/settings/SettingsDropDown.tsx";
 
-const Navbar: React.FC = () => {
+const NavBar: React.FC = () => {
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const navigate = useNavigate();
@@ -30,23 +32,17 @@ const Navbar: React.FC = () => {
     const dropdownRef = useOutsideClick(closeDropdown);
 
     const handleLogout = async () => {
-        // Close dropdown first
         closeDropdown();
 
-        // Show success toast
         showSuccess(t('auth.success.logoutSuccess'));
 
         try {
             // Call the logout service to clear cookies on the backend
-            await import('../../features/authentication/services/AuthenticationService.ts').then(
-                service => service.logout()
-            );
+            await logoutService();
         } catch (error) {
             console.error('Logout request failed:', error);
-            // Continue with local logout even if backend call fails
         }
 
-        // Perform logout and navigate immediately
         authLogout();
         navigate('/login');
     };
@@ -99,10 +95,13 @@ const Navbar: React.FC = () => {
                                     <MdPerson className="dropdown-icon-svg"/> <span>{t('nav.profile')}</span>
                                 </Link>
 
-                                <Link to="/settings" className="dropdown-item flex items-center gap-2"
-                                      onClick={closeDropdown}>
-                                    <MdSettings className="dropdown-icon-svg"/> <span>{t('nav.settings')}</span>
-                                </Link>
+                                <div className="dropdown-item dropdown-parent flex items-center gap-2 settings-parent">
+                                    <MdSettings className="dropdown-icon-svg"/>
+                                    <span>{t('nav.settings')}</span>
+                                    <div className="dropdown-submenu">
+                                        <SettingsDropDown onClose={closeDropdown}/>
+                                    </div>
+                                </div>
 
                                 <div className="dropdown-divider"></div>
 
@@ -127,4 +126,4 @@ const Navbar: React.FC = () => {
     );
 };
 
-export default Navbar;
+export default NavBar;

@@ -1,18 +1,17 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import {Outlet} from 'react-router-dom';
 import NavBar from './NavBar';
 import '../styles/Layout.css';
 
 const Layout: React.FC = () => {
     return (
         <div className="app-layout">
-            <NavBar />
+            <NavBar/>
             <main className="main-content">
-                <Outlet />
+                <Outlet/>
             </main>
         </div>
     );
 };
 
 export default Layout;
-

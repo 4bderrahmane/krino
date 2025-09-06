@@ -1,18 +1,19 @@
-import {createBrowserRouter} from 'react-router-dom';
+import {createBrowserRouter, Navigate} from 'react-router-dom';
 import {Suspense, lazy, type JSX} from "react";
 
 import LoginForm from '../features/authentication/components/LoginForm';
 import ProtectedRoute from '../shared/components/ProtectedRoute';
 import RootRedirect from '../shared/components/RootRedirect';
 import LoadingSpinner from "../shared/components/LoadingSpinner.tsx";
-import Settings from "../features/user-management/components/Settings.tsx";
 
 const RegistrationForm = lazy(() => import("../features/authentication/components/RegistrationForm"));
 const Dashboard = lazy(() => import("../shared/components/Dashboard"));
 const Layout = lazy(() => import("../shared/components/Layout"));
 const NotFoundPage = lazy(() => import("../shared/components/NotFoundPage"));
 const Profile = lazy(() => import("../features/user-management/components/Profile"));
-
+const ProfileSettings = lazy(() => import( "../features/user-management/components/settings/ProfileSettings.tsx"));
+const PasswordSettings = lazy(() => import( "../features/user-management/components/settings/PasswordSettings.tsx"));
+const DeleteAccount = lazy(() => import("../features/user-management/components/settings/DeleteAccount.tsx"));
 
 const withSuspense = (element: JSX.Element) => (
     <Suspense fallback={<LoadingSpinner/>}>{element}</Suspense>
@@ -49,18 +50,37 @@ const router = createBrowserRouter([
             },
             {
                 path: "settings",
-                element: withSuspense(<Settings/>),
+                children: [
+                    {
+                        index: true,
+                        element: <Navigate to="profile" replace/>,
+                    },
+                    {
+                        path: "profile",
+                        element: withSuspense(<ProfileSettings/>),
+                    },
+                    {
+                        path: "password",
+                        element: withSuspense(<PasswordSettings/>),
+                    },
+                    {
+                        path: "delete",
+                        element: withSuspense(<DeleteAccount/>),
+                    }
+                ]
             },
             {
                 path: '*',
                 element: withSuspense(<NotFoundPage/>),
             }
-        ],
+        ]
     },
     {
         path: '*',
-        element: withSuspense(<NotFoundPage/>),
+        element:
+            withSuspense(<NotFoundPage/>),
     }
 ])
+
 
 export default router;

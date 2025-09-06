@@ -39,7 +39,7 @@ export const updateFullProfile = async (updateData: Partial<UserUpdateDTO>): Pro
 };
 
 export const changePassword = async (passwordData: UserUpdatePasswordDTO): Promise<{ message: string }> => {
-    const {data} = await api.post<{ message: string }>(ENDPOINTS.changePassword, passwordData);
+    const {data} = await api.put<{ message: string }>(ENDPOINTS.changePassword, passwordData);
     return data;
 };
 

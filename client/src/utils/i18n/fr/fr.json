@@ -75,12 +75,6 @@
     "jobs": "Emplois",
     "applications": "Applications"
   },
-  "common": {
-    "pageNotFound": "Page non trouvée",
-    "pageNotFoundDescription": "La page que vous recherchez n'existe pas ou a été déplacée.",
-    "goToDashboard": "Aller au tableau de bord",
-    "goToLogin": "Aller à la connexion"
-  },
   "profile": {
     "myProfile": "Mon Profile",
     "id": "Id:",
@@ -102,12 +96,66 @@
     "changeDataSentence": "Pour modifier vos informations de compte, veuillez contacter votre administrateur ou visitez la"
   },
   "settings": {
-    "settings": "Paramètres"
+    "confirmDeletion": "Êtes-vous sûr de vouloir supprimer votre compte ?",
+    "confirmDeletionWarning": "Cette action est irréversible. Toutes vos données seront définitivement supprimées.",
+    "settings": "Paramètres",
+    "resetPassword": "Changer le mot de passe",
+    "deleteAccount": "Supprimer le compte",
+    "modifyProfile": "Modifier le profil",
+    "password": "Modifier le mot de passe",
+    "updateProfile": "Mettre à jour le profil",
+    "changePassword": "Changer le mot de passe",
+    "deleteWarning": "Êtes-vous sûr de vouloir supprimer votre compte ?",
+    "confirmNewPassword": "Confirmer le nouveau mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas ! Assurez-vous de saisir le même mot de passe deux fois."
   },
   "page": {
     "settings": "page des paramètres",
+    "profile": "page du profil",
+    "dashboard": "page du tableau de bord",
+    "reserve": "page de réservation",
+    "bookings": "page des réservations",
     "availability": "page des disponibilités",
     "jobs": "page des emplois",
     "applications": "page des applications"
+  },
+  "common": {
+    "pageNotFound": "Page non trouvée",
+    "pageNotFoundDescription": "La page que vous recherchez n'existe pas ou a été déplacée.",
+    "goToDashboard": "Aller au tableau de bord",
+    "goToLogin": "Aller à la connexion",
+    "password": "Mot de passe",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "update": "Mettre à jour",
+    "submit": "Soumettre",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "yes": "Oui",
+    "no": "Non",
+    "optional": "Optionnel",
+    "required": "Requis",
+    "actions": "Actions",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "view": "Voir",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "home": "Accueil",
+    "more": "Plus",
+    "less": "Moins",
+    "select": "Sélectionner",
+    "deselect": "Désélectionner",
+    "loadingMore": "Chargement supplémentaire...",
+    "noData": "Aucune donnée disponible",
+    "tryAgain": "Réessayer"
   }
 }

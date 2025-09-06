@@ -1,12 +1,23 @@
-import React from 'react';
-import {useAuth} from '../../../shared/hooks/useAuth';
+import React, { useEffect, useState } from 'react';
 import '../styles/Profile.css';
 import {useTranslation} from "react-i18next";
 import { Link } from 'react-router-dom';
+import { getCurrentUser } from '../services/UserManagementService';
+import type { UserResponseDTO } from '../../authentication/types/api.types';
 
 const Profile: React.FC = () => {
     const {t} = useTranslation();
-    const {user} = useAuth();
+    const [user, setUser] = useState<UserResponseDTO | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        setLoading(true);
+        getCurrentUser()
+            .then(setUser)
+            .catch(() => setError('Failed to load user data.'))
+            .finally(() => setLoading(false));
+    }, []);
 
     const getUserInitials = () => {
         if (user?.firstName && user?.lastName) {
@@ -33,8 +44,11 @@ const Profile: React.FC = () => {
         return Array.from(user.roles).join(', ');
     };
 
-    if (!user) {
-        return <div className="profile-empty">No user data available.</div>;
+    if (loading) {
+        return <div className="profile-empty">{t('app.loading')}</div>;
+    }
+    if (error || !user) {
+        return <div className="profile-empty">{error || 'No user data available.'}</div>;
     }
 
     return (
