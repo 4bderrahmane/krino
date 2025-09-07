@@ -1,8 +1,8 @@
 package com.jesa.interviewslotmanager.controller;
 
-import com.jesa.interviewslotmanager.DTO.User.UserResponseDTO;
-import com.jesa.interviewslotmanager.DTO.User.UserUpdateDTO;
-import com.jesa.interviewslotmanager.DTO.User.UserUpdatePasswordDTO;
+import com.jesa.interviewslotmanager.dto.User.UserResponseDTO;
+import com.jesa.interviewslotmanager.dto.User.UserUpdateDTO;
+import com.jesa.interviewslotmanager.dto.User.UserUpdatePasswordDTO;
 import com.jesa.interviewslotmanager.entity.User;
 import com.jesa.interviewslotmanager.entity.CustomUserDetails;
 import com.jesa.interviewslotmanager.service.UserService;
@@ -96,12 +96,14 @@ public class UserController
     }
 
 
-    @PutMapping("/{id}/change-password")
-    @PreAuthorize("#id == authentication.principal.id or hasRole('ADMIN')")
-    public ResponseEntity<UserResponseDTO> updateUserPassword(@PathVariable Long id, @Valid @RequestBody UserUpdatePasswordDTO userUpdateDTO)
+    @PutMapping("/change-password")
+    @PreAuthorize("isAuthenticated() or hasRole('ADMIN')")
+    public ResponseEntity<String> updateUserPassword(Authentication authentication, @Valid @RequestBody UserUpdatePasswordDTO userUpdateDTO)
     {
-        UserResponseDTO updatedUser = userService.changePassword(id, userUpdateDTO);
-        return ResponseEntity.ok(updatedUser);
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+//        UserResponseDTO updatedUser = userService.changePassword(customUserDetails.getId(), userUpdateDTO);
+        userService.changePassword(customUserDetails.getId(), userUpdateDTO);
+        return ResponseEntity.ok("User password updated successfully");
     }
 
 

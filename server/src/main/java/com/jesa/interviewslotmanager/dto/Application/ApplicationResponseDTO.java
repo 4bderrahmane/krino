@@ -1,7 +1,7 @@
-package com.jesa.interviewslotmanager.DTO.Application;
+package com.jesa.interviewslotmanager.dto.Application;
 
-import com.jesa.interviewslotmanager.DTO.Job.JobResponseDTO;
-import com.jesa.interviewslotmanager.DTO.User.UserResponseDTO;
+import com.jesa.interviewslotmanager.dto.Job.JobResponseDTO;
+import com.jesa.interviewslotmanager.dto.User.UserResponseDTO;
 import com.jesa.interviewslotmanager.entity.ApplicationStatus;
 import lombok.*;
 

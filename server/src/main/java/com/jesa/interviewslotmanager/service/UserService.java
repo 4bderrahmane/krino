@@ -1,9 +1,8 @@
 package com.jesa.interviewslotmanager.service;
 
-import com.InterviewManager.interview_slot_manager.DTO.User.*;
-import com.jesa.interviewslotmanager.DTO.User.UserResponseDTO;
-import com.jesa.interviewslotmanager.DTO.User.UserUpdateDTO;
-import com.jesa.interviewslotmanager.DTO.User.UserUpdatePasswordDTO;
+import com.jesa.interviewslotmanager.dto.User.UserResponseDTO;
+import com.jesa.interviewslotmanager.dto.User.UserUpdateDTO;
+import com.jesa.interviewslotmanager.dto.User.UserUpdatePasswordDTO;
 import com.jesa.interviewslotmanager.entity.CustomUserDetails;
 import com.jesa.interviewslotmanager.entity.User;
 import com.jesa.interviewslotmanager.entity.UserRole;
@@ -120,7 +119,7 @@ public class UserService
         return modelMapper.map(updatedUser, UserResponseDTO.class);
     }
 
-    public UserResponseDTO changePassword(Long userId, UserUpdatePasswordDTO passwordChangeDTO)
+    public void changePassword(Long userId, UserUpdatePasswordDTO passwordChangeDTO)
     {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found."));
@@ -137,9 +136,10 @@ public class UserService
 
         existingUser.setPassword(passwordEncoder.encode(passwordChangeDTO.getNewPassword()));
 
-        User updatedUser = userRepository.save(existingUser);
+        userRepository.save(existingUser);
 
-        return modelMapper.map(updatedUser, UserResponseDTO.class);
+//        User updatedUser = userRepository.save(existingUser);
+//        return modelMapper.map(updatedUser, UserResponseDTO.class);
     }
 
     public void deleteUserById(Long userId)

@@ -1,7 +1,7 @@
-package com.jesa.interviewslotmanager.DTO.Job;
+package com.jesa.interviewslotmanager.dto.Job;
 
-import com.jesa.interviewslotmanager.DTO.Department.DepartmentResponseDTO;
-import com.jesa.interviewslotmanager.DTO.Slot.SlotResponseDTO;
+import com.jesa.interviewslotmanager.dto.Department.DepartmentResponseDTO;
+import com.jesa.interviewslotmanager.dto.Slot.SlotResponseDTO;
 
 import java.util.List;
 

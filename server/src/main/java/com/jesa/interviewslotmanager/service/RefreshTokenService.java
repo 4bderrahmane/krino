@@ -25,11 +25,6 @@ public class RefreshTokenService
     private static final int SALT_LENGTH = 16;
     private static final int EXPIRY_DAYS = 30;
 
-//    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository)
-//    {
-//        this.refreshTokenRepository = refreshTokenRepository;
-//    }
-
     private String generateRandomToken()
     {
         byte[] randomBytes = new byte[TOKEN_LENGTH];
@@ -37,7 +32,7 @@ public class RefreshTokenService
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 
-    // Return raw bytes: [salt (16)] + [sha256(tokenWithSalt) (32)] = 48 bytes
+    //This method returns raw bytes: [salt (16)] + [sha256(tokenWithSalt) (32)] = 48 bytes
     private byte[] hashTokenWithSalt(String token)
     {
         try
@@ -133,7 +128,6 @@ public class RefreshTokenService
     {
         LocalDateTime now = LocalDateTime.now();
 
-        // Get all valid tokens and check each one
         List<RefreshToken> validTokens = refreshTokenRepository.findAllValidTokens(now);
 
         for (RefreshToken refreshToken : validTokens)
@@ -199,7 +193,6 @@ public class RefreshTokenService
         refreshTokenRepository.deleteExpiredAndRevokedTokens(LocalDateTime.now());
     }
 
-
     public List<RefreshToken> findActiveTokensByUser(Long userId)
     {
         return refreshTokenRepository.findActiveTokensByUser(userId, LocalDateTime.now());
@@ -213,9 +206,5 @@ public class RefreshTokenService
     public void handleCompromisedToken(Long userId)
     {
         revokeAllTokensForUser(userId);
-        // You can add additional actions here like:
-        // - Sending an email notification to the user
-        // - Logging the security event
-        // - Triggering additional security measures
     }
 }

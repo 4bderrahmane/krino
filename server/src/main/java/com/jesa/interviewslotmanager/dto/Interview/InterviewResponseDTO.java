@@ -1,7 +1,7 @@
-package com.jesa.interviewslotmanager.DTO.Interview;
+package com.jesa.interviewslotmanager.dto.Interview;
 
-import com.jesa.interviewslotmanager.DTO.Job.JobResponseDTO;
-import com.jesa.interviewslotmanager.DTO.User.UserResponseDTO;
+import com.jesa.interviewslotmanager.dto.Job.JobResponseDTO;
+import com.jesa.interviewslotmanager.dto.User.UserResponseDTO;
 import lombok.*;
 
 import java.time.LocalDate;

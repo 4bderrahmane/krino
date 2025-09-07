@@ -1,6 +1,6 @@
-package com.jesa.interviewslotmanager.DTO.Authentication;
+package com.jesa.interviewslotmanager.dto.Authentication;
 
-import com.jesa.interviewslotmanager.DTO.User.UserResponseDTO;
+import com.jesa.interviewslotmanager.dto.User.UserResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

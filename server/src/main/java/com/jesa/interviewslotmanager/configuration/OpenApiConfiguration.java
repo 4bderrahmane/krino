@@ -1,4 +1,4 @@
-//package com.InterviewManager.interview_slot_manager.configuration;
+//package com.jesa.interviewslotmanager.configuration;
 //
 //
 //import com.InterviewManager.interview_slot_manager.utility.RefreshTokenHeaderProvider;

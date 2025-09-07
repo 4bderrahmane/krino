@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.DTO.Application;
+package com.jesa.interviewslotmanager.dto.Application;
 
 
 import jakarta.validation.constraints.NotNull;

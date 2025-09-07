@@ -1,10 +1,10 @@
 package com.jesa.interviewslotmanager.service;
 
-import com.jesa.interviewslotmanager.DTO.Authentication.AuthenticationResponseDTO;
-import com.jesa.interviewslotmanager.DTO.Authentication.RegistrationResponseDTO;
-import com.jesa.interviewslotmanager.DTO.User.UserLoginDTO;
-import com.jesa.interviewslotmanager.DTO.User.UserRegistrationDTO;
-import com.jesa.interviewslotmanager.DTO.User.UserResponseDTO;
+import com.jesa.interviewslotmanager.dto.Authentication.AuthenticationResponseDTO;
+import com.jesa.interviewslotmanager.dto.Authentication.RegistrationResponseDTO;
+import com.jesa.interviewslotmanager.dto.User.UserLoginDTO;
+import com.jesa.interviewslotmanager.dto.User.UserRegistrationDTO;
+import com.jesa.interviewslotmanager.dto.User.UserResponseDTO;
 import com.jesa.interviewslotmanager.entity.User;
 import com.jesa.interviewslotmanager.entity.CustomUserDetails;
 import com.jesa.interviewslotmanager.entity.UserRole;

@@ -83,7 +83,21 @@ public class GlobalExceptionHandler
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
+    @ExceptionHandler(IncorrectPasswordExcpetion.class)
+    public ResponseEntity<ErrorResponse> handleWrongPassword(BadCredentialsException ex, HttpServletRequest request) {
+        log.error("Wrong Password: {}", ex.getMessage());
 
+        ErrorResponse error = new ErrorResponse(
+                Instant.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                "Invalid password",
+                request.getRequestURI(),
+                ErrorCode.INCORRECT_PASSWORD,
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleInvalidCredentialsException(InvalidCredentialsException ex, HttpServletRequest request)
     {

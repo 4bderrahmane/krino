@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.DTO.User;
+package com.jesa.interviewslotmanager.dto.User;
 
 import com.jesa.interviewslotmanager.entity.UserRole;
 import lombok.*;

@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.DTO.Jwt;
+package com.jesa.interviewslotmanager.dto.Jwt;
 
 import lombok.*;
 

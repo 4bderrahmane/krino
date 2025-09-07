@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.DTO.User;
+package com.jesa.interviewslotmanager.dto.User;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;

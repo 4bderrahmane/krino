@@ -1,4 +1,5 @@
 package com.jesa.interviewslotmanager.controller;
 
-public class InterviewController {
+public class InterviewController
+{
 }

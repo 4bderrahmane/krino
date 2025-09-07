@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.DTO.Slot;
+package com.jesa.interviewslotmanager.dto.Slot;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
