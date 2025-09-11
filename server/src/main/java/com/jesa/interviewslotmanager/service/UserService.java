@@ -6,11 +6,12 @@ import com.jesa.interviewslotmanager.dto.User.UserUpdatePasswordDTO;
 import com.jesa.interviewslotmanager.entity.CustomUserDetails;
 import com.jesa.interviewslotmanager.entity.User;
 import com.jesa.interviewslotmanager.entity.UserRole;
-import com.jesa.interviewslotmanager.exception.EmailAlreadyExistsException;
 import com.jesa.interviewslotmanager.exception.InvalidCredentialsException;
-import com.jesa.interviewslotmanager.exception.UserAlreadyExistsException;
+import com.jesa.interviewslotmanager.exception.ResourceConflictException;
 import com.jesa.interviewslotmanager.exception.UserNotFoundException;
+import com.jesa.interviewslotmanager.repository.RefreshTokenRepository;
 import com.jesa.interviewslotmanager.repository.UserRepository;
+import com.jesa.interviewslotmanager.utility.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -19,16 +20,18 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Transactional
 @Service
 @RequiredArgsConstructor
 public class UserService
 {
+    private static final String USERNAME_ALREADY_TAKEN_MESSAGE = "Username '%s' is already taken.";
+    private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public List<User> getAllInterviewers()
     {
@@ -53,17 +56,16 @@ public class UserService
     public User addRoleToUser(Long userId, UserRole role)
     {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("ID", userId));
 
         user.getRoles().add(role);
-
         return userRepository.save(user);
     }
 
     public User getUserById(Long userId)
     {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found"));
+                .orElseThrow(() -> new UserNotFoundException("ID", userId));
     }
 
     public List<UserResponseDTO> getAllUsers()
@@ -72,21 +74,20 @@ public class UserService
 
         return users.stream()
                 .map(user -> modelMapper.map(user, UserResponseDTO.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public UserResponseDTO updateUser(Long userId, UserUpdateDTO userUpdateDTO)
     {
         User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found."));
-
+                .orElseThrow(() -> new UserNotFoundException("ID", userId));
         if (userUpdateDTO.getUsername() != null && !userUpdateDTO.getUsername().equals(existingUser.getUsername()))
         {
             userRepository.findByUsername(userUpdateDTO.getUsername())
                     .filter(user -> !user.getId().equals(userId))
                     .ifPresent(user ->
                     {
-                        throw new UserAlreadyExistsException("Username '" + userUpdateDTO.getUsername() + "' is already taken.");
+                        throw new ResourceConflictException(String.format(USERNAME_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getUsername()), ErrorCode.USERNAME_ALREADY_EXISTS);
                     });
             existingUser.setUsername(userUpdateDTO.getUsername());
         }
@@ -97,7 +98,7 @@ public class UserService
                     .filter(user -> !user.getId().equals(userId))
                     .ifPresent(user ->
                     {
-                        throw new EmailAlreadyExistsException("Email '" + userUpdateDTO.getEmail() + "' is already taken.");
+                        throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getEmail()), ErrorCode.EMAIL_ALREADY_EXISTS);
                     });
             existingUser.setEmail(userUpdateDTO.getEmail());
         }
@@ -119,10 +120,96 @@ public class UserService
         return modelMapper.map(updatedUser, UserResponseDTO.class);
     }
 
+    public UserResponseDTO updateUserPartially(Long userId, UserUpdateDTO userUpdateDTO)
+    {
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("ID", userId));
+
+        if (userUpdateDTO.getUsername() != null && !userUpdateDTO.getUsername().equals(currentUser.getUsername()))
+        {
+            userRepository.findByUsername(userUpdateDTO.getUsername())
+                    .filter(user -> !user.getId().equals(userId))
+                    .ifPresent(user ->
+                    {
+                        throw new ResourceConflictException(String.format(USERNAME_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getUsername()), ErrorCode.USERNAME_ALREADY_EXISTS);
+                    });
+            currentUser.setUsername(userUpdateDTO.getUsername());
+        }
+
+        if (userUpdateDTO.getEmail() != null && !userUpdateDTO.getEmail().equals(currentUser.getEmail()))
+        {
+            userRepository.findByEmail(userUpdateDTO.getEmail())
+                    .filter(user -> !user.getId().equals(userId))
+                    .ifPresent(user ->
+                    {
+                        throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getEmail()), ErrorCode.EMAIL_ALREADY_EXISTS);
+                    });
+            currentUser.setEmail(userUpdateDTO.getEmail());
+        }
+
+        if (userUpdateDTO.getFirstName() != null)
+        {
+            currentUser.setFirstName(userUpdateDTO.getFirstName());
+        }
+        if (userUpdateDTO.getLastName() != null)
+        {
+            currentUser.setLastName(userUpdateDTO.getLastName());
+        }
+        if (userUpdateDTO.getPhoneNumber() != null)
+        {
+            currentUser.setPhoneNumber(userUpdateDTO.getPhoneNumber());
+        }
+
+        User updatedPartially = userRepository.save(currentUser);
+        return modelMapper.map(updatedPartially, UserResponseDTO.class);
+    }
+
+    public UserResponseDTO updateUserFully(Long userId, UserUpdateDTO userUpdateDTO)
+    {
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("ID", userId));
+
+        if (userUpdateDTO.getUsername() == null || userUpdateDTO.getEmail() == null
+                || userUpdateDTO.getFirstName() == null || userUpdateDTO.getLastName() == null
+                || userUpdateDTO.getPhoneNumber() == null)
+        {
+            throw new IllegalArgumentException("All fields must be provided for a full update.");
+        }
+
+        if (!userUpdateDTO.getUsername().equals(existingUser.getUsername()))
+        {
+            userRepository.findByUsername(userUpdateDTO.getUsername())
+                    .filter(user -> !user.getId().equals(userId))
+                    .ifPresent(user ->
+                    {
+                        throw new ResourceConflictException(String.format(USERNAME_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getUsername()), ErrorCode.USERNAME_ALREADY_EXISTS);
+                    });
+        }
+
+        if (!userUpdateDTO.getEmail().equals(existingUser.getEmail()))
+        {
+            userRepository.findByEmail(userUpdateDTO.getEmail())
+                    .filter(user -> !user.getId().equals(userId))
+                    .ifPresent(user ->
+                    {
+                        throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getEmail()), ErrorCode.EMAIL_ALREADY_EXISTS);
+                    });
+        }
+
+        existingUser.setUsername(userUpdateDTO.getUsername());
+        existingUser.setEmail(userUpdateDTO.getEmail());
+        existingUser.setFirstName(userUpdateDTO.getFirstName());
+        existingUser.setLastName(userUpdateDTO.getLastName());
+        existingUser.setPhoneNumber(userUpdateDTO.getPhoneNumber());
+
+        User updatedUser = userRepository.save(existingUser);
+        return modelMapper.map(updatedUser, UserResponseDTO.class);
+    }
+
     public void changePassword(Long userId, UserUpdatePasswordDTO passwordChangeDTO)
     {
         User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found."));
+                .orElseThrow(() -> new UserNotFoundException("ID", userId));
 
         if (!passwordEncoder.matches(passwordChangeDTO.getCurrentPassword(), existingUser.getPassword()))
         {
@@ -137,22 +224,21 @@ public class UserService
         existingUser.setPassword(passwordEncoder.encode(passwordChangeDTO.getNewPassword()));
 
         userRepository.save(existingUser);
-
-//        User updatedUser = userRepository.save(existingUser);
-//        return modelMapper.map(updatedUser, UserResponseDTO.class);
     }
 
     public void deleteUserById(Long userId)
     {
         User userToDelete = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found."));
+                .orElseThrow(() -> new UserNotFoundException("ID", userId));
+
+        refreshTokenRepository.deleteAllByUserId(userId);
         userRepository.delete(userToDelete);
     }
 
     public void approveUser(Long id)
     {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User with ID " + id + " not found."));
+                .orElseThrow(() -> new UserNotFoundException("ID", id));
 
         user.setApproved(true);
     }
@@ -162,13 +248,13 @@ public class UserService
         List<User> nonApprovedUsers = userRepository.findByIsApprovedFalse();
         return nonApprovedUsers.stream()
                 .map(user -> modelMapper.map(user, UserResponseDTO.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public CustomUserDetails loadUserById(Long userId)
     {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("ID", userId));
         return new CustomUserDetails(user);
     }
 }

@@ -65,17 +65,34 @@ public class UserController
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> updateUserById(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
     {
-        UserResponseDTO updatedUser = userService.updateUser(id, userUpdateDTO);
+        UserResponseDTO updatedUser = userService.updateUserFully(id, userUpdateDTO);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponseDTO> partiallyUpdateUserById(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
+    {
+        UserResponseDTO updatedUser = userService.updateUserPartially(id, userUpdateDTO);
         return ResponseEntity.ok(updatedUser);
     }
 
     @PutMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<UserResponseDTO> updateMyAccount(Authentication authentication, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
+    public ResponseEntity<String> updateMyAccountFully(Authentication authentication, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
     {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        UserResponseDTO updatedUser = userService.updateUser(customUserDetails.getId(), userUpdateDTO);
-        return ResponseEntity.ok(updatedUser);
+        userService.updateUserFully(customUserDetails.getId(), userUpdateDTO);
+        return ResponseEntity.ok("User updated successfully");
+    }
+
+    @PatchMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> updateMyAccountPartially(Authentication authentication, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
+    {
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+        userService.updateUserPartially(customUserDetails.getId(), userUpdateDTO);
+        return ResponseEntity.ok("User updated successfully");
     }
 
     @DeleteMapping("/me")
@@ -101,14 +118,14 @@ public class UserController
     public ResponseEntity<String> updateUserPassword(Authentication authentication, @Valid @RequestBody UserUpdatePasswordDTO userUpdateDTO)
     {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-//        UserResponseDTO updatedUser = userService.changePassword(customUserDetails.getId(), userUpdateDTO);
         userService.changePassword(customUserDetails.getId(), userUpdateDTO);
         return ResponseEntity.ok("User password updated successfully");
     }
 
 
     @GetMapping("/non-approved")
-    public ResponseEntity<List<UserResponseDTO>> getNonApprovedUsers() {
+    public ResponseEntity<List<UserResponseDTO>> getNonApprovedUsers()
+    {
         List<UserResponseDTO> nonApprovedUsers = userService.getNonApprovedUsers();
         return ResponseEntity.ok(nonApprovedUsers);
     }

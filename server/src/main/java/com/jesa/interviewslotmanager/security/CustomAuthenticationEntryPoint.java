@@ -1,5 +1,7 @@
-package com.jesa.interviewslotmanager.configuration;
+package com.jesa.interviewslotmanager.security;
 
+import com.jesa.interviewslotmanager.configuration.ErrorResponse;
+import com.jesa.interviewslotmanager.utility.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -14,29 +16,33 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 
 import java.time.Instant;
-import java.util.Map;
-import java.util.HashMap;
+
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Component
 @Slf4j
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint
 {
+
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException
     {
-        log.error("Unauthorized access attempt on path: {} - {}", request.getRequestURI(), authException.getMessage());
+        log.error("Unauthorized error: {}", authException.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                Instant.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                "Authentication required to access this resource.",
+                request.getRequestURI(),
+                ErrorCode.AUTHENTICATION_REQUIRED,
+                null
+        );
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", HttpStatus.UNAUTHORIZED.value());
-        body.put("error", "Unauthorized");
-        body.put("message", "Authentication required");
-        body.put("path", request.getRequestURI());
-        body.put("timestamp", Instant.now().toString());
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(response.getOutputStream(), body);
+        response.getOutputStream().write(objectMapper.writeValueAsBytes(errorResponse));
     }
 }

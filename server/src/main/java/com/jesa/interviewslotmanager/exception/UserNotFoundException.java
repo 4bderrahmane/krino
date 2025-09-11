@@ -6,4 +6,9 @@ public class UserNotFoundException extends RuntimeException
     {
         super(message);
     }
+
+    public UserNotFoundException(String field, Object value)
+    {
+        super(String.format("User not found with %s: '%s'", field, value));
+    }
 }

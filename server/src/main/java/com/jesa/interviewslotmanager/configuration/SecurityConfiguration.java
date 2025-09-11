@@ -1,5 +1,7 @@
 package com.jesa.interviewslotmanager.configuration;
 
+import com.jesa.interviewslotmanager.security.CustomAccessDeniedHandler;
+import com.jesa.interviewslotmanager.security.CustomAuthenticationEntryPoint;
 import com.jesa.interviewslotmanager.security.JwtCookieAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +33,7 @@ import java.util.List;
 public class SecurityConfiguration
 {
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
     private final JwtCookieAuthenticationFilter jwtCookieAuthenticationFilter;
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
@@ -52,10 +55,11 @@ public class SecurityConfiguration
                         .authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtCookieAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(eh -> eh.authenticationEntryPoint(customAuthenticationEntryPoint));
-
+                .exceptionHandling(eh -> eh
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                );
         return http.build();
     }
 
@@ -63,10 +67,9 @@ public class SecurityConfiguration
     public CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origins}") List<String> allowedOrigins)
     {
         CorsConfiguration configuration = new CorsConfiguration();
-
         configuration.setAllowedOrigins(allowedOrigins);
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Auth-Token"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

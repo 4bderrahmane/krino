@@ -16,4 +16,5 @@ public record ErrorResponse(
         Map<String, Object> details
 )
 {
+
 }

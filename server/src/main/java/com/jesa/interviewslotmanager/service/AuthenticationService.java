@@ -9,12 +9,12 @@ import com.jesa.interviewslotmanager.entity.User;
 import com.jesa.interviewslotmanager.entity.CustomUserDetails;
 import com.jesa.interviewslotmanager.entity.UserRole;
 import com.jesa.interviewslotmanager.entity.RefreshToken;
-import com.jesa.interviewslotmanager.exception.EmailAlreadyExistsException;
 import com.jesa.interviewslotmanager.exception.InvalidCredentialsException;
 import com.jesa.interviewslotmanager.exception.InvalidRefreshTokenException;
-import com.jesa.interviewslotmanager.exception.UsernameAlreadyExistsException;
+import com.jesa.interviewslotmanager.exception.ResourceConflictException;
 import com.jesa.interviewslotmanager.repository.UserRepository;
 import com.jesa.interviewslotmanager.utility.CookieUtilities;
+import com.jesa.interviewslotmanager.utility.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -36,6 +36,8 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService
 {
 
+    private static final String USERNAME_ALREADY_TAKEN_MESSAGE = "Username '%s' is already taken.";
+    private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -65,12 +67,12 @@ public class AuthenticationService
 
         if (userRepository.findByUsername(normalizedUsername).isPresent())
         {
-            throw new UsernameAlreadyExistsException("An account with this username already exists: " + normalizedUsername);
+            throw new ResourceConflictException(String.format(USERNAME_ALREADY_TAKEN_MESSAGE, normalizedUsername), ErrorCode.USERNAME_ALREADY_EXISTS);
         }
 
         if (userRepository.findByEmail(normalizedEmail).isPresent())
         {
-            throw new EmailAlreadyExistsException("An account with this email already exists: " + normalizedEmail);
+            throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, normalizedEmail), ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         try
@@ -107,7 +109,7 @@ public class AuthenticationService
         authenticateUser(request.getEmail(), request.getPassword());
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + request.getEmail()));
+                .orElseThrow(() -> new UsernameNotFoundException(String.format("User not found with email: %s", request.getEmail())));
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
         UserResponseDTO userResponse = modelMapper.map(user, UserResponseDTO.class);
