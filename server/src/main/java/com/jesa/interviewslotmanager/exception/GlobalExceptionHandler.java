@@ -2,6 +2,7 @@ package com.jesa.interviewslotmanager.exception;
 
 import com.jesa.interviewslotmanager.configuration.ErrorResponse;
 import com.jesa.interviewslotmanager.utility.ErrorCode;
+import com.jesa.interviewslotmanager.utility.SanitizationUtilities;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,8 +28,8 @@ public class GlobalExceptionHandler
         ErrorResponse errorResponse = new ErrorResponse(
                 Instant.now(),
                 status.value(),
-                message, // No HTML escaping
-                request.getRequestURI(), // No HTML escaping
+                message,
+                SanitizationUtilities.escapeForHtml(request.getRequestURI()),
                 errorCode,
                 details
         );
