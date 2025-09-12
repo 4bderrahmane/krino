@@ -1,9 +1,9 @@
 package com.jesa.interviewslotmanager.controller;
 
-import com.jesa.interviewslotmanager.dto.Authentication.AuthenticationResponseDTO;
-import com.jesa.interviewslotmanager.dto.Authentication.RegistrationResponseDTO;
-import com.jesa.interviewslotmanager.dto.User.UserLoginDTO;
-import com.jesa.interviewslotmanager.dto.User.UserRegistrationDTO;
+import com.jesa.interviewslotmanager.dto.authentication.AuthenticationResponseDTO;
+import com.jesa.interviewslotmanager.dto.authentication.RegistrationResponseDTO;
+import com.jesa.interviewslotmanager.dto.user.UserLoginDTO;
+import com.jesa.interviewslotmanager.dto.user.UserRegistrationDTO;
 import com.jesa.interviewslotmanager.service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

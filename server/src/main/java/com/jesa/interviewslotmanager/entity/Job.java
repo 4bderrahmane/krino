@@ -5,8 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.util.Date;
 
+import java.util.Date;
 
 @Getter
 @Setter
@@ -14,7 +14,8 @@ import java.util.Date;
 @AllArgsConstructor
 @Table(name = "jobs")
 @Entity
-public class Job {
+public class Job
+{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,17 +38,13 @@ public class Job {
     @Enumerated(EnumType.STRING)
     private JobStatus status = JobStatus.OPEN;
 
-    public static enum JobStatus {
-        DRAFT,
-        OPEN,
-        CLOSED,
-        FILLED
+    public enum JobStatus
+    {
+        DRAFT, OPEN, CLOSED, FILLED
     }
 
-    public enum JobType {
-        FULL_TIME,
-        PART_TIME,
-        INTERNSHIP,
-        CONTRACT
+    public enum JobType
+    {
+        FULL_TIME, PART_TIME, INTERNSHIP, CONTRACT
     }
 }

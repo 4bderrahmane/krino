@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.dto.Interview;
+package com.jesa.interviewslotmanager.dto.interview;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.*;

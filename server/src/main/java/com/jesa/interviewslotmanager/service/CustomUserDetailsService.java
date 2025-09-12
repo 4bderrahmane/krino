@@ -29,7 +29,7 @@ public class CustomUserDetailsService implements UserDetailsService
 
     public CustomUserDetails loadUserById(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("ID", userId));
         return new CustomUserDetails(user);
     }
 }

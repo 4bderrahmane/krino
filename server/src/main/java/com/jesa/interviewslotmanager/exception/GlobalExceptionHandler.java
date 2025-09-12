@@ -2,7 +2,6 @@ package com.jesa.interviewslotmanager.exception;
 
 import com.jesa.interviewslotmanager.configuration.ErrorResponse;
 import com.jesa.interviewslotmanager.utility.ErrorCode;
-import com.jesa.interviewslotmanager.utility.SanitizationUtilities;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,8 +27,8 @@ public class GlobalExceptionHandler
         ErrorResponse errorResponse = new ErrorResponse(
                 Instant.now(),
                 status.value(),
-                message,
-                request.getRequestURI(),
+                message, // No HTML escaping
+                request.getRequestURI(), // No HTML escaping
                 errorCode,
                 details
         );
@@ -44,7 +43,7 @@ public class GlobalExceptionHandler
         {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
-            validationErrors.put(fieldName, SanitizationUtilities.escapeForHtml(errorMessage));
+            validationErrors.put(fieldName, errorMessage);
         });
 
         log.warn("Validation failed for request {}: {}", request.getRequestURI(), validationErrors);
@@ -91,6 +90,34 @@ public class GlobalExceptionHandler
     {
         log.warn("Illegal argument for request {}: {}", request.getRequestURI(), ex.getMessage());
         return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ErrorCode.INVALID_REQUEST_BODY, request, null);
+    }
+
+    @ExceptionHandler(JobNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleJobNotFound(JobNotFoundException ex, HttpServletRequest request)
+    {
+        log.warn("Job not found for request {}: {}", request.getRequestURI(), ex.getMessage());
+        return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ErrorCode.JOB_NOT_FOUND, request, null);
+    }
+
+    @ExceptionHandler(DepartmentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleDepartmentNotFound(DepartmentNotFoundException ex, HttpServletRequest request)
+    {
+        log.warn("Department not found for request {}: {}", request.getRequestURI(), ex.getMessage());
+        return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ErrorCode.DEPARTMENT_NOT_FOUND, request, null);
+    }
+
+    @ExceptionHandler(InvalidJobTypeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidJobType(InvalidJobTypeException ex, HttpServletRequest request)
+    {
+        log.warn("Invalid job type for request {}: {}", request.getRequestURI(), ex.getMessage());
+        return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ErrorCode.INVALID_REQUEST_BODY, request, null);
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(InvalidRefreshTokenException ex, HttpServletRequest request)
+    {
+        log.warn("Invalid refresh token for request {}: {}", request.getRequestURI(), ex.getMessage());
+        return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ErrorCode.INVALID_TOKEN, request, null);
     }
 
     @ExceptionHandler(Exception.class)
