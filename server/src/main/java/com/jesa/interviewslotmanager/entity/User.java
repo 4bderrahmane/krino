@@ -1,11 +1,13 @@
 package com.jesa.interviewslotmanager.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -36,7 +38,6 @@ public class User
     @Column(nullable = false)
     private String lastName;
 
-    @Column(nullable = true)
     private String phoneNumber;
 
     private boolean isApproved = false;
@@ -64,7 +65,8 @@ public class User
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<RefreshToken> refreshTokens = new HashSet<>();
+    @JsonIgnore
+    private Collection<RefreshToken> refreshTokens = new HashSet<>();
 
     public boolean hasPermission(Permission permission)
     {

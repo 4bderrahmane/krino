@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Getter
 @Setter
@@ -23,6 +24,7 @@ public class Job
 
     @ManyToOne
     @JoinColumn(name = "department_id", nullable = false)
+    @JsonBackReference
     private Department department;
 
     private String title;

@@ -111,14 +111,14 @@ public class GlobalExceptionHandler
     public ResponseEntity<ErrorResponse> handleInvalidJobType(InvalidJobTypeException ex, HttpServletRequest request)
     {
         log.warn("Invalid job type for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ErrorCode.INVALID_REQUEST_BODY, request, null);
+        return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ErrorCode.INVALID_JOB_TYPE, request, null);
     }
 
     @ExceptionHandler(InvalidRefreshTokenException.class)
     public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(InvalidRefreshTokenException ex, HttpServletRequest request)
     {
         log.warn("Invalid refresh token for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ErrorCode.INVALID_TOKEN, request, null);
+        return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), ErrorCode.INVALID_REFRESH_TOKEN, request, null);
     }
 
     @ExceptionHandler(Exception.class)
