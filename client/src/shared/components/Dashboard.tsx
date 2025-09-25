@@ -3,20 +3,20 @@ import {useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import type {User} from "../types/types.ts";
 import {useAuth} from '../hooks/useAuth';
-import {useToast} from "../contexts/ToastContext.tsx";
+import {useSuccessToast} from '../hooks/useSuccessToast';
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const {t} = useTranslation();
     const {user: authUser, logout: authLogout, justLoggedIn, clearJustLoggedIn} = useAuth();
-    const {showToast} = useToast();
+    const {showSuccessToast} = useSuccessToast();
 
     useEffect(() => {
         if (justLoggedIn) {
-            showToast(t('auth.success.loginSuccess'), 3000);
+            showSuccessToast(t('auth.success.loginSuccess'), 3000);
             clearJustLoggedIn();
         }
-    }, [justLoggedIn, showToast, clearJustLoggedIn, t]);
+    }, [justLoggedIn, showSuccessToast, clearJustLoggedIn, t]);
 
     if (!authUser) {
         return <div>Loading user data...</div>;
@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
     };
 
     const handleShowToast = () => {
-        showToast("Logged in successfully!", 3000);
+        showSuccessToast(t('auth.success.logoutSuccess'), 3000);
     };
 
     return (

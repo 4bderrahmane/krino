@@ -73,7 +73,8 @@
     "settings": "Settings",
     "availability": "Availability",
     "jobs": "Jobs",
-    "applications": "Applications"
+    "applications": "Applications",
+    "interviews": "Interviews"
   },
   "common": {
     "pageNotFound": "Page Not Found",
@@ -95,7 +96,8 @@
     "passwordChanged": "Password changed successfully.",
     "updateFailed": "Failed to update profile. Please try again.",
     "changePasswordFailed": "Failed to change password. Please try again.",
-    "changeDataSentence": "To change your account details, please contact your administrator or visit the"
+    "changeDataSentence": "To change your account details, please contact your administrator or visit the",
+    "updateSuccess": "Profile updated successfully!"
   },
   "settings": {
     "confirmDeletion": "Are you sure you want to delete your account?",

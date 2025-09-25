@@ -28,13 +28,13 @@ export const getCurrentUser = async (): Promise<UserResponseDTO> => {
     return data;
 };
 
-export const updatePartialProfile = async (updateData: UserUpdateDTO): Promise<UserResponseDTO> => {
-    const {data} = await api.patch<UserResponseDTO>(ENDPOINTS.profile, updateData);
+export const updatePartialProfile = async (updateData: UserUpdateDTO): Promise<string> => {
+    const {data} = await api.patch<string>(ENDPOINTS.profile, updateData);
     return data;
 };
 
-export const updateFullProfile = async (updateData: Partial<UserUpdateDTO>): Promise<UserResponseDTO> => {
-    const {data} = await api.put<UserResponseDTO>(ENDPOINTS.profile, updateData);
+export const updateFullProfile = async (updateData: Partial<UserUpdateDTO>): Promise<string> => {
+    const {data} = await api.put<string>(ENDPOINTS.profile, updateData);
     return data;
 };
 

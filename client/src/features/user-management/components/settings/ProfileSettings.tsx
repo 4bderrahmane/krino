@@ -1,33 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { getCurrentUser, updatePartialProfile } from '../../services/UserManagementService';
-// import './SettingsForms.css';
+import React, {useState, useEffect} from 'react';
+import {useTranslation} from 'react-i18next';
+import {getCurrentUser, updatePartialProfile, updateFullProfile} from '../../services/UserManagementService';
 import '../../styles/settings/SettingsForm.css';
+import {useSuccessToast} from "../../../../shared/hooks/useSuccessToast.ts";
 
 const ProfileSettings = () => {
-    const { t } = useTranslation();
+    const {t} = useTranslation();
     const [form, setForm] = useState({
+        username: '',
         firstName: '',
         lastName: '',
         email: '',
         phoneNumber: ''
     });
-    const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState('');
-    const [error, setError] = useState('');
+    const [initialForm, setInitialForm] = useState(form);
 
-    // Fetch user data on mount
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const {showSuccessToast} = useSuccessToast();
+
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 const user = await getCurrentUser();
-                setForm({
+                const userData = {
+                    username: user.username || '',
                     firstName: user.firstName || '',
                     lastName: user.lastName || '',
                     email: user.email || '',
                     phoneNumber: user.phoneNumber || ''
-                });
-            } catch (err) {
+                };
+                setForm(userData);
+                setInitialForm(userData);
+            } catch {
                 setError(t('profile.fetchError'));
             }
         };
@@ -36,20 +41,43 @@ const ProfileSettings = () => {
     }, [t]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+        const {name, value} = e.target;
+        setForm(prev => ({...prev, [name]: value}));
+    };
+    const handleShowToast = (text: string, duration: number): void => {
+        showSuccessToast(text, duration);
     };
 
     const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setSuccess('');
         setError('');
 
+        const changedData: Partial<typeof form> = {};
+        const formKeys = Object.keys(form) as Array<keyof typeof form>;
+        let changedCount = 0;
+
+        formKeys.forEach((key) => {
+            if (form[key] !== initialForm[key]) {
+                changedData[key] = form[key];
+                changedCount++;
+            }
+        });
+
+        if (changedCount === 0) {
+            setLoading(false);
+            return;
+        }
+
         try {
-            await updatePartialProfile(form);
-            setSuccess(t('profile.updateSuccess'));
-        } catch (err) {
+            if (changedCount === formKeys.length) {
+                await updateFullProfile(form);
+            } else {
+                await updatePartialProfile(changedData);
+            }
+            setInitialForm(form);
+            handleShowToast(t('profile.updateSuccess'), 3000);
+        } catch {
             setError(t('profile.updateError'));
         } finally {
             setLoading(false);
@@ -61,6 +89,18 @@ const ProfileSettings = () => {
             <form className="settings-card" onSubmit={handleProfileSubmit}>
                 <h2>{t('settings.updateProfile')}</h2>
                 <div className="form-content">
+                    <div className="info-row">
+                        <label className="info-label" htmlFor="username">{t('profile.username') || 'Username'}</label>
+                        <input
+                            className="info-value"
+                            type="text"
+                            id="username"
+                            name="username"
+                            value={form.username}
+                            onChange={handleChange}
+                            autoComplete="username"
+                        />
+                    </div>
                     <div className="info-row">
                         <label className="info-label" htmlFor="firstName">{t('profile.firstName')}</label>
                         <input
@@ -115,7 +155,6 @@ const ProfileSettings = () => {
                         {loading ? t('app.loading') : t('profile.saveChanges')}
                     </button>
                 </div>
-                {success && <div className="settings-success">{success}</div>}
                 {error && <div className="settings-error">{error}</div>}
             </form>
         </div>

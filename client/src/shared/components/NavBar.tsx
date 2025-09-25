@@ -3,7 +3,6 @@ import {Link, useNavigate, useLocation} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import '../styles/NavBar.css';
 import LanguageSwitcher from './LanguageSwitcher';
-import SuccessToast from './SuccessToast';
 import Welcome from "./Welcome.tsx";
 import {useSuccessToast} from '../hooks/useSuccessToast';
 import {useAuth} from '../hooks/useAuth';
@@ -19,7 +18,7 @@ const NavBar: React.FC = () => {
     const location = useLocation();
     const {t} = useTranslation();
     const {user, logout: authLogout} = useAuth();
-    const {isVisible, message, showSuccess, hideSuccess} = useSuccessToast();
+    const { showSuccessToast } = useSuccessToast();
 
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
@@ -34,7 +33,7 @@ const NavBar: React.FC = () => {
     const handleLogout = async () => {
         closeDropdown();
 
-        showSuccess(t('auth.success.logoutSuccess'));
+        showSuccessToast(t('auth.success.logoutSuccess'));
 
         try {
             // Call the logout service to clear cookies on the backend
@@ -64,17 +63,23 @@ const NavBar: React.FC = () => {
             <div className="navbar-menu">
                 <ul className="navbar-links">
                     <li className={isCurrentPage('/dashboard') ? 'active' : ''}>
-                        <Link to="/dashboard">{t('nav.dashboard')}</Link>
+                        <Link to="/dashboard">
+                            {t('nav.dashboard')}
+                        </Link>
                     </li>
                     <li className={isCurrentPage('/applications') ? 'active' : ''}>
-                        <Link to="/applications">{t('nav.applications')}</Link>
+                        <Link to="/applications">
+                            {t('nav.applications')}
+                        </Link>
                     </li>
                     <li className={isCurrentPage('/jobs') ? 'active' : ''}>
-                        <Link to="/jobs">{t('nav.jobs')}</Link>
+                        <Link to="/jobs">
+                            {t('nav.jobs')}
+                        </Link>
                     </li>
-                    <li className={isCurrentPage('/timeslots') ? 'active' : ''}>
-                        <Link to="/timeslots">
-                            {t('nav.availability')}
+                    <li className={isCurrentPage('/interviews') ? 'active' : ''}>
+                        <Link to="/interviews">
+                            {t('nav.interviews')}
                         </Link>
                     </li>
                 </ul>
@@ -83,10 +88,10 @@ const NavBar: React.FC = () => {
                     <LanguageSwitcher/>
 
                     <div className="navbar-user" ref={dropdownRef}>
-                        <div className="user-profile" onClick={toggleDropdown}>
+                        <button className="user-profile" onClick={toggleDropdown}>
                             <span className="user-name">{username}</span>
                             <span className="dropdown-icon">▼</span>
-                        </div>
+                        </button>
 
                         {isDropdownOpen && (
                             <div className="dropdown-menu">
@@ -116,12 +121,6 @@ const NavBar: React.FC = () => {
                     </div>
                 </div>
             </div>
-
-            <SuccessToast
-                isVisible={isVisible}
-                message={message}
-                onClose={hideSuccess}
-            />
         </nav>
     );
 };

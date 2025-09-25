@@ -5,13 +5,12 @@ import type {UserRegistrationDTO, AuthErrorCode} from '../types/api.types';
 import '../styles/RegistrationForm.css';
 import {register} from "../services/AuthenticationService.ts";
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher.tsx";
-import SuccessToast from "../../../shared/components/SuccessToast.tsx";
 import {useSuccessToast} from "../../../shared/hooks/useSuccessToast.ts";
 
 const RegistrationForm: React.FC = () => {
     const {t, i18n} = useTranslation();
     const navigate = useNavigate();
-    const {isVisible, message, showSuccess, hideSuccess} = useSuccessToast();
+    const { showSuccessToast } = useSuccessToast();
 
     const [credentials, setCredentials] = useState<UserRegistrationDTO>({
         email: '',
@@ -49,7 +48,7 @@ const RegistrationForm: React.FC = () => {
             const data = await register(credentials);
             console.log('User Response: ', data);
 
-            showSuccess(t('auth.success.registrationSuccess'));
+            showSuccessToast(t('auth.success.registrationSuccess'));
 
             await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -210,14 +209,6 @@ const RegistrationForm: React.FC = () => {
                     <Link to="/login">{t('auth.signIn')}</Link>
                 </p>
             </div>
-
-            {/* Success Toast */}
-            <SuccessToast
-                isVisible={isVisible}
-                message={message}
-                onClose={hideSuccess}
-                duration={3000}
-            />
         </>
     );
 };

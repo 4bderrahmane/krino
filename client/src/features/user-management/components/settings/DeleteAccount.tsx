@@ -10,7 +10,7 @@ const DeleteAccount = () => {
     const {t} = useTranslation();
     const navigate = useNavigate();
     const {logout} = useAuth();
-    const {showSuccess} = useSuccessToast();
+    const {showSuccessToast} = useSuccessToast();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [password, setPassword] = useState('');
@@ -23,8 +23,7 @@ const DeleteAccount = () => {
 
         try {
             await deleteAccount(password);
-            showSuccess(t('settings.accountDeletedSuccess'));
-            // Perform logout and redirect to login page
+            showSuccessToast(t('settings.accountDeletedSuccess'), 3000);
             logout();
             navigate('/login');
         } catch (err: any) {
