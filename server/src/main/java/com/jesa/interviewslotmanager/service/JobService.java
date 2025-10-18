@@ -1,6 +1,8 @@
 package com.jesa.interviewslotmanager.service;
 
 import com.jesa.interviewslotmanager.dto.job.JobCreateDTO;
+import com.jesa.interviewslotmanager.dto.job.JobResponseDTO;
+import com.jesa.interviewslotmanager.dto.job.JobUpdateDTO;
 import com.jesa.interviewslotmanager.entity.Department;
 import com.jesa.interviewslotmanager.entity.Job;
 import com.jesa.interviewslotmanager.exception.DepartmentNotFoundException;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class JobService
 {
     private static final String INVALID_JOB_TYPE_MESSAGE = "Job type '%s' doesn't exist.";
+    private static final String INVALID_JOB_STATUS_MESSAGE = "Job status '%s' doesn't exist.";
     private final JobRepository jobRepository;
     private final DepartmentRepository departmentRepository;
     private final ModelMapper modelMapper;
@@ -31,7 +34,7 @@ public class JobService
         jobRepository.delete(job);
     }
 
-    public Job createJob(JobCreateDTO dto)
+    public JobResponseDTO createJob(JobCreateDTO dto)
     {
         Department department = departmentRepository.findByName(dto.getDepartmentName())
                 .orElseThrow(() -> new DepartmentNotFoundException("Name", dto.getDepartmentName()));
@@ -41,13 +44,110 @@ public class JobService
         job.setDepartment(department);
         try
         {
-            job.setType(Job.JobType.valueOf(dto.getType()));
+            job.setType(Job.JobType.valueOf(dto.getType().toUpperCase()));
         } catch (IllegalArgumentException e)
         {
             throw new InvalidJobTypeException(String.format(INVALID_JOB_TYPE_MESSAGE, dto.getType()));
         }
 
         job.setStatus(Job.JobStatus.OPEN);
-        return jobRepository.save(job);
+        Job savedJob = jobRepository.save(job);
+        return modelMapper.map(savedJob, JobResponseDTO.class);
+    }
+
+    public JobResponseDTO getJobById(Long jobId)
+    {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new JobNotFoundException("ID", jobId));
+        return modelMapper.map(job, JobResponseDTO.class);
+    }
+
+    public JobResponseDTO updateJob(Long jobId, JobUpdateDTO jobUpdateDTO)
+    {
+        Job existingJob = jobRepository.findById(jobId)
+                .orElseThrow(() -> new JobNotFoundException("ID", jobId));
+
+        updateJobFromDto(existingJob, jobUpdateDTO);
+
+        Job updatedJob = jobRepository.save(existingJob);
+        return modelMapper.map(updatedJob, JobResponseDTO.class);
+    }
+
+    public JobResponseDTO patchJob(Long jobId, JobUpdateDTO jobUpdateDTO)
+    {
+        Job existingJob = jobRepository.findById(jobId)
+                .orElseThrow(() -> new JobNotFoundException("ID", jobId));
+
+        patchJobFromDto(existingJob, jobUpdateDTO);
+
+        Job updatedJob = jobRepository.save(existingJob);
+        return modelMapper.map(updatedJob, JobResponseDTO.class);
+    }
+
+    private void updateJobFromDto(Job job, JobUpdateDTO dto)
+    {
+        job.setTitle(dto.getTitle());
+        job.setDescription(dto.getDescription());
+
+        if (dto.getDepartmentName() != null)
+        {
+            Department department = departmentRepository.findByName(dto.getDepartmentName())
+                    .orElseThrow(() -> new DepartmentNotFoundException("Name", dto.getDepartmentName()));
+            job.setDepartment(department);
+        }
+
+        try
+        {
+            job.setType(Job.JobType.valueOf(dto.getType().toUpperCase()));
+        } catch (IllegalArgumentException e)
+        {
+            throw new InvalidJobTypeException(String.format(INVALID_JOB_TYPE_MESSAGE, dto.getType()));
+        }
+
+        try
+        {
+            job.setStatus(Job.JobStatus.valueOf(dto.getStatus().toUpperCase()));
+        } catch (IllegalArgumentException e)
+        {
+            throw new InvalidJobTypeException(String.format(INVALID_JOB_STATUS_MESSAGE, dto.getStatus()));
+        }
+    }
+
+    private void patchJobFromDto(Job job, JobUpdateDTO dto)
+    {
+        if (dto.getTitle() != null)
+        {
+            job.setTitle(dto.getTitle());
+        }
+        if (dto.getDescription() != null)
+        {
+            job.setDescription(dto.getDescription());
+        }
+        if (dto.getDepartmentName() != null)
+        {
+            Department department = departmentRepository.findByName(dto.getDepartmentName())
+                    .orElseThrow(() -> new DepartmentNotFoundException("Name", dto.getDepartmentName()));
+            job.setDepartment(department);
+        }
+        if (dto.getType() != null)
+        {
+            try
+            {
+                job.setType(Job.JobType.valueOf(dto.getType().toUpperCase()));
+            } catch (IllegalArgumentException e)
+            {
+                throw new InvalidJobTypeException(String.format(INVALID_JOB_TYPE_MESSAGE, dto.getType()));
+            }
+        }
+        if (dto.getStatus() != null)
+        {
+            try
+            {
+                job.setStatus(Job.JobStatus.valueOf(dto.getStatus().toUpperCase()));
+            } catch (IllegalArgumentException e)
+            {
+                throw new InvalidJobTypeException(String.format(INVALID_JOB_STATUS_MESSAGE, dto.getStatus()));
+            }
+        }
     }
 }

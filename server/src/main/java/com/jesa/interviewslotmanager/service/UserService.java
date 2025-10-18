@@ -48,11 +48,6 @@ public class UserService
         return userRepository.findByUsername(username);
     }
 
-    public User updateUser(User user)
-    {
-        return userRepository.save(user);
-    }
-
     public User addRoleToUser(Long userId, UserRole role)
     {
         User user = userRepository.findById(userId)
@@ -75,49 +70,6 @@ public class UserService
         return users.stream()
                 .map(user -> modelMapper.map(user, UserResponseDTO.class))
                 .toList();
-    }
-
-    public UserResponseDTO updateUser(Long userId, UserUpdateDTO userUpdateDTO)
-    {
-        User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("ID", userId));
-        if (userUpdateDTO.getUsername() != null && !userUpdateDTO.getUsername().equals(existingUser.getUsername()))
-        {
-            userRepository.findByUsername(userUpdateDTO.getUsername())
-                    .filter(user -> !user.getId().equals(userId))
-                    .ifPresent(user ->
-                    {
-                        throw new ResourceConflictException(String.format(USERNAME_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getUsername()), ErrorCode.USERNAME_ALREADY_EXISTS);
-                    });
-            existingUser.setUsername(userUpdateDTO.getUsername());
-        }
-
-        if (userUpdateDTO.getEmail() != null && !userUpdateDTO.getEmail().equals(existingUser.getEmail()))
-        {
-            userRepository.findByEmail(userUpdateDTO.getEmail())
-                    .filter(user -> !user.getId().equals(userId))
-                    .ifPresent(user ->
-                    {
-                        throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getEmail()), ErrorCode.EMAIL_ALREADY_EXISTS);
-                    });
-            existingUser.setEmail(userUpdateDTO.getEmail());
-        }
-        if (userUpdateDTO.getFirstName() != null)
-        {
-            existingUser.setFirstName(userUpdateDTO.getFirstName());
-        }
-        if (userUpdateDTO.getLastName() != null)
-        {
-            existingUser.setLastName(userUpdateDTO.getLastName());
-        }
-        if (userUpdateDTO.getPhoneNumber() != null)
-        {
-            existingUser.setPhoneNumber(userUpdateDTO.getPhoneNumber());
-        }
-
-        User updatedUser = userRepository.save(existingUser);
-
-        return modelMapper.map(updatedUser, UserResponseDTO.class);
     }
 
     public UserResponseDTO updateUserPartially(Long userId, UserUpdateDTO userUpdateDTO)

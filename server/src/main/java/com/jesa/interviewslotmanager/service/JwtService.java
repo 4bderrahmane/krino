@@ -26,7 +26,7 @@ public class JwtService
     @Value("${jwt.secret}")
     private String secretKey;
 
-    @Value("${jwt.issuer:interview-slot-manager}")
+    @Value("${app.jwt.issuer}")
     private String issuer;
 
     @Value("${app.jwt.access-token-expiration.ms}")

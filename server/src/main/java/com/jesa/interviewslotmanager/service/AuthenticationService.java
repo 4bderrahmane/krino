@@ -98,7 +98,7 @@ public class AuthenticationService
         } catch (Exception e)
         {
             log.error("Error during user registration for email {}: {}", normalizedEmail, e.getMessage());
-            throw new RuntimeException("Registration failed: " + e.getMessage());
+            throw new RuntimeException(STR."Registration failed: \{e.getMessage()}");
         }
     }
 
@@ -219,10 +219,8 @@ public class AuthenticationService
     public String logout(HttpServletRequest request, HttpServletResponse response)
     {
         CookieUtilities.getRefreshTokenFromCookie(request)
-                .ifPresent(refreshToken ->
-                        refreshTokenService.findValidRefreshToken(refreshToken)
-                                .ifPresent(refreshTokenService::revokeToken)
-                );
+                .flatMap(refreshTokenService::findValidRefreshToken)
+                .ifPresent(refreshTokenService::revokeToken);
 
         CookieUtilities.clearAuthenticationCookies(response);
 

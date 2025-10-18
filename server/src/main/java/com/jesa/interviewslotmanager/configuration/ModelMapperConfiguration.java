@@ -1,4 +1,3 @@
-//package com.SlotManagement.slot_booking_system.config;
 package com.jesa.interviewslotmanager.configuration;
 
 import org.modelmapper.ModelMapper;
@@ -10,7 +9,8 @@ public class ModelMapperConfiguration
 {
 
     @Bean
-    public ModelMapper modelMapper() {
+    public ModelMapper modelMapper()
+    {
         return new ModelMapper();
     }
 
