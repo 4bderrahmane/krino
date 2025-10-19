@@ -2,7 +2,7 @@ package com.jesa.interviewslotmanager.service;
 
 import com.jesa.interviewslotmanager.entity.User;
 import com.jesa.interviewslotmanager.entity.CustomUserDetails;
-import com.jesa.interviewslotmanager.exception.UserNotFoundException;
+import com.jesa.interviewslotmanager.exception.ResourceNotFoundException;
 import com.jesa.interviewslotmanager.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,9 +27,10 @@ public class CustomUserDetailsService implements UserDetailsService
     }
 
 
-    public CustomUserDetails loadUserById(Long userId) {
+    public CustomUserDetails loadUserById(Long userId)
+    {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("ID", userId));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User with ID '%s' not found", userId)));
         return new CustomUserDetails(user);
     }
 }

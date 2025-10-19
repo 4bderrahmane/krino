@@ -1,47 +1,82 @@
 package com.jesa.interviewslotmanager.service;
 
 import com.jesa.interviewslotmanager.dto.application.ApplicationCreateDTO;
+import com.jesa.interviewslotmanager.dto.application.ApplicationResponseDTO;
+import com.jesa.interviewslotmanager.dto.application.ApplicationUpdateDTO;
 import com.jesa.interviewslotmanager.entity.Application;
-import com.jesa.interviewslotmanager.entity.Job;
-import com.jesa.interviewslotmanager.entity.User;
-import com.jesa.interviewslotmanager.exception.JobNotFoundException;
-import com.jesa.interviewslotmanager.exception.UserNotFoundException;
+import com.jesa.interviewslotmanager.exception.ResourceNotFoundException;
 import com.jesa.interviewslotmanager.repository.ApplicationRepository;
-import com.jesa.interviewslotmanager.repository.JobRepository;
-import com.jesa.interviewslotmanager.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 public class ApplicationService
 {
+
     private final ApplicationRepository applicationRepository;
-    private final JobRepository jobRepository;
-    private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
-    public Application createApplication(ApplicationCreateDTO request)
+    public ApplicationResponseDTO createApplication(ApplicationCreateDTO applicationCreateDTO)
     {
+        Application application = modelMapper.map(applicationCreateDTO, Application.class);
+        Application savedApplication = applicationRepository.save(application);
+        return modelMapper.map(savedApplication, ApplicationResponseDTO.class);
+    }
 
-        Job job = jobRepository.findById(request.getJobId())
-                .orElseThrow(() -> new JobNotFoundException("ID", String.valueOf(request.getJobId())));
+    public ApplicationResponseDTO getApplicationById(Long applicationId)
+    {
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getName(), "id", applicationId));
+        return modelMapper.map(application, ApplicationResponseDTO.class);
+    }
 
-//        Job job = jobRepository.findByTitle(request.getJobTitle())
-//                .orElseThrow(() -> new JobNotFoundException("Title", jobRepository.findById(request.getJobId()).get().getTitle()));
-        //.orElseThrow(() -> new JobNotFoundException("Title", jobRepository.findById(request.getJobId()).get().getTitle() ));
+    public List<ApplicationResponseDTO> getAllApplications()
+    {
+        return applicationRepository.findAll().stream()
+                .map(application -> modelMapper.map(application, ApplicationResponseDTO.class))
+                .toList();
+    }
 
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User candidate = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("email", email));
+    public ApplicationResponseDTO updateApplication(Long applicationId, ApplicationUpdateDTO applicationUpdateDTO)
+    {
+        Application existingApplication = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getName(), "id", applicationId));
 
-        Application application = new Application();
-        application.setJob(job);
-        application.setCandidate(candidate);
-        application.setResumeUrl(request.getResumeUrl());
-        application.setAppliedAt(request.getAppliedAt());
-        return applicationRepository.save(application);
+        modelMapper.map(applicationUpdateDTO, existingApplication);
+        Application updatedApplication = applicationRepository.save(existingApplication);
+        return modelMapper.map(updatedApplication, ApplicationResponseDTO.class);
+    }
+
+    public ApplicationResponseDTO patchApplication(Long applicationId, ApplicationUpdateDTO applicationUpdateDTO)
+    {
+        Application existingApplication = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getName(), "id", applicationId));
+
+        if (applicationUpdateDTO.getStatus() != null)
+        {
+            existingApplication.setStatus(applicationUpdateDTO.getStatus());
+        }
+        if (applicationUpdateDTO.getResumeUrl() != null)
+        {
+            existingApplication.setResumeUrl(applicationUpdateDTO.getResumeUrl());
+        }
+
+        Application patchedApplication = applicationRepository.save(existingApplication);
+        return modelMapper.map(patchedApplication, ApplicationResponseDTO.class);
+    }
+
+    public void deleteApplication(Long applicationId)
+    {
+        if (!applicationRepository.existsById(applicationId))
+        {
+            throw new ResourceNotFoundException(Application.class.getName(), "id", applicationId);
+        }
+        applicationRepository.deleteById(applicationId);
     }
 }

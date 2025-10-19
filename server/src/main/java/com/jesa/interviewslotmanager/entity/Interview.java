@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Date;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,7 +13,8 @@ import java.util.Date;
 @Entity
 @Table(name = "interviews")
 
-public class Interview {
+public class Interview
+{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,15 +31,12 @@ public class Interview {
     @JoinColumn(name = "job_id")
     private Job job;
 
-    @Temporal(TemporalType.DATE)
-    private Date interviewDate;
+    @OneToOne
+    @JoinColumn(name = "slot_id")
+    private Slot slot;
 
-    @Temporal(TemporalType.TIME)
-    private Date startTime;
+    @Lob
+    private String notes;
 
-    @Temporal(TemporalType.TIME)
-    private Date endTime;
-
-    private boolean isOnline = false;
-
+    private Boolean isOnline;
 }

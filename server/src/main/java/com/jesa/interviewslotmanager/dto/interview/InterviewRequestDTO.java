@@ -3,15 +3,12 @@ package com.jesa.interviewslotmanager.dto.interview;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
-public class InterviewRequestDTO {
+public class InterviewRequestDTO
+{
     @NotNull(message = "Interviewer ID cannot be null")
     private Long interviewerId;
 
@@ -21,14 +18,10 @@ public class InterviewRequestDTO {
     @NotNull(message = "Job ID cannot be null")
     private Long jobId;
 
-    @NotNull(message = "Interview date cannot be null")
-    private LocalDate interviewDate;
+    @NotNull(message = "Slot ID cannot be null")
+    private Long slotId;
 
-    @NotNull(message = "Start time cannot be null")
-    private LocalTime startTime;
+    private String notes;
 
-    @NotNull(message = "End time cannot be null")
-    private LocalTime endTime;
-
-    private boolean isOnline = false;
+    private Boolean isOnline;
 }

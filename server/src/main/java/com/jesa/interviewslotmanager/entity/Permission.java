@@ -1,6 +1,7 @@
 package com.jesa.interviewslotmanager.entity;
 
-public enum Permission {
+public enum Permission
+{
     CAN_CREATE_USER,
     CAN_UPDATE_USER,
     CAN_DELETE_USER,

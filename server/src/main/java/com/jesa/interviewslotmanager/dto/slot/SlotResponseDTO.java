@@ -13,7 +13,7 @@ public class SlotResponseDTO
 {
 
     private Long id;
-    private String durationInMinutes;
+    private Integer durationInMinutes;
     private boolean isAvailable = true;
     private LocalDate interviewDate;
     private LocalTime startTime;

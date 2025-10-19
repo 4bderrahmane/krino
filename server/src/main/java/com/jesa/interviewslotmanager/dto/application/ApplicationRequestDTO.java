@@ -4,12 +4,12 @@ package com.jesa.interviewslotmanager.dto.application;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class ApplicationRequestDTO {
+public class ApplicationRequestDTO
+{
 
     @NotNull(message = "Job ID cannot be null")
     private Long jobId;

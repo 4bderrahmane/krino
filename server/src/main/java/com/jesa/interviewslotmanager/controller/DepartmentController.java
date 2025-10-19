@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/departments")
@@ -49,5 +51,12 @@ public class DepartmentController
     {
         DepartmentResponseDTO department = departmentService.getDepartmentById(id);
         return ResponseEntity.ok(department);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<DepartmentResponseDTO>> getAllDepartments()
+    {
+        List<DepartmentResponseDTO> departments = departmentService.getAllDepartments();
+        return ResponseEntity.ok(departments);
     }
 }

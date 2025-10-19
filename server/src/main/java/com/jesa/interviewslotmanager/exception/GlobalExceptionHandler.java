@@ -58,7 +58,14 @@ public class GlobalExceptionHandler
         return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), ex.getErrorCode(), request, null);
     }
 
-    @ExceptionHandler({UserNotFoundException.class, UsernameNotFoundException.class})
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request)
+    {
+        log.warn("Resource not found for request {}: {}", request.getRequestURI(), ex.getMessage());
+        return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ex.getErrorCode() != null ? ex.getErrorCode() : ErrorCode.RESOURCE_NOT_FOUND, request, null);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(Exception ex, HttpServletRequest request)
     {
         log.warn("User not found for request {}: {}", request.getRequestURI(), ex.getMessage());
@@ -91,20 +98,6 @@ public class GlobalExceptionHandler
     {
         log.warn("Illegal argument for request {}: {}", request.getRequestURI(), ex.getMessage());
         return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ErrorCode.INVALID_REQUEST_BODY, request, null);
-    }
-
-    @ExceptionHandler(JobNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleJobNotFound(JobNotFoundException ex, HttpServletRequest request)
-    {
-        log.warn("Job not found for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ErrorCode.JOB_NOT_FOUND, request, null);
-    }
-
-    @ExceptionHandler(DepartmentNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleDepartmentNotFound(DepartmentNotFoundException ex, HttpServletRequest request)
-    {
-        log.warn("Department not found for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ErrorCode.DEPARTMENT_NOT_FOUND, request, null);
     }
 
     @ExceptionHandler(InvalidJobTypeException.class)

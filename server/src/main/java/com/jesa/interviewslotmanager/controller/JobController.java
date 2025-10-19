@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/jobs")
 @RequiredArgsConstructor
@@ -25,19 +27,29 @@ public class JobController
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<JobResponseDTO> getJobById(@PathVariable("id") Long id) {
+    public ResponseEntity<JobResponseDTO> getJobById(@PathVariable("id") Long id)
+    {
         JobResponseDTO job = jobService.getJobById(id);
         return ResponseEntity.ok(job);
     }
 
+    @GetMapping
+    public ResponseEntity<List<JobResponseDTO>> getAllJobs()
+    {
+        List<JobResponseDTO> jobs = jobService.getAllJobs();
+        return ResponseEntity.ok(jobs);
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<JobResponseDTO> updateJob(@PathVariable("id") Long id, @Valid @RequestBody JobUpdateDTO jobUpdateDTO) {
+    public ResponseEntity<JobResponseDTO> updateJob(@PathVariable("id") Long id, @Valid @RequestBody JobUpdateDTO jobUpdateDTO)
+    {
         JobResponseDTO updatedJob = jobService.updateJob(id, jobUpdateDTO);
         return ResponseEntity.ok(updatedJob);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<JobResponseDTO> patchJob(@PathVariable("id") Long id, @Valid @RequestBody JobUpdateDTO jobUpdateDTO) {
+    public ResponseEntity<JobResponseDTO> patchJob(@PathVariable("id") Long id, @Valid @RequestBody JobUpdateDTO jobUpdateDTO)
+    {
         JobResponseDTO patchedJob = jobService.patchJob(id, jobUpdateDTO);
         return ResponseEntity.ok(patchedJob);
     }

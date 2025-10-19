@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.util.Date;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Getter
 @Setter
@@ -13,23 +15,20 @@ import java.util.Date;
 @AllArgsConstructor
 @Entity
 @Table(name = "slots")
-public class Slot {
-
+public class Slot
+{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String durationInMinutes;
+    private Integer durationInMinutes;
 
     @Column(nullable = false)
     private boolean isAvailable = true;
 
-    @Temporal(TemporalType.DATE)
-    private Date interviewDate;
+    private LocalDate interviewDate;
 
-    @Temporal(TemporalType.TIME)
-    private Date startTime;
+    private LocalTime startTime;
 
-    @Temporal(TemporalType.TIME)
-    private Date endTime;
+    private LocalTime endTime;
 }

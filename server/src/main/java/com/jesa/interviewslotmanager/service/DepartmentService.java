@@ -4,14 +4,16 @@ import com.jesa.interviewslotmanager.dto.department.DepartmentCreateDTO;
 import com.jesa.interviewslotmanager.dto.department.DepartmentResponseDTO;
 import com.jesa.interviewslotmanager.dto.department.DepartmentUpdateDTO;
 import com.jesa.interviewslotmanager.entity.Department;
-import com.jesa.interviewslotmanager.exception.DepartmentNotFoundException;
 import com.jesa.interviewslotmanager.exception.ResourceConflictException;
+import com.jesa.interviewslotmanager.exception.ResourceNotFoundException;
 import com.jesa.interviewslotmanager.repository.DepartmentRepository;
 import com.jesa.interviewslotmanager.utility.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -27,7 +29,7 @@ public class DepartmentService
     {
         if (!departmentRepository.existsById(id))
         {
-            throw new DepartmentNotFoundException(DEPARTMENT_NOT_FOUND);
+            throw new ResourceNotFoundException(String.format(DEPARTMENT_NOT_FOUND, id));
         }
         departmentRepository.deleteById(id);
     }
@@ -51,7 +53,7 @@ public class DepartmentService
     public DepartmentResponseDTO updateDepartment(Long id, DepartmentUpdateDTO departmentUpdateDTO)
     {
         Department existingDepartment = departmentRepository.findById(id)
-                .orElseThrow(() -> new DepartmentNotFoundException(DEPARTMENT_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(DEPARTMENT_NOT_FOUND, id)));
 
         if (departmentRepository.findByName(departmentUpdateDTO.getName()).isPresent() && !existingDepartment.getName().equals(departmentUpdateDTO.getName()))
         {
@@ -68,7 +70,7 @@ public class DepartmentService
     public DepartmentResponseDTO patchDepartment(Long id, DepartmentUpdateDTO departmentUpdateDTO)
     {
         Department existingDepartment = departmentRepository.findById(id)
-                .orElseThrow(() -> new DepartmentNotFoundException(DEPARTMENT_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(DEPARTMENT_NOT_FOUND, id)));
 
         if (departmentUpdateDTO.getName() != null)
         {
@@ -91,7 +93,14 @@ public class DepartmentService
     public DepartmentResponseDTO getDepartmentById(Long id)
     {
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new DepartmentNotFoundException(DEPARTMENT_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(DEPARTMENT_NOT_FOUND, id)));
         return modelMapper.map(department, DepartmentResponseDTO.class);
+    }
+
+    public List<DepartmentResponseDTO> getAllDepartments()
+    {
+        return departmentRepository.findAll().stream()
+                .map(department -> modelMapper.map(department, DepartmentResponseDTO.class))
+                .toList();
     }
 }

@@ -3,7 +3,6 @@ package com.jesa.interviewslotmanager.dto.slot;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -14,10 +13,6 @@ import lombok.*;
 
 public class SlotRequestDTO
 {
-
-    @NotBlank(message = "Duration in minutes cannot be blank")
-    private String durationInMinutes;
-
     @NotNull(message = "Interview date cannot be null")
     private LocalDate interviewDate;
 

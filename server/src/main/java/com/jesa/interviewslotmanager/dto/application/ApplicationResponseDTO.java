@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApplicationResponseDTO {
+public class ApplicationResponseDTO
+{
     private Long id;
     private Long jobId;
     private UserResponseDTO candidate;
