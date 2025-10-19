@@ -78,11 +78,7 @@ public class SlotService
             existingSlot.setEndTime(slotUpdateDTO.getEndTime());
         }
 
-        // Recalculate duration if start or end time was changed
-        if (slotUpdateDTO.getStartTime() != null || slotUpdateDTO.getEndTime() != null)
-        {
-            updateDuration(existingSlot);
-        }
+        updateDuration(existingSlot);
 
         Slot patchedSlot = slotRepository.save(existingSlot);
         return modelMapper.map(patchedSlot, SlotResponseDTO.class);
