@@ -1,11 +1,7 @@
 package com.jesa.interviewslotmanager.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.AccessLevel;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -35,7 +31,7 @@ public class Slot
     @OneToOne(mappedBy = "slot")
     private Interview interview;
 
-    public void setInterview(Interview interview)
+    public void setInterview( Interview interview)
     {
         this.interview = interview;
         this.available = (interview == null);
