@@ -2,6 +2,8 @@ package com.jesa.interviewslotmanager.utility;
 
 public enum ErrorCode
 {
+    METHOD_NOT_SUPPORTED,
+    MALFORMED_JSON,
 
     UNEXPECTED_ERROR,
     INVALID_REQUEST_BODY,

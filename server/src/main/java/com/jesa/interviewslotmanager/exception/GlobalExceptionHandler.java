@@ -7,16 +7,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestControllerAdvice
 @Slf4j
@@ -65,15 +69,22 @@ public class GlobalExceptionHandler
         return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ex.getErrorCode() != null ? ex.getErrorCode() : ErrorCode.RESOURCE_NOT_FOUND, request, null);
     }
 
-    @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFound(Exception ex, HttpServletRequest request)
-    {
-        log.warn("User not found for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ErrorCode.USER_NOT_FOUND, request, null);
-    }
+//    @ExceptionHandler(UsernameNotFoundException.class)
+//    public ResponseEntity<ErrorResponse> handleUserNotFound(Exception ex, HttpServletRequest request)
+//    {
+//        log.warn("User not found for request {}: {}", request.getRequestURI(), ex.getMessage());
+//        return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ErrorCode.USER_NOT_FOUND, request, null);
+//    }
 
     @ExceptionHandler({BadCredentialsException.class, InvalidCredentialsException.class})
     public ResponseEntity<ErrorResponse> handleBadCredentials(Exception ex, HttpServletRequest request)
+    {
+        log.warn("Invalid credentials attempt for request {}: {}", request.getRequestURI(), ex.getMessage());
+        return createErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password", ErrorCode.INVALID_CREDENTIALS, request, null);
+    }
+
+    @ExceptionHandler({BadCredentialsException.class, InvalidCredentialsException.class})
+    public ResponseEntity<ErrorResponse> handleBadCredentialss(Exception ex, HttpServletRequest request)
     {
         log.warn("Invalid credentials attempt for request {}: {}", request.getRequestURI(), ex.getMessage());
         return createErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password", ErrorCode.INVALID_CREDENTIALS, request, null);
@@ -93,11 +104,36 @@ public class GlobalExceptionHandler
         return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), ErrorCode.INVALID_TOKEN, request, null);
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request)
+    {
+        String message = String.format("Parameter '%s' with value '%s' could not be converted to type '%s'",
+                ex.getName(), ex.getValue(), Objects.requireNonNull(ex.getRequiredType()).getSimpleName());
+        log.warn("Type mismatch for request {}: {}", request.getRequestURI(), message);
+        return createErrorResponse(HttpStatus.BAD_REQUEST, message, ErrorCode.INVALID_REQUEST_BODY, request, null);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request)
+    {
+        String message = String.format("Method '%s' is not supported for this endpoint. Supported methods are %s.",
+                ex.getMethod(), ex.getSupportedHttpMethods());
+        log.warn("Unsupported HTTP method for request {}: {}", request.getRequestURI(), message);
+        return createErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, message, ErrorCode.METHOD_NOT_SUPPORTED, request, null);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request)
     {
         log.warn("Illegal argument for request {}: {}", request.getRequestURI(), ex.getMessage());
         return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ErrorCode.INVALID_REQUEST_BODY, request, null);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMalformedJson(HttpMessageNotReadableException ex, HttpServletRequest request)
+    {
+        log.warn("Malformed JSON for request {}: {}", request.getRequestURI(), ex.getMessage());
+        return createErrorResponse(HttpStatus.BAD_REQUEST, "Malformed JSON request body.", ErrorCode.MALFORMED_JSON, request, null);
     }
 
     @ExceptionHandler(InvalidJobTypeException.class)
@@ -126,4 +162,5 @@ public class GlobalExceptionHandler
                 null
         );
     }
+
 }
