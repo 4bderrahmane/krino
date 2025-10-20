@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.AccessLevel;
 
 @Getter
 @Setter
@@ -31,12 +32,29 @@ public class Interview
     @JoinColumn(name = "job_id")
     private Job job;
 
+    @Setter(AccessLevel.NONE)
     @OneToOne
-    @JoinColumn(name = "slot_id")
+    @JoinColumn(name = "slot_id", unique = true)
     private Slot slot;
 
     @Lob
     private String notes;
 
     private Boolean isOnline;
+
+    public void setSlot(Slot slot)
+    {
+        if (this.slot != null)
+        {
+            Slot previous = this.slot;
+            this.slot = null;
+            previous.setInterview(null);
+        }
+
+        if (slot != null)
+        {
+            this.slot = slot;
+            slot.setInterview(this);
+        }
+    }
 }

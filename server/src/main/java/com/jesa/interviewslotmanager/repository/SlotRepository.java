@@ -12,11 +12,7 @@ public interface SlotRepository extends JpaRepository<Slot, Long>
 {
     List<Slot> findByInterview(Interview interview);
 
-    List<Slot> findByInterviewer(User interviewer);
+    List<Slot> findByAvailableTrue();
 
-    List<Slot> findByCandidate(User candidate);
-
-    List<Slot> findByIsAvailableTrue();
-
-    List<Slot> findByInterviewDateAndIsAvailableTrue(Date interviewDate);
+    List<Slot> findByInterviewDateAndAvailableTrue(Date interviewDate);
 }

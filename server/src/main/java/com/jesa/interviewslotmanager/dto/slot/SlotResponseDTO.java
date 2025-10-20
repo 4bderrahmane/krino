@@ -14,7 +14,7 @@ public class SlotResponseDTO
 
     private Long id;
     private Integer durationInMinutes;
-    private boolean isAvailable = true;
+    private boolean available = true;
     private LocalDate interviewDate;
     private LocalTime startTime;
     private LocalTime endTime;

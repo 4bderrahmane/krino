@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.AccessLevel;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -21,14 +22,22 @@ public class Slot
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
+    @Column(name = "is_available", nullable = false)
+    private boolean available = true;
+
     private Integer durationInMinutes;
-
-    @Column(nullable = false)
-    private boolean isAvailable = true;
-
     private LocalDate interviewDate;
-
     private LocalTime startTime;
-
     private LocalTime endTime;
+
+    @Setter(AccessLevel.NONE)
+    @OneToOne(mappedBy = "slot")
+    private Interview interview;
+
+    public void setInterview(Interview interview)
+    {
+        this.interview = interview;
+        this.available = (interview == null);
+    }
 }

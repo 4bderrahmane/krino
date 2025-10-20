@@ -34,7 +34,7 @@ public class SlotService
     public SlotResponseDTO getSlotById(Long slotId)
     {
         Slot slot = slotRepository.findById(slotId)
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getName(), "id", slotId));
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "id", slotId));
         return modelMapper.map(slot, SlotResponseDTO.class);
     }
 
@@ -61,9 +61,9 @@ public class SlotService
         Slot existingSlot = slotRepository.findById(slotId)
                 .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getName(), "id", slotId));
 
-        if (slotUpdateDTO.getIsAvailable() != null)
+        if (slotUpdateDTO.getAvailable() != null)
         {
-            existingSlot.setAvailable(slotUpdateDTO.getIsAvailable());
+            existingSlot.setAvailable(slotUpdateDTO.getAvailable());
         }
         if (slotUpdateDTO.getInterviewDate() != null)
         {
