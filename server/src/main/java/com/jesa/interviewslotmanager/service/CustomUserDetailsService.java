@@ -30,7 +30,7 @@ public class CustomUserDetailsService implements UserDetailsService
     public CustomUserDetails loadUserById(Long userId)
     {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format("User with ID '%s' not found", userId)));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
         return new CustomUserDetails(user);
     }
 }

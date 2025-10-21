@@ -7,6 +7,7 @@ import com.jesa.interviewslotmanager.entity.CustomUserDetails;
 import com.jesa.interviewslotmanager.entity.User;
 import com.jesa.interviewslotmanager.entity.UserRole;
 import com.jesa.interviewslotmanager.exception.InvalidCredentialsException;
+import com.jesa.interviewslotmanager.exception.IncorrectPasswordException;
 import com.jesa.interviewslotmanager.exception.ResourceConflictException;
 import com.jesa.interviewslotmanager.exception.ResourceNotFoundException;
 import com.jesa.interviewslotmanager.repository.RefreshTokenRepository;
@@ -52,7 +53,7 @@ public class UserService
     public User addRoleToUser(Long userId, UserRole role)
     {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
 
         user.getRoles().add(role);
         return userRepository.save(user);
@@ -61,7 +62,7 @@ public class UserService
     public User getUserById(Long userId)
     {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
     }
 
     public List<UserResponseDTO> getAllUsers()
@@ -76,7 +77,7 @@ public class UserService
     public UserResponseDTO updateUserPartially(Long userId, UserUpdateDTO userUpdateDTO)
     {
         User currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
 
         if (userUpdateDTO.getUsername() != null && !userUpdateDTO.getUsername().equals(currentUser.getUsername()))
         {
@@ -120,7 +121,7 @@ public class UserService
     public UserResponseDTO updateUserFully(Long userId, UserUpdateDTO userUpdateDTO)
     {
         User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
 
         if (userUpdateDTO.getUsername() == null || userUpdateDTO.getEmail() == null
                 || userUpdateDTO.getFirstName() == null || userUpdateDTO.getLastName() == null
@@ -162,11 +163,11 @@ public class UserService
     public void changePassword(Long userId, UserUpdatePasswordDTO passwordChangeDTO)
     {
         User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
 
         if (!passwordEncoder.matches(passwordChangeDTO.getCurrentPassword(), existingUser.getPassword()))
         {
-            throw new InvalidCredentialsException("Current password is not correct.");
+            throw new IncorrectPasswordException("Current password is not correct.");
         }
 
         if (!passwordChangeDTO.getNewPassword().equals(passwordChangeDTO.getConfirmNewPassword()))
@@ -182,7 +183,7 @@ public class UserService
     public void deleteUserById(Long userId)
     {
         User userToDelete = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
 
         refreshTokenRepository.deleteAllByUserId(userId);
         userRepository.delete(userToDelete);
@@ -191,7 +192,7 @@ public class UserService
     public void approveUser(Long id)
     {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, id)));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", id));
 
         user.setApproved(true);
     }
@@ -207,7 +208,7 @@ public class UserService
     public CustomUserDetails loadUserById(Long userId)
     {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
         return new CustomUserDetails(user);
     }
 }

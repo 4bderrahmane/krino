@@ -48,7 +48,7 @@ public class SlotService
     public SlotResponseDTO updateSlot(Long slotId, SlotUpdateDTO slotUpdateDTO)
     {
         Slot existingSlot = slotRepository.findById(slotId)
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getName(), "id", slotId));
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "id", slotId));
 
         modelMapper.map(slotUpdateDTO, existingSlot);
         updateDuration(existingSlot);
@@ -59,7 +59,7 @@ public class SlotService
     public SlotResponseDTO patchSlot(Long slotId, SlotUpdateDTO slotUpdateDTO)
     {
         Slot existingSlot = slotRepository.findById(slotId)
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getName(), "id", slotId));
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "id", slotId));
 
         if (slotUpdateDTO.getAvailable() != null)
         {
@@ -88,7 +88,7 @@ public class SlotService
     {
         if (!slotRepository.existsById(slotId))
         {
-            throw new ResourceNotFoundException(Slot.class.getName(), "id", slotId);
+            throw new ResourceNotFoundException(Slot.class.getSimpleName(), "id", slotId);
 
         }
         slotRepository.deleteById(slotId);

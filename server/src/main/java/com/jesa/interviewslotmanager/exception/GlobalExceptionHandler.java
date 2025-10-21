@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -69,22 +68,8 @@ public class GlobalExceptionHandler
         return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ex.getErrorCode() != null ? ex.getErrorCode() : ErrorCode.RESOURCE_NOT_FOUND, request, null);
     }
 
-//    @ExceptionHandler(UsernameNotFoundException.class)
-//    public ResponseEntity<ErrorResponse> handleUserNotFound(Exception ex, HttpServletRequest request)
-//    {
-//        log.warn("User not found for request {}: {}", request.getRequestURI(), ex.getMessage());
-//        return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ErrorCode.USER_NOT_FOUND, request, null);
-//    }
-
     @ExceptionHandler({BadCredentialsException.class, InvalidCredentialsException.class})
     public ResponseEntity<ErrorResponse> handleBadCredentials(Exception ex, HttpServletRequest request)
-    {
-        log.warn("Invalid credentials attempt for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password", ErrorCode.INVALID_CREDENTIALS, request, null);
-    }
-
-    @ExceptionHandler({BadCredentialsException.class, InvalidCredentialsException.class})
-    public ResponseEntity<ErrorResponse> handleBadCredentialss(Exception ex, HttpServletRequest request)
     {
         log.warn("Invalid credentials attempt for request {}: {}", request.getRequestURI(), ex.getMessage());
         return createErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password", ErrorCode.INVALID_CREDENTIALS, request, null);

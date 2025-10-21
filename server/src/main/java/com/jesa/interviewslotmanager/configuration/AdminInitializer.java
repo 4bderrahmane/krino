@@ -27,7 +27,7 @@ public class AdminInitializer implements CommandLineRunner
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private static final Logger logger = LoggerFactory.getLogger(AdminInitializer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdminInitializer.class);
 
     @Override
     public void run(String... args) throws Exception
@@ -47,7 +47,7 @@ public class AdminInitializer implements CommandLineRunner
                     .build();
 
             userRepository.save(adminUser);
-            logger.info("ADMIN user created successfully.");
+            LOGGER.info("ADMIN user created successfully.");
         }
     }
 

@@ -32,7 +32,7 @@ public class ApplicationService
     public ApplicationResponseDTO getApplicationById(Long applicationId)
     {
         Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getName(), "id", applicationId));
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), "id", applicationId));
         return modelMapper.map(application, ApplicationResponseDTO.class);
     }
 
@@ -46,7 +46,7 @@ public class ApplicationService
     public ApplicationResponseDTO updateApplication(Long applicationId, ApplicationUpdateDTO applicationUpdateDTO)
     {
         Application existingApplication = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getName(), "id", applicationId));
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), "id", applicationId));
 
         modelMapper.map(applicationUpdateDTO, existingApplication);
         Application updatedApplication = applicationRepository.save(existingApplication);
@@ -56,7 +56,7 @@ public class ApplicationService
     public ApplicationResponseDTO patchApplication(Long applicationId, ApplicationUpdateDTO applicationUpdateDTO)
     {
         Application existingApplication = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getName(), "id", applicationId));
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), "id", applicationId));
 
         if (applicationUpdateDTO.getStatus() != null)
         {
@@ -75,7 +75,7 @@ public class ApplicationService
     {
         if (!applicationRepository.existsById(applicationId))
         {
-            throw new ResourceNotFoundException(Application.class.getName(), "id", applicationId);
+            throw new ResourceNotFoundException(Application.class.getSimpleName(), "id", applicationId);
         }
         applicationRepository.deleteById(applicationId);
     }

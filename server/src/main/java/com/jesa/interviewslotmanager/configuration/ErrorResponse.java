@@ -1,5 +1,6 @@
 package com.jesa.interviewslotmanager.configuration;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.jesa.interviewslotmanager.utility.ErrorCode;
 
@@ -8,6 +9,7 @@ import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ErrorResponse(
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
         Instant timestamp,
         int status,
         String message,

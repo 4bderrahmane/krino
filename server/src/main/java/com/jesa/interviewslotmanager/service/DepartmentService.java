@@ -20,7 +20,6 @@ import java.util.List;
 @Transactional
 public class DepartmentService
 {
-    private static final String DEPARTMENT_NOT_FOUND = "Department '%s' not found";
     private static final String DEPARTMENT_ALREADY_EXISTS = "Department '%s' already exists";
     private final DepartmentRepository departmentRepository;
     private final ModelMapper modelMapper;
@@ -29,7 +28,8 @@ public class DepartmentService
     {
         if (!departmentRepository.existsById(id))
         {
-            throw new ResourceNotFoundException(String.format(DEPARTMENT_NOT_FOUND, id));
+            // use object-name constructor to get DEPARTMENT_NOT_FOUND ErrorCode
+            throw new ResourceNotFoundException(Department.class.getSimpleName(), "id", id);
         }
         departmentRepository.deleteById(id);
     }
@@ -53,7 +53,7 @@ public class DepartmentService
     public DepartmentResponseDTO updateDepartment(Long id, DepartmentUpdateDTO departmentUpdateDTO)
     {
         Department existingDepartment = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(DEPARTMENT_NOT_FOUND, id)));
+                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "id", id));
 
         if (departmentRepository.findByName(departmentUpdateDTO.getName()).isPresent() && !existingDepartment.getName().equals(departmentUpdateDTO.getName()))
         {
@@ -70,7 +70,7 @@ public class DepartmentService
     public DepartmentResponseDTO patchDepartment(Long id, DepartmentUpdateDTO departmentUpdateDTO)
     {
         Department existingDepartment = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(DEPARTMENT_NOT_FOUND, id)));
+                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "id", id));
 
         if (departmentUpdateDTO.getName() != null)
         {
@@ -93,7 +93,7 @@ public class DepartmentService
     public DepartmentResponseDTO getDepartmentById(Long id)
     {
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(DEPARTMENT_NOT_FOUND, id)));
+                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "id", id));
         return modelMapper.map(department, DepartmentResponseDTO.class);
     }
 

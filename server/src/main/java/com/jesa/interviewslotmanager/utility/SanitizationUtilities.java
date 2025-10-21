@@ -29,7 +29,7 @@ public final class SanitizationUtilities
         {
             return data;
         }
-        Map<String, Object> cleaned = new LinkedHashMap<>(data.size());
+        Map<String, Object> cleaned = LinkedHashMap.newLinkedHashMap(data.size());
         data.forEach((k, v) ->
         {
             if (v instanceof String s)
