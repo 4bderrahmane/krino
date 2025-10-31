@@ -11,6 +11,7 @@ import com.jesa.interviewslotmanager.entity.UserRole;
 import com.jesa.interviewslotmanager.entity.RefreshToken;
 import com.jesa.interviewslotmanager.exception.InvalidCredentialsException;
 import com.jesa.interviewslotmanager.exception.InvalidRefreshTokenException;
+import com.jesa.interviewslotmanager.exception.RegistrationException;
 import com.jesa.interviewslotmanager.exception.ResourceConflictException;
 import com.jesa.interviewslotmanager.repository.UserRepository;
 import com.jesa.interviewslotmanager.utility.CookieUtilities;
@@ -97,8 +98,8 @@ public class AuthenticationService
 
         } catch (Exception e)
         {
-            log.error("Error during user registration for email {}: {}", normalizedEmail, e.getMessage());
-            throw new RuntimeException(STR."Registration failed: \{e.getMessage()}");
+            log.error("Error during user registration for email {}: {}", normalizedEmail, e.getMessage(), e);
+            throw new RegistrationException("Registration failed: " + e.getMessage(), e);
         }
     }
 
@@ -119,9 +120,7 @@ public class AuthenticationService
 
         cookieUtilities.setCookies(accessToken, refreshToken, response, "/", "/api/auth/");
 
-        AuthenticationResponseDTO authenticationResponseDto = new AuthenticationResponseDTO(accessToken, refreshToken, "Bearer", 360L, userResponse);
-
-        return authenticationResponseDto;
+        return new AuthenticationResponseDTO(accessToken, refreshToken, "Bearer", 360L, userResponse);
     }
 
     private String extractDeviceInfo(HttpServletRequest request)
@@ -147,7 +146,7 @@ public class AuthenticationService
         return request.getRemoteAddr();
     }
 
-    private Authentication authenticateUser(String email, String password)
+    private void authenticateUser(String email, String password)
     {
         try
         {
@@ -161,7 +160,6 @@ public class AuthenticationService
                 throw new InvalidCredentialsException("Authentication failed");
             }
 
-            return authentication;
         } catch (AuthenticationException e)
         {
             log.warn("Authentication failed for email: {}", email);

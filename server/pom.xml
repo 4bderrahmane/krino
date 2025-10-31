@@ -137,6 +137,12 @@
             <version>5.2.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- Add H2 for tests so test application.properties can use the driver -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

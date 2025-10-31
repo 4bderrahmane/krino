@@ -28,14 +28,7 @@ public class GlobalExceptionHandler
 
     private ResponseEntity<ErrorResponse> createErrorResponse(HttpStatus status, String message, ErrorCode errorCode, HttpServletRequest request, Map<String, Object> details)
     {
-        ErrorResponse errorResponse = new ErrorResponse(
-                Instant.now(),
-                status.value(),
-                message,
-                SanitizationUtilities.escapeForHtml(request.getRequestURI()),
-                errorCode,
-                details
-        );
+        ErrorResponse errorResponse = new ErrorResponse(Instant.now(), status.value(), message, SanitizationUtilities.escapeForHtml(request.getRequestURI()), errorCode, details);
         return new ResponseEntity<>(errorResponse, status);
     }
 
@@ -132,7 +125,13 @@ public class GlobalExceptionHandler
     public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(InvalidRefreshTokenException ex, HttpServletRequest request)
     {
         log.warn("Invalid refresh token for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), ErrorCode.INVALID_REFRESH_TOKEN, request, null);
+        return createErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                ex.getMessage(),
+                ErrorCode.INVALID_REFRESH_TOKEN,
+                request,
+                null
+        );
     }
 
     @ExceptionHandler(Exception.class)
