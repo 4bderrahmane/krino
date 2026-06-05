@@ -1,0 +1,18 @@
+package com.jesa.interviewslotmanager.repository;
+
+import com.jesa.interviewslotmanager.entity.Interview;
+import com.jesa.interviewslotmanager.entity.Slot;
+import com.jesa.interviewslotmanager.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Date;
+import java.util.List;
+
+public interface SlotRepository extends JpaRepository<Slot, Long>
+{
+    List<Slot> findByInterview(Interview interview);
+
+    List<Slot> findByAvailableTrue();
+
+    List<Slot> findByInterviewDateAndAvailableTrue(Date interviewDate);
+}
