@@ -1,0 +1,141 @@
+/*!* Success Toast - Bottom Left Positioning *!*/
+/*.success-toast {*/
+/*    position: fixed;*/
+/*    bottom: 2rem;*/
+/*    left: 2rem;*/
+/*    display: flex;*/
+/*    align-items: center;*/
+/*    background-color: #10b981;*/
+/*    color: white;*/
+/*    padding: 0.75rem 1.25rem;*/
+/*    border-radius: 0.5rem;*/
+/*    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);*/
+/*    transition: all 0.3s ease-in-out;*/
+/*    transform: translateX(-100%);*/
+/*    opacity: 0;*/
+/*    z-index: 1000;*/
+/*    visibility: hidden;*/
+/*}*/
+
+/*.success-toast.visible {*/
+/*    transform: translateX(0);*/
+/*    opacity: 1;*/
+/*    visibility: visible;*/
+/*}*/
+
+/*!* Success Toast Content *!*/
+/*.success-toast-content {*/
+/*    display: flex;*/
+/*    align-items: center;*/
+/*    gap: 0.75rem;*/
+/*    flex: 1;*/
+/*}*/
+
+/*!* Success Icon *!*/
+/*.success-toast-icon {*/
+/*    width: 1.5rem;*/
+/*    height: 1.5rem;*/
+/*    margin-right: 0.75rem;*/
+/*    flex-shrink: 0;*/
+/*}*/
+
+/*!* Success Message *!*/
+/*.success-message {*/
+/*    flex: 1;*/
+/*}*/
+
+/*!* Close Button *!*/
+/*.success-toast-close {*/
+/*    margin-left: 1rem;*/
+/*    background: none;*/
+/*    border: none;*/
+/*    color: rgba(255, 255, 255, 0.7);*/
+/*    cursor: pointer;*/
+/*    padding: 0;*/
+/*    display: flex;*/
+/*    align-items: center;*/
+/*    transition: color 0.2s ease;*/
+/*}*/
+
+/*.success-toast-close:hover {*/
+/*    color: white;*/
+/*}*/
+
+/*.success-toast-close-icon {*/
+/*    width: 1.25rem;*/
+/*    height: 1.25rem;*/
+/*}*/
+
+/*!* Mobile Responsiveness *!*/
+/*@media (max-width: 480px) {*/
+/*    .success-toast {*/
+/*        left: 10px;*/
+/*        right: 10px;*/
+/*        bottom: 10px;*/
+/*    }*/
+
+/*    .success-toast-content {*/
+/*        min-width: auto;*/
+/*        width: 100%;*/
+/*    }*/
+/*}*/
+
+.success-notification {
+    position: fixed;
+    bottom: 2rem; /* 32px / 16px = 2rem */
+    left: 2rem; /* 32px / 16px = 2rem */
+    display: flex;
+    align-items: center;
+    background-color: #10b981; /* green-500 */
+    color: white;
+    padding: 0.75rem 1.25rem; /* py-3 px-5 */
+    border-radius: 0.5rem; /* rounded-lg */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* shadow-2xl */
+    transition: all 300ms ease-in-out;
+    transform: translateX(0);
+    opacity: 1;
+}
+
+/* Hidden state */
+.success-notification.hidden {
+    transform: translateX(-100%);
+    opacity: 0;
+}
+
+/* Visible state */
+.success-notification.visible {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+/* Success Icon */
+.success-icon {
+    width: 1.5rem; /* w-6 */
+    height: 1.5rem; /* h-6 */
+    margin-right: 0.75rem; /* mr-3 */
+    flex-shrink: 0;
+}
+
+/* Close Button */
+.close-button {
+    margin-left: 1rem; /* ml-4 */
+    color: #d1fae5; /* green-100 */
+    transition: color 150ms;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-button:hover {
+    color: white;
+}
+
+/* Close Icon */
+.close-icon {
+    width: 1.25rem; /* h-5 w-5 */
+    height: 1.25rem;
+}

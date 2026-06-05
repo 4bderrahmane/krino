@@ -1,0 +1,131 @@
+.settings-card {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 600px;
+}
+
+.settings-card h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f3f4f6;
+    padding-bottom: 16px;
+}
+
+.form-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.info-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.info-label {
+    min-width: 140px;
+    text-align: left;
+    font-weight: 500;
+    color: #374151;
+}
+
+.info-value {
+    flex: 1;
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+}
+
+.info-value:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.form-footer {
+    margin-top: 24px;
+    text-align: right;
+}
+
+.button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.settings-button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    background-color: #4f46e5;
+    color: white;
+}
+
+.settings-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.settings-button:hover:not(:disabled) {
+    background-color: #4338ca;
+}
+
+.secondary-button {
+    background-color: #e5e7eb;
+    color: #1f2937;
+}
+
+.secondary-button:hover:not(:disabled) {
+    background-color: #d1d5db;
+}
+
+.danger-zone {
+    border-color: #ef4444;
+}
+
+.danger-header {
+    color: #dc2626;
+}
+
+.danger-button {
+    background-color: #dc2626;
+}
+
+.danger-button:hover:not(:disabled) {
+    background-color: #b91c1c;
+}
+
+.settings-success {
+    margin-top: 16px;
+    color: #16a34a;
+    text-align: left;
+}
+
+.settings-error {
+    margin-top: 16px;
+    color: #dc2626;
+    text-align: left;
+}
+
+.settings-center-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 60vh;
+    width: 100%;
+}

@@ -1,0 +1,227 @@
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 60px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand a {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.navbar-menu {
+    display: flex;
+    align-items: center;
+}
+
+.navbar-links {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-links li {
+    margin-right: 1.5rem;
+}
+
+.navbar-links li.active {
+    /* background-color: #e6f7ff; lol */
+    border-bottom: 2px solid #1890ff;
+}
+
+.navbar-links li.active a {
+    color: #1890ff;
+    font-weight: bold;
+}
+
+.navbar-links a {
+    color: #4b5563;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.navbar-links a:hover {
+    color: #2563eb;
+}
+
+.navbar-user {
+    position: relative;
+    margin-left: 1rem;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.user-profile:hover {
+    background-color: #f3f4f6;
+}
+
+.user-name {
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+.dropdown-icon {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px); /* Position below the user profile with a small gap */
+    min-width: 180px; /* Set a minimum width */
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    padding: 0.5rem 0;
+    width: auto; /* Allow width to be determined by content */
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    color: #4b5563;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.dropdown-item .dropdown-icon-svg {
+    vertical-align: middle;
+    font-size: 1.2em;
+    margin-bottom: 2px;
+    margin-right: 0.5em;
+}
+
+.dropdown-item:hover {
+    background-color: #f3f4f6;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #e5e7eb;
+    margin: 0.5rem 0;
+}
+
+.logout-button {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #ef4444;
+}
+
+.logout-button:hover {
+    background-color: #fef2f2;
+}
+
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* Remove underline from welcome message username */
+.welcome-message span,
+.welcome-username,
+.user-welcome span {
+    text-decoration: none !important;
+    border-bottom: none !important;
+}
+
+/*
+  Try to identify the specific class used for the "Welcome, username" message
+  or the span wrapping the username within the Navbar.
+  Common examples might be .navbar-user-greeting, .welcome-text, .username-display, etc.
+  Replace '.navbar-username-span-class' with the actual class if you know it.
+*/
+
+/* General approach for spans within typical navbar user sections */
+.navbar .user-info span,
+.navbar .user-greeting span,
+.navbar .welcome-message span,
+.navbar .navbar-text span, /* If it's a generic text element in the navbar */
+.navbar p span, /* If the welcome message is in a paragraph */
+.navbar-username-span-class /* Replace with actual class if known */ {
+    text-decoration: none !important;
+    border-bottom: none !important;
+    background-image: none !important; /* In case underline is a background image */
+    box-shadow: none !important; /* In case underline is a shadow */
+    /* Remove any pseudo-elements that might be creating a line */
+    position: relative; /* Often needed if ::after was positioned absolutely */
+}
+
+.navbar .user-info span::after,
+.navbar .user-info span::before,
+.navbar .user-greeting span::after,
+.navbar .user-greeting span::before,
+.navbar .welcome-message span::after,
+.navbar .welcome-message span::before,
+.navbar .navbar-text span::after,
+.navbar .navbar-text span::before,
+.navbar p span::after,
+.navbar p span::before,
+.navbar-username-span-class::after,
+.navbar-username-span-class::before {
+    display: none !important;
+    content: '' !important;
+    height: 0 !important;
+    border: none !important;
+    background: none !important;
+}
+
+.dropdown-parent {
+    position: relative;
+}
+
+.dropdown-submenu {
+    display: none;
+    position: absolute;
+    right: 100%;
+    left: auto;
+    top: 0;
+    min-width: 180px;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 20;
+    padding: 0.5rem 0;
+    margin-right: 4px;
+}
+
+.dropdown-parent:hover .dropdown-submenu,
+.dropdown-parent:focus-within .dropdown-submenu {
+    display: block;
+}
+
+.dropdown-submenu .dropdown-item {
+    white-space: nowrap;
+    padding: 0.5rem 1rem;
+    color: #4b5563;
+    background: none;
+    border: none;
+    text-align: left;
+    width: 100%;
+}
+
+.dropdown-submenu .dropdown-item:hover {
+    background: #f3f4f6;
+    color: #2563eb;
+}

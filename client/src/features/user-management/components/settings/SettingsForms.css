@@ -1,0 +1,136 @@
+.settings-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settings-card h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.info-value {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #1f2937;
+  background: #f9fafb;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.info-value:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  background: #fff;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-button {
+  display: inline-block;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 500;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.settings-button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.settings-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  background: #e5e7eb;
+  color: #4b5563;
+  margin-right: 8px;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: #d1d5db;
+}
+
+.danger-zone {
+  border: 1px solid #fee2e2;
+}
+
+.danger-header {
+  color: #dc2626 !important;
+}
+
+.danger-button {
+  background: #dc2626;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.button-group {
+  gap: 8px;
+}
+
+/* Success and error messages */
+.settings-success {
+  color: #16a34a;
+  margin-top: 16px;
+  font-weight: 500;
+}
+
+.settings-error {
+  color: #dc2626;
+  margin-top: 16px;
+  font-weight: 500;
+}
+
+@media (min-width: 640px) {
+  .info-row {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .info-label {
+    width: 150px;
+    flex-shrink: 0;
+  }
+}
