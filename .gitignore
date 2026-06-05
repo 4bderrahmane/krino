@@ -1,0 +1,37 @@
+# Root-level ignores for the monorepo.
+# Each sub-project (client/, server/) also has its own scoped .gitignore.
+
+# ----- OS files -----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ----- Editors / IDEs -----
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# ----- Local tooling -----
+.claude/settings.local.json
+
+# ----- Environment / secrets -----
+.env
+.env.*
+!.env.example
+
+# ----- Logs -----
+*.log
+logs/
+
+# ----- Safety nets (also covered per-project) -----
+# Node / client
+node_modules/
+dist/
+dist-ssr/
+
+# Java / server
+target/
+HELP.md

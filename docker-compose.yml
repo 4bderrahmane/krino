@@ -1,0 +1,53 @@
+# Docker Compose for local/dev orchestration of the Interview Slot Manager monorepo.
+#
+# The client is a static SPA whose browser code calls the API at
+# http://localhost:8080/api (see client/src/shared/services/api.ts), so the
+# server is published on host port 8080 to match that expectation.
+#
+# NOTE: The server needs a reachable MySQL database and an
+# application.properties (server/src/main/resources/application.properties,
+# which is git-ignored). Uncomment and configure the `db` service below, or
+# point the server at an external database, before relying on this.
+
+services:
+  server:
+    build:
+      context: ./server
+    container_name: ism-server
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    # environment:
+    #   SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/interview_slots
+    #   SPRING_DATASOURCE_USERNAME: ism
+    #   SPRING_DATASOURCE_PASSWORD: change-me
+    # depends_on:
+    #   - db
+
+  client:
+    build:
+      context: ./client
+    container_name: ism-client
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  # Uncomment to run a local MySQL alongside the services.
+  # db:
+  #   image: mysql:8
+  #   container_name: ism-db
+  #   environment:
+  #     MYSQL_DATABASE: interview_slots
+  #     MYSQL_USER: ism
+  #     MYSQL_PASSWORD: change-me
+  #     MYSQL_ROOT_PASSWORD: change-me-root
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - db-data:/var/lib/mysql
+  #   restart: unless-stopped
+
+# volumes:
+#   db-data:
