@@ -1,8 +1,8 @@
-package com.jesa.interviewslotmanager.security;
+package com.krino.backend.security;
 
 import tools.jackson.databind.ObjectMapper;
-import com.jesa.interviewslotmanager.utility.ErrorCode;
-import com.jesa.interviewslotmanager.configuration.ErrorResponse;
+import com.krino.backend.utility.ErrorCode;
+import com.krino.backend.configuration.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;

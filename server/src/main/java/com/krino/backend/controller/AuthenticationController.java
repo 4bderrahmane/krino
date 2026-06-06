@@ -1,10 +1,10 @@
-package com.jesa.interviewslotmanager.controller;
+package com.krino.backend.controller;
 
-import com.jesa.interviewslotmanager.dto.authentication.AuthenticationResponseDTO;
-import com.jesa.interviewslotmanager.dto.authentication.RegistrationResponseDTO;
-import com.jesa.interviewslotmanager.dto.user.UserLoginDTO;
-import com.jesa.interviewslotmanager.dto.user.UserRegistrationDTO;
-import com.jesa.interviewslotmanager.service.AuthenticationService;
+import com.krino.backend.dto.authentication.AuthenticationResponseDTO;
+import com.krino.backend.dto.authentication.RegistrationResponseDTO;
+import com.krino.backend.dto.user.UserLoginDTO;
+import com.krino.backend.dto.user.UserRegistrationDTO;
+import com.krino.backend.service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;

@@ -1,7 +1,7 @@
-package com.jesa.interviewslotmanager.dto.application;
+package com.krino.backend.dto.application;
 
-import com.jesa.interviewslotmanager.dto.user.UserResponseDTO;
-import com.jesa.interviewslotmanager.entity.ApplicationStatus;
+import com.krino.backend.dto.user.UserResponseDTO;
+import com.krino.backend.entity.ApplicationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

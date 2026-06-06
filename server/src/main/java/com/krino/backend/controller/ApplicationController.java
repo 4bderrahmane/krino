@@ -1,9 +1,9 @@
-package com.jesa.interviewslotmanager.controller;
+package com.krino.backend.controller;
 
-import com.jesa.interviewslotmanager.dto.application.ApplicationCreateDTO;
-import com.jesa.interviewslotmanager.dto.application.ApplicationResponseDTO;
-import com.jesa.interviewslotmanager.dto.application.ApplicationUpdateDTO;
-import com.jesa.interviewslotmanager.service.ApplicationService;
+import com.krino.backend.dto.application.ApplicationCreateDTO;
+import com.krino.backend.dto.application.ApplicationResponseDTO;
+import com.krino.backend.dto.application.ApplicationUpdateDTO;
+import com.krino.backend.service.ApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.entity;
+package com.krino.backend.entity;
 
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;

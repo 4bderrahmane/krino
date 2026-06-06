@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.entity;
+package com.krino.backend.entity;
 
 import java.util.Set;
 import java.util.stream.Collectors;

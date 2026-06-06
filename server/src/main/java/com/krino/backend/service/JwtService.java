@@ -1,7 +1,7 @@
-package com.jesa.interviewslotmanager.service;
+package com.krino.backend.service;
 
-import com.jesa.interviewslotmanager.entity.CustomUserDetails;
-import com.jesa.interviewslotmanager.exception.TokenException;
+import com.krino.backend.entity.CustomUserDetails;
+import com.krino.backend.exception.TokenException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

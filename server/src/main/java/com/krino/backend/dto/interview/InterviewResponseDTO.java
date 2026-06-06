@@ -1,8 +1,8 @@
-package com.jesa.interviewslotmanager.dto.interview;
+package com.krino.backend.dto.interview;
 
-import com.jesa.interviewslotmanager.dto.job.JobResponseDTO;
-import com.jesa.interviewslotmanager.dto.slot.SlotResponseDTO;
-import com.jesa.interviewslotmanager.dto.user.UserResponseDTO;
+import com.krino.backend.dto.job.JobResponseDTO;
+import com.krino.backend.dto.slot.SlotResponseDTO;
+import com.krino.backend.dto.user.UserResponseDTO;
 import lombok.*;
 
 @Getter

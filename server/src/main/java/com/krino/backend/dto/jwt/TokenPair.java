@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.dto.jwt;
+package com.krino.backend.dto.jwt;
 
 import lombok.*;
 

@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.configuration;
+package com.krino.backend.configuration;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

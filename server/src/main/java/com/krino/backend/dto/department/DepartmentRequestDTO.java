@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.dto.department;
+package com.krino.backend.dto.department;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

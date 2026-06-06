@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.dto.interview;
+package com.krino.backend.dto.interview;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.*;

@@ -1,6 +1,6 @@
-package com.jesa.interviewslotmanager.dto.application;
+package com.krino.backend.dto.application;
 
-import com.jesa.interviewslotmanager.entity.ApplicationStatus;
+import com.krino.backend.entity.ApplicationStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;

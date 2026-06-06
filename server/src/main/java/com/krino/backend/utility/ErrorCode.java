@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.utility;
+package com.krino.backend.utility;
 
 public enum ErrorCode
 {

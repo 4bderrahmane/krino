@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.dto.department;
+package com.krino.backend.dto.department;
 
 import lombok.Data;
 

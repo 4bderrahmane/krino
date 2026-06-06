@@ -1,9 +1,9 @@
-package com.jesa.interviewslotmanager.security;
+package com.krino.backend.security;
 
-import com.jesa.interviewslotmanager.service.CustomUserDetailsService;
-import com.jesa.interviewslotmanager.service.JwtService;
-import com.jesa.interviewslotmanager.entity.CustomUserDetails;
-import com.jesa.interviewslotmanager.utility.CookieUtilities;
+import com.krino.backend.service.CustomUserDetailsService;
+import com.krino.backend.service.JwtService;
+import com.krino.backend.entity.CustomUserDetails;
+import com.krino.backend.utility.CookieUtilities;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

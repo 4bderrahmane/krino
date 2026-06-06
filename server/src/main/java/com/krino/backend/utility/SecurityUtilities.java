@@ -1,6 +1,6 @@
-package com.jesa.interviewslotmanager.utility;
+package com.krino.backend.utility;
 
-import com.jesa.interviewslotmanager.entity.CustomUserDetails;
+import com.krino.backend.entity.CustomUserDetails;
 import lombok.experimental.UtilityClass;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;

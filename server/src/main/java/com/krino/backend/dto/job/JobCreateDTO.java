@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.dto.job;
+package com.krino.backend.dto.job;
 
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;

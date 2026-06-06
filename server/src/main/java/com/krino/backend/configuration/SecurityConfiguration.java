@@ -1,8 +1,8 @@
-package com.jesa.interviewslotmanager.configuration;
+package com.krino.backend.configuration;
 
-import com.jesa.interviewslotmanager.security.CustomAccessDeniedHandler;
-import com.jesa.interviewslotmanager.security.CustomAuthenticationEntryPoint;
-import com.jesa.interviewslotmanager.security.JwtCookieAuthenticationFilter;
+import com.krino.backend.security.CustomAccessDeniedHandler;
+import com.krino.backend.security.CustomAuthenticationEntryPoint;
+import com.krino.backend.security.JwtCookieAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

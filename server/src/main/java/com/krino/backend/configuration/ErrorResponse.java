@@ -1,8 +1,8 @@
-package com.jesa.interviewslotmanager.configuration;
+package com.krino.backend.configuration;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.jesa.interviewslotmanager.utility.ErrorCode;
+import com.krino.backend.utility.ErrorCode;
 
 import java.time.Instant;
 import java.util.Map;

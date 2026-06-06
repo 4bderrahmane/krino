@@ -1,11 +1,11 @@
-package com.jesa.interviewslotmanager.controller;
+package com.krino.backend.controller;
 
-import com.jesa.interviewslotmanager.dto.user.UserResponseDTO;
-import com.jesa.interviewslotmanager.dto.user.UserUpdateDTO;
-import com.jesa.interviewslotmanager.dto.user.UserUpdatePasswordDTO;
-import com.jesa.interviewslotmanager.entity.User;
-import com.jesa.interviewslotmanager.entity.CustomUserDetails;
-import com.jesa.interviewslotmanager.service.UserService;
+import com.krino.backend.dto.user.UserResponseDTO;
+import com.krino.backend.dto.user.UserUpdateDTO;
+import com.krino.backend.dto.user.UserUpdatePasswordDTO;
+import com.krino.backend.entity.User;
+import com.krino.backend.entity.CustomUserDetails;
+import com.krino.backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;

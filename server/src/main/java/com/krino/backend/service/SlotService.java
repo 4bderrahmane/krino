@@ -1,11 +1,11 @@
-package com.jesa.interviewslotmanager.service;
+package com.krino.backend.service;
 
-import com.jesa.interviewslotmanager.dto.slot.SlotRequestDTO;
-import com.jesa.interviewslotmanager.dto.slot.SlotResponseDTO;
-import com.jesa.interviewslotmanager.dto.slot.SlotUpdateDTO;
-import com.jesa.interviewslotmanager.entity.Slot;
-import com.jesa.interviewslotmanager.exception.ResourceNotFoundException;
-import com.jesa.interviewslotmanager.repository.SlotRepository;
+import com.krino.backend.dto.slot.SlotRequestDTO;
+import com.krino.backend.dto.slot.SlotResponseDTO;
+import com.krino.backend.dto.slot.SlotUpdateDTO;
+import com.krino.backend.entity.Slot;
+import com.krino.backend.exception.ResourceNotFoundException;
+import com.krino.backend.repository.SlotRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;

@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.utility;
+package com.krino.backend.utility;
 
 import org.springframework.web.util.HtmlUtils;
 

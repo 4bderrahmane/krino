@@ -1,8 +1,7 @@
-package com.jesa.interviewslotmanager.repository;
+package com.krino.backend.repository;
 
-import com.jesa.interviewslotmanager.entity.Interview;
-import com.jesa.interviewslotmanager.entity.Slot;
-import com.jesa.interviewslotmanager.entity.User;
+import com.krino.backend.entity.Interview;
+import com.krino.backend.entity.Slot;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Date;

@@ -1,8 +1,8 @@
-package com.jesa.interviewslotmanager.service;
+package com.krino.backend.service;
 
-import com.jesa.interviewslotmanager.entity.RefreshToken;
-import com.jesa.interviewslotmanager.entity.User;
-import com.jesa.interviewslotmanager.repository.RefreshTokenRepository;
+import com.krino.backend.entity.RefreshToken;
+import com.krino.backend.entity.User;
+import com.krino.backend.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

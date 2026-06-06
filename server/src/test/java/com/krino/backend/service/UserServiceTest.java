@@ -1,10 +1,10 @@
-package com.jesa.interviewslotmanager.service;
+package com.krino.backend.service;
 
-import com.jesa.interviewslotmanager.dto.user.UserUpdatePasswordDTO;
-import com.jesa.interviewslotmanager.entity.User;
-import com.jesa.interviewslotmanager.exception.IncorrectPasswordException;
-import com.jesa.interviewslotmanager.exception.InvalidCredentialsException;
-import com.jesa.interviewslotmanager.repository.UserRepository;
+import com.krino.backend.dto.user.UserUpdatePasswordDTO;
+import com.krino.backend.entity.User;
+import com.krino.backend.exception.IncorrectPasswordException;
+import com.krino.backend.exception.InvalidCredentialsException;
+import com.krino.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;

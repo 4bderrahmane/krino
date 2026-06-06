@@ -1,13 +1,13 @@
-package com.jesa.interviewslotmanager.service;
+package com.krino.backend.service;
 
-import com.jesa.interviewslotmanager.dto.department.DepartmentCreateDTO;
-import com.jesa.interviewslotmanager.dto.department.DepartmentResponseDTO;
-import com.jesa.interviewslotmanager.dto.department.DepartmentUpdateDTO;
-import com.jesa.interviewslotmanager.entity.Department;
-import com.jesa.interviewslotmanager.exception.ResourceConflictException;
-import com.jesa.interviewslotmanager.exception.ResourceNotFoundException;
-import com.jesa.interviewslotmanager.repository.DepartmentRepository;
-import com.jesa.interviewslotmanager.utility.ErrorCode;
+import com.krino.backend.dto.department.DepartmentCreateDTO;
+import com.krino.backend.dto.department.DepartmentResponseDTO;
+import com.krino.backend.dto.department.DepartmentUpdateDTO;
+import com.krino.backend.entity.Department;
+import com.krino.backend.exception.ResourceConflictException;
+import com.krino.backend.exception.ResourceNotFoundException;
+import com.krino.backend.repository.DepartmentRepository;
+import com.krino.backend.utility.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;

@@ -1,6 +1,6 @@
-package com.jesa.interviewslotmanager.repository;
+package com.krino.backend.repository;
 
-import com.jesa.interviewslotmanager.entity.RefreshToken;
+import com.krino.backend.entity.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

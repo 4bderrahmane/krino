@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.dto.user;
+package com.krino.backend.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;

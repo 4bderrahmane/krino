@@ -1,8 +1,8 @@
-package com.jesa.interviewslotmanager.configuration;
+package com.krino.backend.configuration;
 
-import com.jesa.interviewslotmanager.entity.UserRole;
-import com.jesa.interviewslotmanager.entity.User;
-import com.jesa.interviewslotmanager.repository.UserRepository;
+import com.krino.backend.entity.UserRole;
+import com.krino.backend.entity.User;
+import com.krino.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;

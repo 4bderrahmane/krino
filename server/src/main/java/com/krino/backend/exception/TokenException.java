@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.exception;
+package com.krino.backend.exception;
 
 public class TokenException extends RuntimeException
 {

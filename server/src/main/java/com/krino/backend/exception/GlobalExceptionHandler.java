@@ -1,8 +1,8 @@
-package com.jesa.interviewslotmanager.exception;
+package com.krino.backend.exception;
 
-import com.jesa.interviewslotmanager.configuration.ErrorResponse;
-import com.jesa.interviewslotmanager.utility.ErrorCode;
-import com.jesa.interviewslotmanager.utility.SanitizationUtilities;
+import com.krino.backend.configuration.ErrorResponse;
+import com.krino.backend.utility.ErrorCode;
+import com.krino.backend.utility.SanitizationUtilities;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

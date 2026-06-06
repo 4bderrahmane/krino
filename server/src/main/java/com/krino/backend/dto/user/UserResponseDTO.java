@@ -1,6 +1,6 @@
-package com.jesa.interviewslotmanager.dto.user;
+package com.krino.backend.dto.user;
 
-import com.jesa.interviewslotmanager.entity.UserRole;
+import com.krino.backend.entity.UserRole;
 import lombok.*;
 
 import java.util.Set;

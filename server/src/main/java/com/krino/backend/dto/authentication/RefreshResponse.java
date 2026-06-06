@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.dto.authentication;
+package com.krino.backend.dto.authentication;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,6 +1,6 @@
-package com.jesa.interviewslotmanager.dto.job;
+package com.krino.backend.dto.job;
 
-import com.jesa.interviewslotmanager.dto.department.DepartmentResponseDTO;
+import com.krino.backend.dto.department.DepartmentResponseDTO;
 import lombok.Data;
 
 @Data

@@ -1,7 +1,7 @@
-package com.jesa.interviewslotmanager.security;
+package com.krino.backend.security;
 
-import com.jesa.interviewslotmanager.configuration.ErrorResponse;
-import com.jesa.interviewslotmanager.utility.ErrorCode;
+import com.krino.backend.configuration.ErrorResponse;
+import com.krino.backend.utility.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;

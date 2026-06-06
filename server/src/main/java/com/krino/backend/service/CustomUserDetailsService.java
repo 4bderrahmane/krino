@@ -1,9 +1,9 @@
-package com.jesa.interviewslotmanager.service;
+package com.krino.backend.service;
 
-import com.jesa.interviewslotmanager.entity.User;
-import com.jesa.interviewslotmanager.entity.CustomUserDetails;
-import com.jesa.interviewslotmanager.exception.ResourceNotFoundException;
-import com.jesa.interviewslotmanager.repository.UserRepository;
+import com.krino.backend.entity.User;
+import com.krino.backend.entity.CustomUserDetails;
+import com.krino.backend.exception.ResourceNotFoundException;
+import com.krino.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

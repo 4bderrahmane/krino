@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager.entity;
+package com.krino.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Set;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 
 @Getter

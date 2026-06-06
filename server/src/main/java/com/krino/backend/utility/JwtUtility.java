@@ -1,6 +1,6 @@
-package com.jesa.interviewslotmanager.utility;
+package com.krino.backend.utility;
 
-import com.jesa.interviewslotmanager.entity.CustomUserDetails;
+import com.krino.backend.entity.CustomUserDetails;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;

@@ -1,6 +1,6 @@
-package com.jesa.interviewslotmanager.exception;
+package com.krino.backend.exception;
 
-import com.jesa.interviewslotmanager.utility.ErrorCode;
+import com.krino.backend.utility.ErrorCode;
 import lombok.Getter;
 
 @Getter
