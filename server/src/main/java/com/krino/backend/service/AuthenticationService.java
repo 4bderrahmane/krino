@@ -120,7 +120,7 @@ public class AuthenticationService
 
         cookieUtilities.setCookies(accessToken, refreshToken, response, "/", "/api/auth/");
 
-        return new AuthenticationResponseDTO(accessToken, refreshToken, "Bearer", 360L, userResponse);
+        return new AuthenticationResponseDTO("Bearer", jwtService.getAccessTokenExpiryInSeconds(), userResponse);
     }
 
     private String extractDeviceInfo(HttpServletRequest request)
@@ -206,8 +206,6 @@ public class AuthenticationService
         log.info("Access and refresh tokens rotated successfully for user: {}", user.getEmail());
 
         return AuthenticationResponseDTO.builder()
-                .accessToken(newAccessToken)
-                .refreshToken(newRefreshToken)
                 .tokenType("Bearer")
                 .expiresIn(jwtService.getAccessTokenExpiryInSeconds())
                 .user(userResponse)

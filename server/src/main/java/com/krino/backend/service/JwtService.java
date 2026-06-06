@@ -9,11 +9,12 @@ import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 
+import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -32,7 +33,7 @@ public class JwtService
     @Value("${app.jwt.access-token-expiration.ms}")
     private long accessTokenExpirationInMs;
 
-    private Key signingKey;
+    private SecretKey signingKey;
 
     @PostConstruct
     protected void init()
@@ -50,16 +51,16 @@ public class JwtService
         Date expiryDate = new Date(now.getTime() + accessTokenExpirationInMs);
 
         return Jwts.builder()
-                .setSubject(userDetails.getId().toString())
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .setIssuer(issuer)
+                .subject(userDetails.getId().toString())
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .issuer(issuer)
                 .claim("email", userDetails.getEmail())
                 .claim("roles", userDetails.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))
                 .claim("type", "access")
-                .signWith(signingKey, SignatureAlgorithm.HS256)
+                .signWith(signingKey, Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -67,10 +68,10 @@ public class JwtService
     {
         try
         {
-            Jwts.parserBuilder()
-                    .setSigningKey(signingKey)
+            Jwts.parser()
+                    .verifyWith(signingKey)
                     .build()
-                    .parseClaimsJws(token);
+                    .parseSignedClaims(token);
             return true;
         } catch (SignatureException ex)
         {
@@ -95,11 +96,11 @@ public class JwtService
     {
         try
         {
-            return Jwts.parserBuilder()
-                    .setSigningKey(signingKey)
+            return Jwts.parser()
+                    .verifyWith(signingKey)
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token)
+                    .getPayload();
         } catch (Exception e)
         {
             log.error("Could not parse claims from token: {}", e.getMessage());

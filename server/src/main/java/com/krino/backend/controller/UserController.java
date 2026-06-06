@@ -124,6 +124,7 @@ public class UserController
 
 
     @GetMapping("/non-approved")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserResponseDTO>> getNonApprovedUsers()
     {
         List<UserResponseDTO> nonApprovedUsers = userService.getNonApprovedUsers();

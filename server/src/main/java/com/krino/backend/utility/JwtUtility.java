@@ -2,6 +2,8 @@ package com.jesa.interviewslotmanager.utility;
 
 import com.jesa.interviewslotmanager.entity.CustomUserDetails;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +13,8 @@ import org.springframework.util.StringUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -29,6 +33,8 @@ public class JwtUtility
     @Value("${app.jwt.access-token-expiration.ms}")
     private long accessTokenExpirationInMs;
 
+    private SecretKey signingKey;
+
     @PostConstruct
     protected void init()
     {
@@ -36,6 +42,7 @@ public class JwtUtility
         {
             log.warn("JWT secret key should be at least 32 characters");
         }
+        this.signingKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateAccessToken(CustomUserDetails userDetails)
@@ -44,16 +51,16 @@ public class JwtUtility
         Date expiryDate = new Date(now.getTime() + accessTokenExpirationInMs);
 
         return Jwts.builder()
-                .setSubject(userDetails.getId().toString())
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .setIssuer(issuer)
+                .subject(userDetails.getId().toString())
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .issuer(issuer)
                 .claim("email", userDetails.getEmail())
                 .claim("roles", userDetails.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))
                 .claim("type", "access")
-                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .signWith(signingKey, Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -62,8 +69,9 @@ public class JwtUtility
         try
         {
             Jwts.parser()
-                    .setSigningKey(secretKey)
-                    .parseClaimsJws(token);
+                    .verifyWith(signingKey)
+                    .build()
+                    .parseSignedClaims(token);
             return true;
         } catch (SignatureException ex)
         {
@@ -89,9 +97,10 @@ public class JwtUtility
         try
         {
             return Jwts.parser()
-                    .setSigningKey(secretKey)
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .verifyWith(signingKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
         } catch (Exception e)
         {
             log.error("Could not parse claims from token: {}", e.getMessage());

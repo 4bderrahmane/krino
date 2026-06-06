@@ -5,14 +5,16 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.4</version>
+        <version>4.0.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.InterviewManager</groupId>
-    <artifactId>interview-slot-manager</artifactId>
+
+    <groupId>com.krino</groupId>
+    <artifactId>backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>interview-slot-manager</name>
-    <description>Interview slot management system for scheduling and managing candidate interviews</description>
+
+    <name>krino</name>
+    <description>Krino is a system for scheduling and managing candidate interviews at a company</description>
     <url/>
     <licenses>
         <license/>
@@ -27,11 +29,7 @@
         <url/>
     </scm>
     <properties>
-        <java.version>21</java.version>
-        <!-- byte-buddy agent used for Mockito inline instrumentation at test runtime -->
-        <bytebuddy.agent.version>1.17.6</bytebuddy.agent.version>
-        <maven.dependency.plugin.version>3.5.0</maven.dependency.plugin.version>
-        <maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
+        <java.version>25</java.version>
     </properties>
     <dependencies>
         <dependency>
@@ -59,9 +57,13 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.modelmapper</groupId>
             <artifactId>modelmapper</artifactId>
-            <version>3.1.1</version>
+            <version>3.2.6</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -79,11 +81,9 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.18.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -96,35 +96,20 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-            <version>3.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>8.0.1.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>jakarta.el</artifactId>
-            <version>4.0.2</version>
-        </dependency>
-        <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.11.5</version>
+            <version>0.12.6</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.11.5</version>
+            <version>0.12.6</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
-            <version>0.11.5</version>
+            <version>0.12.6</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -132,16 +117,13 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <version>5.2.0</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- Add H2 for tests so test application.properties can use the driver -->
-        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
     </dependencies>
 
@@ -157,9 +139,7 @@
                             <artifactId>lombok</artifactId>
                         </path>
                     </annotationProcessorPaths>
-                    <source>21</source>
-                    <target>21</target>
-                    <compilerArgs>--enable-preview</compilerArgs>
+                    <release>${java.version}</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -174,11 +154,9 @@
                     </excludes>
                 </configuration>
             </plugin>
-            <!-- copy byte-buddy-agent into target so it can be used as the javaagent for test JVM -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>${maven.dependency.plugin.version}</version>
                 <executions>
                     <execution>
                         <id>copy-bytebuddy-agent</id>
@@ -191,7 +169,7 @@
                                 <artifactItem>
                                     <groupId>net.bytebuddy</groupId>
                                     <artifactId>byte-buddy-agent</artifactId>
-                                    <version>${bytebuddy.agent.version}</version>
+                                    <version>${byte-buddy.version}</version>
                                     <destFileName>byte-buddy-agent.jar</destFileName>
                                 </artifactItem>
                             </artifactItems>
@@ -204,9 +182,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire.plugin.version}</version>
                 <configuration>
-                    <!-- Use the copied byte-buddy agent so we don't point at mockito-inline which isn't a javaagent jar -->
                     <argLine>-javaagent:${project.build.directory}/byte-buddy-agent.jar</argLine>
                 </configuration>
             </plugin>

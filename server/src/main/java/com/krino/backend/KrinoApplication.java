@@ -1,4 +1,4 @@
-package com.jesa.interviewslotmanager;
+package com.krino.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

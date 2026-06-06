@@ -1,7 +1,6 @@
 package com.jesa.interviewslotmanager.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
 import com.jesa.interviewslotmanager.utility.ErrorCode;
 import com.jesa.interviewslotmanager.configuration.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +18,12 @@ import java.time.Instant;
 public class CustomAccessDeniedHandler implements AccessDeniedHandler
 {
 
-    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private final ObjectMapper objectMapper;
+
+    public CustomAccessDeniedHandler(ObjectMapper objectMapper)
+    {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException
