@@ -10,15 +10,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
 
 @Component
+@Profile("dev")
 @RequiredArgsConstructor
 public class AdminInitializer implements CommandLineRunner
 {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdminInitializer.class);
+
     @Value("${app.admin.email}")
     private String adminEmail;
 
@@ -27,28 +33,29 @@ public class AdminInitializer implements CommandLineRunner
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private static final Logger LOGGER = LoggerFactory.getLogger(AdminInitializer.class);
 
     @Override
-    public void run(String... args) throws Exception
+    public void run(String... args)
     {
-        if (userRepository.findByEmail(adminEmail).isEmpty()) {
-
-            var adminUser = User.builder()
-                    .username("Admin")
-                    .firstName("Abderrahmane")
-                    .lastName("Khbabez")
-                    .email(adminEmail)
-                    .phoneNumber("767572988")
-                    .isApproved(true)
-                    .createdAt(LocalDateTime.now())
-                    .password(passwordEncoder.encode(adminPassword))
-                    .roles(Set.of(UserRole.ADMIN))
-                    .build();
-
-            userRepository.save(adminUser);
-            LOGGER.info("ADMIN user created successfully.");
+        if (userRepository.findByEmail(adminEmail).isPresent())
+        {
+            LOGGER.info("Admin '{}' already exists, skipping seed.", adminEmail);
+            return;
         }
-    }
 
+        var admin = User.builder()
+                .username("Admin")
+                .firstName("Abderrahmane")
+                .lastName("Khbabez")
+                .email(adminEmail)
+                .phoneNumber("123456789")
+                .isApproved(true)
+                .password(passwordEncoder.encode(adminPassword))
+                .roles(Set.of(UserRole.ADMIN))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        userRepository.save(admin);
+        LOGGER.info("Admin '{}' created.", adminEmail);
+    }
 }
