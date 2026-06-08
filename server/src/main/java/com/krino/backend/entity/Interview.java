@@ -6,19 +6,32 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.AccessLevel;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
+
+import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "interviews")
+@Table(name = "interviews", indexes = {
+        @Index(name = "idx_interviews_public_id", columnList = "public_id")
+})
 
 public class Interview
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @UuidGenerator
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "public_id", unique = true, nullable = false, updatable = false,
+            columnDefinition = "VARCHAR(36)")
+    private UUID publicId;
 
     @ManyToOne
     @JoinColumn(name = "interviewer_id")
