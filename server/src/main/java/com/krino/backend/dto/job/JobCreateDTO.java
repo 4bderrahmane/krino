@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 public class JobCreateDTO
@@ -20,7 +20,7 @@ public class JobCreateDTO
 
     @NotNull
     @Future
-    private Date applyingDeadline;
+    private LocalDate applyingDeadline;
 
     @NotNull
     private String type;
