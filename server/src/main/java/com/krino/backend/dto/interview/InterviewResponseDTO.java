@@ -5,6 +5,8 @@ import com.krino.backend.dto.slot.SlotResponseDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
 import lombok.*;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,7 +15,7 @@ import lombok.*;
 public class InterviewResponseDTO
 {
 
-    private Long id;
+    private UUID id;
     private UserResponseDTO interviewer;
     private UserResponseDTO candidate;
     private JobResponseDTO job;
