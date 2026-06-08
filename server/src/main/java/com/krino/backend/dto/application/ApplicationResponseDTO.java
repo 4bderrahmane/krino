@@ -7,14 +7,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApplicationResponseDTO
 {
-    private Long id;
-    private Long jobId;
+    private UUID id;
+    private UUID jobId;
     private UserResponseDTO candidate;
     private ApplicationStatus status;
     private String resumeUrl;
