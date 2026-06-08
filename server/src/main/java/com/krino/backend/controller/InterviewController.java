@@ -1,14 +1,19 @@
 package com.krino.backend.controller;
 
+import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.interview.InterviewRequestDTO;
 import com.krino.backend.dto.interview.InterviewResponseDTO;
 import com.krino.backend.service.InterviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.net.URI;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/interviews")
@@ -18,45 +23,51 @@ public class InterviewController
 
     private final InterviewService interviewService;
 
-    @PostMapping("/create")
+    @PostMapping
+    @PreAuthorize("hasAuthority('CAN_CREATE_INTERVIEW')")
     public ResponseEntity<InterviewResponseDTO> createInterview(@Valid @RequestBody InterviewRequestDTO interviewRequestDTO)
     {
         InterviewResponseDTO createdInterview = interviewService.createInterview(interviewRequestDTO);
-        return ResponseEntity.ok(createdInterview);
+        return ResponseEntity.created(URI.create("/api/interviews/" + createdInterview.getId())).body(createdInterview);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<InterviewResponseDTO> getInterviewById(@PathVariable Long id)
+    @GetMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_READ_INTERVIEW')")
+    public ResponseEntity<InterviewResponseDTO> getInterviewByPublicId(@PathVariable UUID publicId)
     {
-        InterviewResponseDTO interview = interviewService.getInterviewById(id);
+        InterviewResponseDTO interview = interviewService.getInterviewByPublicId(publicId);
         return ResponseEntity.ok(interview);
     }
 
     @GetMapping
-    public ResponseEntity<List<InterviewResponseDTO>> getAllInterviews()
+    @PreAuthorize("hasAuthority('CAN_READ_INTERVIEW')")
+    public ResponseEntity<PageResponse<InterviewResponseDTO>> getAllInterviews(@PageableDefault(size = 20, sort = "id") Pageable pageable)
     {
-        List<InterviewResponseDTO> interviews = interviewService.getAllInterviews();
+        PageResponse<InterviewResponseDTO> interviews = interviewService.getAllInterviews(pageable);
         return ResponseEntity.ok(interviews);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<InterviewResponseDTO> updateInterview(@PathVariable Long id, @Valid @RequestBody InterviewRequestDTO interviewRequestDTO)
+    @PutMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_UPDATE_INTERVIEW')")
+    public ResponseEntity<InterviewResponseDTO> updateInterview(@PathVariable UUID publicId, @Valid @RequestBody InterviewRequestDTO interviewRequestDTO)
     {
-        InterviewResponseDTO updatedInterview = interviewService.updateInterview(id, interviewRequestDTO);
+        InterviewResponseDTO updatedInterview = interviewService.updateInterview(publicId, interviewRequestDTO);
         return ResponseEntity.ok(updatedInterview);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<InterviewResponseDTO> patchInterview(@PathVariable Long id, @RequestBody InterviewRequestDTO interviewRequestDTO)
+    @PatchMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_UPDATE_INTERVIEW')")
+    public ResponseEntity<InterviewResponseDTO> patchInterview(@PathVariable UUID publicId, @RequestBody InterviewRequestDTO interviewRequestDTO)
     {
-        InterviewResponseDTO patchedInterview = interviewService.patchInterview(id, interviewRequestDTO);
+        InterviewResponseDTO patchedInterview = interviewService.patchInterview(publicId, interviewRequestDTO);
         return ResponseEntity.ok(patchedInterview);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteInterview(@PathVariable Long id)
+    @DeleteMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_DELETE_INTERVIEW')")
+    public ResponseEntity<Void> deleteInterview(@PathVariable UUID publicId)
     {
-        interviewService.deleteInterview(id);
+        interviewService.deleteInterview(publicId);
         return ResponseEntity.noContent().build();
     }
 }
