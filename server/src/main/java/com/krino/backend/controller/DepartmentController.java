@@ -1,15 +1,20 @@
 package com.krino.backend.controller;
 
+import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.department.DepartmentCreateDTO;
 import com.krino.backend.dto.department.DepartmentResponseDTO;
 import com.krino.backend.dto.department.DepartmentUpdateDTO;
 import com.krino.backend.service.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.net.URI;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
@@ -18,45 +23,51 @@ public class DepartmentController
 {
     private final DepartmentService departmentService;
 
-    @PostMapping("/create")
+    @PostMapping
+    @PreAuthorize("hasAuthority('CAN_CREATE_DEPARTMENT')")
     public ResponseEntity<DepartmentResponseDTO> createDepartment(@Valid @RequestBody DepartmentCreateDTO request)
     {
         DepartmentResponseDTO department = departmentService.createDepartment(request);
+        return ResponseEntity.created(URI.create("/api/departments/" + department.getId())).body(department);
+    }
+
+    @DeleteMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_DELETE_DEPARTMENT')")
+    public ResponseEntity<Void> deleteDepartmentByPublicId(@PathVariable("publicId") UUID publicId)
+    {
+        departmentService.deleteDepartmentByPublicId(publicId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_UPDATE_DEPARTMENT')")
+    public ResponseEntity<DepartmentResponseDTO> editDepartmentCompletelyByPublicId(@PathVariable("publicId") UUID publicId, @Valid @RequestBody DepartmentUpdateDTO request)
+    {
+        DepartmentResponseDTO department = departmentService.updateDepartment(publicId, request);
         return ResponseEntity.ok(department);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteDepartmentById(@PathVariable("id") Long id)
+    @PatchMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_UPDATE_DEPARTMENT')")
+    public ResponseEntity<DepartmentResponseDTO> editDepartmentPartiallyByPublicId(@PathVariable("publicId") UUID publicId, @Valid @RequestBody DepartmentUpdateDTO request)
     {
-        departmentService.deleteDepartmentById(id);
-        return ResponseEntity.ok("Department deleted");
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<DepartmentResponseDTO> editDepartmentCompletelyById(@PathVariable("id") Long id, @Valid @RequestBody DepartmentUpdateDTO request)
-    {
-        DepartmentResponseDTO department = departmentService.updateDepartment(id, request);
+        DepartmentResponseDTO department = departmentService.patchDepartment(publicId, request);
         return ResponseEntity.ok(department);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<DepartmentResponseDTO> editDepartmentPartiallyById(@PathVariable("id") Long id, @Valid @RequestBody DepartmentUpdateDTO request)
+    @GetMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_READ_DEPARTMENT')")
+    public ResponseEntity<DepartmentResponseDTO> getDepartmentByPublicId(@PathVariable("publicId") UUID publicId)
     {
-        DepartmentResponseDTO department = departmentService.patchDepartment(id, request);
-        return ResponseEntity.ok(department);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<DepartmentResponseDTO> getDepartmentById(@PathVariable("id") Long id)
-    {
-        DepartmentResponseDTO department = departmentService.getDepartmentById(id);
+        DepartmentResponseDTO department = departmentService.getDepartmentByPublicId(publicId);
         return ResponseEntity.ok(department);
     }
 
     @GetMapping
-    public ResponseEntity<List<DepartmentResponseDTO>> getAllDepartments()
+    @PreAuthorize("hasAuthority('CAN_READ_DEPARTMENT')")
+    public ResponseEntity<PageResponse<DepartmentResponseDTO>> getAllDepartments(@PageableDefault(size = 20, sort = "id") Pageable pageable)
     {
-        List<DepartmentResponseDTO> departments = departmentService.getAllDepartments();
+        PageResponse<DepartmentResponseDTO> departments = departmentService.getAllDepartments(pageable);
         return ResponseEntity.ok(departments);
     }
 }
