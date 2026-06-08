@@ -3,6 +3,8 @@ package com.krino.backend.dto.interview;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -10,16 +12,16 @@ import lombok.*;
 public class InterviewRequestDTO
 {
     @NotNull(message = "Interviewer ID cannot be null")
-    private Long interviewerId;
+    private UUID interviewerId;
 
     @NotNull(message = "Candidate ID cannot be null")
-    private Long candidateId;
+    private UUID candidateId;
 
     @NotNull(message = "Job ID cannot be null")
-    private Long jobId;
+    private UUID jobId;
 
     @NotNull(message = "Slot ID cannot be null")
-    private Long slotId;
+    private UUID slotId;
 
     private String notes;
 
