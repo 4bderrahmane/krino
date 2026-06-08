@@ -4,6 +4,7 @@ import com.krino.backend.entity.UserRole;
 import lombok.*;
 
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -13,7 +14,7 @@ import java.util.Set;
 public class UserResponseDTO
 {
 
-    private Long id;
+    private UUID id;
     private String username;
     private String firstName;
     private String lastName;
