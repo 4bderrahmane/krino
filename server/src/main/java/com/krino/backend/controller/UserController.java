@@ -1,5 +1,6 @@
 package com.krino.backend.controller;
 
+import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.dto.user.UserUpdatePasswordDTO;
@@ -9,13 +10,14 @@ import com.krino.backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -28,18 +30,18 @@ public class UserController
 
     @GetMapping
     @PreAuthorize("hasAuthority('CAN_READ_USER')")
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers()
+    public ResponseEntity<PageResponse<UserResponseDTO>> getAllUsers(@PageableDefault(size = 20, sort = "id") Pageable pageable)
     {
-        List<UserResponseDTO> users = userService.getAllUsers();
+        PageResponse<UserResponseDTO> users = userService.getAllUsers(pageable);
         return ResponseEntity.ok(users);
     }
 
-    @PutMapping("approve/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> approveUser(@PathVariable Long id)
+    @PatchMapping("/{publicId}/approval")
+    @PreAuthorize("hasAuthority('CAN_APPROVE_USER')")
+    public ResponseEntity<Void> approveUser(@PathVariable UUID publicId)
     {
-        userService.approveUser(id);
-        return ResponseEntity.status(HttpStatus.OK).body("User approved successfully");
+        userService.approveUser(publicId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me")
@@ -47,52 +49,52 @@ public class UserController
     public ResponseEntity<UserResponseDTO> getMyData(Authentication authentication)
     {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        User user = userService.getUserById(customUserDetails.getId());
+        User user = userService.getUserByPublicId(customUserDetails.getPublicId());
         UserResponseDTO userResponseDTO = modelMapper.map(user, UserResponseDTO.class);
         return ResponseEntity.ok(userResponseDTO);
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('CAN_READ_USER') or #id == authentication.principal.id")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id)
+    @GetMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_READ_USER') or #publicId == authentication.principal.publicId")
+    public ResponseEntity<UserResponseDTO> getUserByPublicId(@PathVariable UUID publicId)
     {
-        User user = userService.getUserById(id);
+        User user = userService.getUserByPublicId(publicId);
         UserResponseDTO userResponseDTO = modelMapper.map(user, UserResponseDTO.class);
         return ResponseEntity.ok(userResponseDTO);
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserResponseDTO> updateUserById(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
+    @PutMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_UPDATE_USER')")
+    public ResponseEntity<UserResponseDTO> updateUserByPublicId(@PathVariable UUID publicId, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
     {
-        UserResponseDTO updatedUser = userService.updateUserFully(id, userUpdateDTO);
+        UserResponseDTO updatedUser = userService.updateUserFully(publicId, userUpdateDTO);
         return ResponseEntity.ok(updatedUser);
     }
 
-    @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserResponseDTO> partiallyUpdateUserById(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
+    @PatchMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_UPDATE_USER')")
+    public ResponseEntity<UserResponseDTO> partiallyUpdateUserByPublicId(@PathVariable UUID publicId, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
     {
-        UserResponseDTO updatedUser = userService.updateUserPartially(id, userUpdateDTO);
+        UserResponseDTO updatedUser = userService.updateUserPartially(publicId, userUpdateDTO);
         return ResponseEntity.ok(updatedUser);
     }
 
     @PutMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<String> updateMyAccountFully(Authentication authentication, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
+    public ResponseEntity<UserResponseDTO> updateMyAccountFully(Authentication authentication, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
     {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        userService.updateUserFully(customUserDetails.getId(), userUpdateDTO);
-        return ResponseEntity.ok("User updated successfully");
+        UserResponseDTO updatedUser = userService.updateUserFully(customUserDetails.getPublicId(), userUpdateDTO);
+        return ResponseEntity.ok(updatedUser);
     }
 
     @PatchMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<String> updateMyAccountPartially(Authentication authentication, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
+    public ResponseEntity<UserResponseDTO> updateMyAccountPartially(Authentication authentication, @Valid @RequestBody UserUpdateDTO userUpdateDTO)
     {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        userService.updateUserPartially(customUserDetails.getId(), userUpdateDTO);
-        return ResponseEntity.ok("User updated successfully");
+        UserResponseDTO updatedUser = userService.updateUserPartially(customUserDetails.getPublicId(), userUpdateDTO);
+        return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/me")
@@ -100,34 +102,34 @@ public class UserController
     public ResponseEntity<Void> deleteMyAccount(Authentication authentication)
     {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        userService.deleteUserById(customUserDetails.getId());
+        userService.deleteUserByPublicId(customUserDetails.getPublicId());
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteUserById(@PathVariable Long id)
+    @DeleteMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_DELETE_USER')")
+    public ResponseEntity<Void> deleteUserByPublicId(@PathVariable UUID publicId)
     {
-        userService.deleteUserById(id);
+        userService.deleteUserByPublicId(publicId);
         return ResponseEntity.noContent().build();
     }
 
 
-    @PutMapping("/change-password")
+    @PutMapping("/me/password")
     @PreAuthorize("isAuthenticated() or hasRole('ADMIN')")
-    public ResponseEntity<String> updateUserPassword(Authentication authentication, @Valid @RequestBody UserUpdatePasswordDTO userUpdateDTO)
+    public ResponseEntity<Void> updateUserPassword(Authentication authentication, @Valid @RequestBody UserUpdatePasswordDTO userUpdateDTO)
     {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        userService.changePassword(customUserDetails.getId(), userUpdateDTO);
-        return ResponseEntity.ok("User password updated successfully");
+        userService.changePassword(customUserDetails.getPublicId(), userUpdateDTO);
+        return ResponseEntity.noContent().build();
     }
 
 
     @GetMapping("/non-approved")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserResponseDTO>> getNonApprovedUsers()
+    @PreAuthorize("hasAuthority('CAN_APPROVE_USER')")
+    public ResponseEntity<PageResponse<UserResponseDTO>> getNonApprovedUsers(@PageableDefault(size = 20, sort = "id") Pageable pageable)
     {
-        List<UserResponseDTO> nonApprovedUsers = userService.getNonApprovedUsers();
+        PageResponse<UserResponseDTO> nonApprovedUsers = userService.getNonApprovedUsers(pageable);
         return ResponseEntity.ok(nonApprovedUsers);
     }
 }
