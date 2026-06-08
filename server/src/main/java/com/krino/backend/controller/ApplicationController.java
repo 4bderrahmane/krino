@@ -3,13 +3,18 @@ package com.krino.backend.controller;
 import com.krino.backend.dto.application.ApplicationCreateDTO;
 import com.krino.backend.dto.application.ApplicationResponseDTO;
 import com.krino.backend.dto.application.ApplicationUpdateDTO;
+import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.service.ApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.net.URI;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/applications")
@@ -20,44 +25,50 @@ public class ApplicationController
     private final ApplicationService applicationService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('CAN_CREATE_APPLICATION')")
     public ResponseEntity<ApplicationResponseDTO> createApplication(@Valid @RequestBody ApplicationCreateDTO applicationCreateDTO)
     {
         ApplicationResponseDTO createdApplication = applicationService.createApplication(applicationCreateDTO);
-        return ResponseEntity.ok(createdApplication);
+        return ResponseEntity.created(URI.create("/api/applications/" + createdApplication.getId())).body(createdApplication);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApplicationResponseDTO> getApplicationById(@PathVariable Long id)
+    @GetMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_READ_APPLICATION')")
+    public ResponseEntity<ApplicationResponseDTO> getApplicationByPublicId(@PathVariable UUID publicId)
     {
-        ApplicationResponseDTO application = applicationService.getApplicationById(id);
+        ApplicationResponseDTO application = applicationService.getApplicationByPublicId(publicId);
         return ResponseEntity.ok(application);
     }
 
     @GetMapping
-    public ResponseEntity<List<ApplicationResponseDTO>> getAllApplications()
+    @PreAuthorize("hasAuthority('CAN_READ_APPLICATION')")
+    public ResponseEntity<PageResponse<ApplicationResponseDTO>> getAllApplications(@PageableDefault(size = 20, sort = "id") Pageable pageable)
     {
-        List<ApplicationResponseDTO> applications = applicationService.getAllApplications();
+        PageResponse<ApplicationResponseDTO> applications = applicationService.getAllApplications(pageable);
         return ResponseEntity.ok(applications);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ApplicationResponseDTO> updateApplication(@PathVariable Long id, @Valid @RequestBody ApplicationUpdateDTO applicationUpdateDTO)
+    @PutMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_UPDATE_APPLICATION')")
+    public ResponseEntity<ApplicationResponseDTO> updateApplication(@PathVariable UUID publicId, @Valid @RequestBody ApplicationUpdateDTO applicationUpdateDTO)
     {
-        ApplicationResponseDTO updatedApplication = applicationService.updateApplication(id, applicationUpdateDTO);
+        ApplicationResponseDTO updatedApplication = applicationService.updateApplication(publicId, applicationUpdateDTO);
         return ResponseEntity.ok(updatedApplication);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<ApplicationResponseDTO> patchApplication(@PathVariable Long id, @RequestBody ApplicationUpdateDTO applicationUpdateDTO)
+    @PatchMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_UPDATE_APPLICATION')")
+    public ResponseEntity<ApplicationResponseDTO> patchApplication(@PathVariable UUID publicId, @RequestBody ApplicationUpdateDTO applicationUpdateDTO)
     {
-        ApplicationResponseDTO patchedApplication = applicationService.patchApplication(id, applicationUpdateDTO);
+        ApplicationResponseDTO patchedApplication = applicationService.patchApplication(publicId, applicationUpdateDTO);
         return ResponseEntity.ok(patchedApplication);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteApplication(@PathVariable Long id)
+    @DeleteMapping("/{publicId}")
+    @PreAuthorize("hasAuthority('CAN_DELETE_APPLICATION')")
+    public ResponseEntity<Void> deleteApplication(@PathVariable UUID publicId)
     {
-        applicationService.deleteApplication(id);
-        return ResponseEntity.ok("Application deleted successfully");
+        applicationService.deleteApplication(publicId);
+        return ResponseEntity.noContent().build();
     }
 }
