@@ -4,23 +4,24 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Setter;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
 @Table(name = "refresh_tokens", indexes = {
-        @Index(name = "idx_token_hash", columnList = "tokenHash"),
-        @Index(name = "idx_user_id", columnList = "user_id"),
-        @Index(name = "idx_expires_at", columnList = "expiresAt")
+        @Index(name = "idx_token_hash", columnList = "token_hash"),
+        @Index(name = "idx_expires_at", columnList = "expires_at")
 })
 public class RefreshToken
 {
@@ -31,7 +32,10 @@ public class RefreshToken
     @Column(columnDefinition = "VARCHAR(36)")
     private UUID id;
 
-    @Column(nullable = false, unique = true, columnDefinition = "BINARY(48)") // 16 (salt) + 32 (sha256) = 48 bytes
+    /**
+     * HMAC-SHA256 of the raw token using the server-side refresh-token secret.
+     */
+    @Column(name = "token_hash", nullable = false, unique = true, columnDefinition = "BINARY(32)")
     private byte[] tokenHash;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -39,46 +43,47 @@ public class RefreshToken
     @JsonIgnore
     private User user;
 
-    @Column(nullable = false)
-    private LocalDateTime expiresAt;
+    @Column(name = "expires_at", nullable = false)
+    private Instant expiresAt;
 
     @Builder.Default
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
 
-    private LocalDateTime lastUsedAt;
+    /**
+     * Set true when this token is rotated away. A consumed token reappearing = reuse.
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean consumed = false;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean revoked = false;
+
+    // optional audit context — fine to keep
     private String deviceInfo;
-
     private String ipAddress;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean isRevoked = false;
-
-    // Utility methods
     public boolean isExpired()
     {
-        return LocalDateTime.now().isAfter(this.expiresAt);
+        return Instant.now().isAfter(this.expiresAt);
     }
 
-    public boolean isValid()
+    /**
+     * Usable only if untouched, unrevoked, unexpired.
+     */
+    public boolean isUsable()
     {
-        return !isRevoked && !isExpired();
+        return !consumed && !revoked && !isExpired();
     }
 
-    public void markUsed()
-    {
-        this.lastUsedAt = LocalDateTime.now();
-    }
-
-    // PrePersist callback to set createdAt if not already set
     @PrePersist
     protected void onCreate()
     {
         if (this.createdAt == null)
         {
-            this.createdAt = LocalDateTime.now();
+            this.createdAt = Instant.now();
         }
     }
 }
