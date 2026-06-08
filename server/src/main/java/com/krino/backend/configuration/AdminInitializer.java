@@ -4,6 +4,7 @@ import com.krino.backend.entity.UserRole;
 import com.krino.backend.entity.User;
 import com.krino.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -35,7 +35,7 @@ public class AdminInitializer implements CommandLineRunner
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args)
+    public void run(String @NonNull ... args)
     {
         if (userRepository.findByEmail(adminEmail).isPresent())
         {
