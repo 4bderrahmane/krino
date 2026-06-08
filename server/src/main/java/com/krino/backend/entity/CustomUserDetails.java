@@ -5,6 +5,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter
@@ -12,6 +13,7 @@ public class CustomUserDetails implements UserDetails
 {
     private User user;
     private final Long id;
+    private final UUID publicId;
     private final String email;
     private final String password;
     private final boolean enabled;
@@ -21,6 +23,7 @@ public class CustomUserDetails implements UserDetails
     {
         this.user = user; // ensure downstream services can access the User
         this.id = user.getId();
+        this.publicId = user.getPublicId();
         this.email = user.getEmail();
         this.password = user.getPassword();
         this.enabled = user.isApproved();
