@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -26,7 +28,8 @@ public class AuthenticationController
     @PostMapping("/register")
     public ResponseEntity<RegistrationResponseDTO> register(@Valid @RequestBody UserRegistrationDTO request)
     {
-        return ResponseEntity.ok(authenticationService.register(request));
+        RegistrationResponseDTO registration = authenticationService.register(request);
+        return ResponseEntity.created(URI.create("/api/users/" + registration.getUser().getId())).body(registration);
     }
 
     @PostMapping("/login")
@@ -36,9 +39,10 @@ public class AuthenticationController
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response)
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response)
     {
-        return ResponseEntity.ok(authenticationService.logout(request, response));
+        authenticationService.logout(request, response);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/refresh")
