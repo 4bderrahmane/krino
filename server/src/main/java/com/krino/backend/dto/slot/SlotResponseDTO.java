@@ -2,6 +2,7 @@ package com.krino.backend.dto.slot;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.UUID;
 
 import lombok.*;
 
@@ -12,7 +13,7 @@ import lombok.*;
 public class SlotResponseDTO
 {
 
-    private Long id;
+    private UUID id;
     private Integer durationInMinutes;
     private boolean available = true;
     private LocalDate interviewDate;
