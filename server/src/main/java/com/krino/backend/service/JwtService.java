@@ -16,6 +16,7 @@ import org.springframework.security.core.GrantedAuthority;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -51,7 +52,7 @@ public class JwtService
         Date expiryDate = new Date(now.getTime() + accessTokenExpirationInMs);
 
         return Jwts.builder()
-                .subject(userDetails.getId().toString())
+                .subject(userDetails.getPublicId().toString())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .issuer(issuer)
@@ -108,10 +109,10 @@ public class JwtService
         }
     }
 
-    public Long getUserIdFromToken(String token)
+    public UUID getUserPublicIdFromToken(String token)
     {
         Claims claims = getClaimsFromToken(token);
-        return Long.parseLong(claims.getSubject());
+        return UUID.fromString(claims.getSubject());
     }
 
     public String getEmailFromToken(String token)

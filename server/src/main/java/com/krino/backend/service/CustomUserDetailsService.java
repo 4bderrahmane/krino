@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService
@@ -27,10 +29,10 @@ public class CustomUserDetailsService implements UserDetailsService
     }
 
 
-    public CustomUserDetails loadUserById(Long userId)
+    public CustomUserDetails loadUserByPublicId(UUID publicId)
     {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
+        User user = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
         return new CustomUserDetails(user);
     }
 }

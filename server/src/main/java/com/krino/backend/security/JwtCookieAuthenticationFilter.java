@@ -44,7 +44,7 @@ public class JwtCookieAuthenticationFilter extends OncePerRequestFilter
                 {
                     if (jwtService.validateToken(accessToken))
                     {
-                        CustomUserDetails userDetails = customUserDetailsService.loadUserById((jwtService.getUserIdFromToken(accessToken)));
+                        CustomUserDetails userDetails = customUserDetailsService.loadUserByPublicId(jwtService.getUserPublicIdFromToken(accessToken));
 
                         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
