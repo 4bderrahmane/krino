@@ -8,9 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long>
 {
+    Optional<Application> findByPublicId(UUID publicId);
+
     List<Application> findByCandidate(User candidate);
 
     List<Application> findByJob(Job job);
