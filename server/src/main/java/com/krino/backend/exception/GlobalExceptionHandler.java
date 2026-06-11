@@ -8,7 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -129,6 +131,19 @@ public class GlobalExceptionHandler
                 HttpStatus.UNAUTHORIZED,
                 ex.getMessage(),
                 ErrorCode.INVALID_REFRESH_TOKEN,
+                request,
+                null
+        );
+    }
+
+    @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
+    public ResponseEntity<ErrorResponse> handleAccessDenied(Exception ex, HttpServletRequest request)
+    {
+        log.warn("Access denied for request {}: {}", request.getRequestURI(), ex.getMessage());
+        return createErrorResponse(
+                HttpStatus.FORBIDDEN,
+                "You do not have permission to perform this action.",
+                ErrorCode.ACCESS_DENIED,
                 request,
                 null
         );
