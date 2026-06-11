@@ -1,5 +1,6 @@
 package com.krino.backend.service;
 
+import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.department.DepartmentCreateDTO;
 import com.krino.backend.dto.department.DepartmentResponseDTO;
 import com.krino.backend.dto.department.DepartmentUpdateDTO;
@@ -11,9 +12,10 @@ import com.krino.backend.utility.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -24,14 +26,12 @@ public class DepartmentService
     private final DepartmentRepository departmentRepository;
     private final ModelMapper modelMapper;
 
-    public void deleteDepartmentById(Long id)
+    public void deleteDepartmentByPublicId(UUID publicId)
     {
-        if (!departmentRepository.existsById(id))
-        {
-            // use object-name constructor to get DEPARTMENT_NOT_FOUND ErrorCode
-            throw new ResourceNotFoundException(Department.class.getSimpleName(), "id", id);
-        }
-        departmentRepository.deleteById(id);
+        // use object-name constructor to get DEPARTMENT_NOT_FOUND ErrorCode
+        Department department = departmentRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId", publicId));
+        departmentRepository.delete(department);
     }
 
     public DepartmentResponseDTO createDepartment(DepartmentCreateDTO department)
@@ -50,10 +50,10 @@ public class DepartmentService
         return modelMapper.map(savedDepartment, DepartmentResponseDTO.class);
     }
 
-    public DepartmentResponseDTO updateDepartment(Long id, DepartmentUpdateDTO departmentUpdateDTO)
+    public DepartmentResponseDTO updateDepartment(UUID publicId, DepartmentUpdateDTO departmentUpdateDTO)
     {
-        Department existingDepartment = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "id", id));
+        Department existingDepartment = departmentRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId", publicId));
 
         if (departmentRepository.findByName(departmentUpdateDTO.getName()).isPresent() && !existingDepartment.getName().equals(departmentUpdateDTO.getName()))
         {
@@ -67,10 +67,10 @@ public class DepartmentService
         return modelMapper.map(updatedDepartment, DepartmentResponseDTO.class);
     }
 
-    public DepartmentResponseDTO patchDepartment(Long id, DepartmentUpdateDTO departmentUpdateDTO)
+    public DepartmentResponseDTO patchDepartment(UUID publicId, DepartmentUpdateDTO departmentUpdateDTO)
     {
-        Department existingDepartment = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "id", id));
+        Department existingDepartment = departmentRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId", publicId));
 
         if (departmentUpdateDTO.getName() != null)
         {
@@ -90,17 +90,16 @@ public class DepartmentService
         return modelMapper.map(updatedDepartment, DepartmentResponseDTO.class);
     }
 
-    public DepartmentResponseDTO getDepartmentById(Long id)
+    public DepartmentResponseDTO getDepartmentByPublicId(UUID publicId)
     {
-        Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "id", id));
+        Department department = departmentRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId", publicId));
         return modelMapper.map(department, DepartmentResponseDTO.class);
     }
 
-    public List<DepartmentResponseDTO> getAllDepartments()
+    public PageResponse<DepartmentResponseDTO> getAllDepartments(Pageable pageable)
     {
-        return departmentRepository.findAll().stream()
-                .map(department -> modelMapper.map(department, DepartmentResponseDTO.class))
-                .toList();
+        return PageResponse.from(departmentRepository.findAll(pageable),
+                department -> modelMapper.map(department, DepartmentResponseDTO.class));
     }
 }

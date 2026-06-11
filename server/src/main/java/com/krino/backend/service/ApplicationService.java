@@ -3,15 +3,19 @@ package com.krino.backend.service;
 import com.krino.backend.dto.application.ApplicationCreateDTO;
 import com.krino.backend.dto.application.ApplicationResponseDTO;
 import com.krino.backend.dto.application.ApplicationUpdateDTO;
+import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.entity.Application;
+import com.krino.backend.entity.Job;
 import com.krino.backend.exception.ResourceNotFoundException;
 import com.krino.backend.repository.ApplicationRepository;
+import com.krino.backend.repository.JobRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -20,43 +24,54 @@ public class ApplicationService
 {
 
     private final ApplicationRepository applicationRepository;
+    private final JobRepository jobRepository;
     private final ModelMapper modelMapper;
 
     public ApplicationResponseDTO createApplication(ApplicationCreateDTO applicationCreateDTO)
     {
         Application application = modelMapper.map(applicationCreateDTO, Application.class);
+        application.setJob(resolveJob(applicationCreateDTO.getJobId()));
         Application savedApplication = applicationRepository.save(application);
         return modelMapper.map(savedApplication, ApplicationResponseDTO.class);
     }
 
-    public ApplicationResponseDTO getApplicationById(Long applicationId)
+    private Job resolveJob(UUID jobPublicId)
     {
-        Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), "id", applicationId));
+        return jobRepository.findByPublicId(jobPublicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Job.class.getSimpleName(), "publicId", jobPublicId));
+    }
+
+    public ApplicationResponseDTO getApplicationByPublicId(UUID publicId)
+    {
+        Application application = applicationRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), "publicId", publicId));
         return modelMapper.map(application, ApplicationResponseDTO.class);
     }
 
-    public List<ApplicationResponseDTO> getAllApplications()
+    public PageResponse<ApplicationResponseDTO> getAllApplications(Pageable pageable)
     {
-        return applicationRepository.findAll().stream()
-                .map(application -> modelMapper.map(application, ApplicationResponseDTO.class))
-                .toList();
+        return PageResponse.from(applicationRepository.findAll(pageable),
+                application -> modelMapper.map(application, ApplicationResponseDTO.class));
     }
 
-    public ApplicationResponseDTO updateApplication(Long applicationId, ApplicationUpdateDTO applicationUpdateDTO)
+    public ApplicationResponseDTO updateApplication(UUID publicId, ApplicationUpdateDTO applicationUpdateDTO)
     {
-        Application existingApplication = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), "id", applicationId));
+        Application existingApplication = applicationRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), "publicId", publicId));
 
         modelMapper.map(applicationUpdateDTO, existingApplication);
+        if (applicationUpdateDTO.getJobId() != null)
+        {
+            existingApplication.setJob(resolveJob(applicationUpdateDTO.getJobId()));
+        }
         Application updatedApplication = applicationRepository.save(existingApplication);
         return modelMapper.map(updatedApplication, ApplicationResponseDTO.class);
     }
 
-    public ApplicationResponseDTO patchApplication(Long applicationId, ApplicationUpdateDTO applicationUpdateDTO)
+    public ApplicationResponseDTO patchApplication(UUID publicId, ApplicationUpdateDTO applicationUpdateDTO)
     {
-        Application existingApplication = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), "id", applicationId));
+        Application existingApplication = applicationRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), "publicId", publicId));
 
         if (applicationUpdateDTO.getStatus() != null)
         {
@@ -66,17 +81,19 @@ public class ApplicationService
         {
             existingApplication.setResumeUrl(applicationUpdateDTO.getResumeUrl());
         }
+        if (applicationUpdateDTO.getJobId() != null)
+        {
+            existingApplication.setJob(resolveJob(applicationUpdateDTO.getJobId()));
+        }
 
         Application patchedApplication = applicationRepository.save(existingApplication);
         return modelMapper.map(patchedApplication, ApplicationResponseDTO.class);
     }
 
-    public void deleteApplication(Long applicationId)
+    public void deleteApplication(UUID publicId)
     {
-        if (!applicationRepository.existsById(applicationId))
-        {
-            throw new ResourceNotFoundException(Application.class.getSimpleName(), "id", applicationId);
-        }
-        applicationRepository.deleteById(applicationId);
+        Application application = applicationRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), "publicId", publicId));
+        applicationRepository.delete(application);
     }
 }

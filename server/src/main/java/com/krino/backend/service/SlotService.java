@@ -1,5 +1,6 @@
 package com.krino.backend.service;
 
+import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.slot.SlotRequestDTO;
 import com.krino.backend.dto.slot.SlotResponseDTO;
 import com.krino.backend.dto.slot.SlotUpdateDTO;
@@ -9,10 +10,11 @@ import com.krino.backend.repository.SlotRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -31,24 +33,23 @@ public class SlotService
         return modelMapper.map(savedSlot, SlotResponseDTO.class);
     }
 
-    public SlotResponseDTO getSlotById(Long slotId)
+    public SlotResponseDTO getSlotByPublicId(UUID publicId)
     {
-        Slot slot = slotRepository.findById(slotId)
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "id", slotId));
+        Slot slot = slotRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", publicId));
         return modelMapper.map(slot, SlotResponseDTO.class);
     }
 
-    public List<SlotResponseDTO> getAllSlots()
+    public PageResponse<SlotResponseDTO> getAllSlots(Pageable pageable)
     {
-        return slotRepository.findAll().stream()
-                .map(slot -> modelMapper.map(slot, SlotResponseDTO.class))
-                .toList();
+        return PageResponse.from(slotRepository.findAll(pageable),
+                slot -> modelMapper.map(slot, SlotResponseDTO.class));
     }
 
-    public SlotResponseDTO updateSlot(Long slotId, SlotUpdateDTO slotUpdateDTO)
+    public SlotResponseDTO updateSlot(UUID publicId, SlotUpdateDTO slotUpdateDTO)
     {
-        Slot existingSlot = slotRepository.findById(slotId)
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "id", slotId));
+        Slot existingSlot = slotRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", publicId));
 
         modelMapper.map(slotUpdateDTO, existingSlot);
         updateDuration(existingSlot);
@@ -56,10 +57,10 @@ public class SlotService
         return modelMapper.map(updatedSlot, SlotResponseDTO.class);
     }
 
-    public SlotResponseDTO patchSlot(Long slotId, SlotUpdateDTO slotUpdateDTO)
+    public SlotResponseDTO patchSlot(UUID publicId, SlotUpdateDTO slotUpdateDTO)
     {
-        Slot existingSlot = slotRepository.findById(slotId)
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "id", slotId));
+        Slot existingSlot = slotRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", publicId));
 
         if (slotUpdateDTO.getAvailable() != null)
         {
@@ -84,14 +85,11 @@ public class SlotService
         return modelMapper.map(patchedSlot, SlotResponseDTO.class);
     }
 
-    public void deleteSlot(Long slotId)
+    public void deleteSlot(UUID publicId)
     {
-        if (!slotRepository.existsById(slotId))
-        {
-            throw new ResourceNotFoundException(Slot.class.getSimpleName(), "id", slotId);
-
-        }
-        slotRepository.deleteById(slotId);
+        Slot slot = slotRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", publicId));
+        slotRepository.delete(slot);
     }
 
     private void updateDuration(Slot slot)

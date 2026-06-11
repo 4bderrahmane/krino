@@ -1,5 +1,6 @@
 package com.krino.backend.service;
 
+import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.interview.InterviewRequestDTO;
 import com.krino.backend.dto.interview.InterviewResponseDTO;
 import com.krino.backend.entity.Interview;
@@ -12,9 +13,10 @@ import com.krino.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -29,12 +31,12 @@ public class InterviewService
 
     public InterviewResponseDTO createInterview(InterviewRequestDTO interviewRequestDTO)
     {
-        User interviewer = userRepository.findById(interviewRequestDTO.getInterviewerId())
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", interviewRequestDTO.getInterviewerId()));
-        User candidate = userRepository.findById(interviewRequestDTO.getCandidateId())
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", interviewRequestDTO.getCandidateId()));
-        Slot slot = slotRepository.findById(interviewRequestDTO.getSlotId())
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "id", interviewRequestDTO.getSlotId()));
+        User interviewer = userRepository.findByPublicId(interviewRequestDTO.getInterviewerId())
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", interviewRequestDTO.getInterviewerId()));
+        User candidate = userRepository.findByPublicId(interviewRequestDTO.getCandidateId())
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", interviewRequestDTO.getCandidateId()));
+        Slot slot = slotRepository.findByPublicId(interviewRequestDTO.getSlotId())
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", interviewRequestDTO.getSlotId()));
 
         Interview interview = new Interview();
         interview.setInterviewer(interviewer);
@@ -47,30 +49,29 @@ public class InterviewService
         return modelMapper.map(savedInterview, InterviewResponseDTO.class);
     }
 
-    public InterviewResponseDTO getInterviewById(Long interviewId)
+    public InterviewResponseDTO getInterviewByPublicId(UUID publicId)
     {
-        Interview interview = interviewRepository.findById(interviewId)
-                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "id", interviewId));
+        Interview interview = interviewRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId", publicId));
         return modelMapper.map(interview, InterviewResponseDTO.class);
     }
 
-    public List<InterviewResponseDTO> getAllInterviews()
+    public PageResponse<InterviewResponseDTO> getAllInterviews(Pageable pageable)
     {
-        return interviewRepository.findAll().stream()
-                .map(interview -> modelMapper.map(interview, InterviewResponseDTO.class))
-                .toList();
+        return PageResponse.from(interviewRepository.findAll(pageable),
+                interview -> modelMapper.map(interview, InterviewResponseDTO.class));
     }
 
-    public InterviewResponseDTO updateInterview(Long interviewId, InterviewRequestDTO interviewRequestDTO)
+    public InterviewResponseDTO updateInterview(UUID publicId, InterviewRequestDTO interviewRequestDTO)
     {
-        Interview existingInterview = interviewRepository.findById(interviewId)
-                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "id", interviewId));
-        var interviewer = userRepository.findById(interviewRequestDTO.getInterviewerId())
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", interviewRequestDTO.getInterviewerId()));
-        var candidate = userRepository.findById(interviewRequestDTO.getCandidateId())
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", interviewRequestDTO.getCandidateId()));
-        var slot = slotRepository.findById(interviewRequestDTO.getSlotId())
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "id", interviewRequestDTO.getSlotId()));
+        Interview existingInterview = interviewRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId", publicId));
+        var interviewer = userRepository.findByPublicId(interviewRequestDTO.getInterviewerId())
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", interviewRequestDTO.getInterviewerId()));
+        var candidate = userRepository.findByPublicId(interviewRequestDTO.getCandidateId())
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", interviewRequestDTO.getCandidateId()));
+        var slot = slotRepository.findByPublicId(interviewRequestDTO.getSlotId())
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", interviewRequestDTO.getSlotId()));
 
         existingInterview.setInterviewer(interviewer);
         existingInterview.setCandidate(candidate);
@@ -82,27 +83,27 @@ public class InterviewService
         return modelMapper.map(updatedInterview, InterviewResponseDTO.class);
     }
 
-    public InterviewResponseDTO patchInterview(Long interviewId, InterviewRequestDTO interviewRequestDTO)
+    public InterviewResponseDTO patchInterview(UUID publicId, InterviewRequestDTO interviewRequestDTO)
     {
-        Interview existingInterview = interviewRepository.findById(interviewId)
-                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "id", interviewId));
+        Interview existingInterview = interviewRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId", publicId));
 
         if (interviewRequestDTO.getInterviewerId() != null)
         {
-            User interviewer = userRepository.findById(interviewRequestDTO.getInterviewerId())
-                    .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", interviewRequestDTO.getInterviewerId()));
+            User interviewer = userRepository.findByPublicId(interviewRequestDTO.getInterviewerId())
+                    .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", interviewRequestDTO.getInterviewerId()));
             existingInterview.setInterviewer(interviewer);
         }
         if (interviewRequestDTO.getCandidateId() != null)
         {
-            User candidate = userRepository.findById(interviewRequestDTO.getCandidateId())
-                    .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", interviewRequestDTO.getCandidateId()));
+            User candidate = userRepository.findByPublicId(interviewRequestDTO.getCandidateId())
+                    .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", interviewRequestDTO.getCandidateId()));
             existingInterview.setCandidate(candidate);
         }
         if (interviewRequestDTO.getSlotId() != null)
         {
-            Slot slot = slotRepository.findById(interviewRequestDTO.getSlotId())
-                    .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "id", interviewRequestDTO.getSlotId()));
+            Slot slot = slotRepository.findByPublicId(interviewRequestDTO.getSlotId())
+                    .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", interviewRequestDTO.getSlotId()));
             existingInterview.setSlot(slot);
         }
         if (interviewRequestDTO.getNotes() != null)
@@ -118,12 +119,10 @@ public class InterviewService
         return modelMapper.map(patchedInterview, InterviewResponseDTO.class);
     }
 
-    public void deleteInterview(Long interviewId)
+    public void deleteInterview(UUID publicId)
     {
-        if (!interviewRepository.existsById(interviewId))
-        {
-            throw new ResourceNotFoundException(Interview.class.getSimpleName(), "id", interviewId);
-        }
-        interviewRepository.deleteById(interviewId);
+        Interview interview = interviewRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId", publicId));
+        interviewRepository.delete(interview);
     }
 }

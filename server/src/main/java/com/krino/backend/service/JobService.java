@@ -1,5 +1,6 @@
 package com.krino.backend.service;
 
+import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.job.JobCreateDTO;
 import com.krino.backend.dto.job.JobResponseDTO;
 import com.krino.backend.dto.job.JobUpdateDTO;
@@ -12,9 +13,10 @@ import com.krino.backend.repository.JobRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.UUID;
 
 @Transactional
 @Service
@@ -23,15 +25,15 @@ public class JobService
 {
     private static final String INVALID_JOB_TYPE_MESSAGE = "Job type '%s' doesn't exist.";
     private static final String INVALID_JOB_STATUS_MESSAGE = "Job status '%s' doesn't exist.";
-    private static final String JOB_NOT_FOUND_MESSAGE = "Job with ID '%d' not found.";
+    private static final String JOB_NOT_FOUND_MESSAGE = "Job with public ID '%s' not found.";
     private static final String DEPARTMENT_NOT_FOUND_MESSAGE = "Department with name '%s' not found.";
     private final JobRepository jobRepository;
     private final DepartmentRepository departmentRepository;
     private final ModelMapper modelMapper;
 
-    public void deleteJobById(Long jobId)
+    public void deleteJobByPublicId(UUID publicId)
     {
-        Job job = jobRepository.findById(jobId).orElseThrow(() -> new ResourceNotFoundException(String.format(JOB_NOT_FOUND_MESSAGE, jobId)));
+        Job job = jobRepository.findByPublicId(publicId).orElseThrow(() -> new ResourceNotFoundException(String.format(JOB_NOT_FOUND_MESSAGE, publicId)));
 
         jobRepository.delete(job);
     }
@@ -56,22 +58,21 @@ public class JobService
         return modelMapper.map(savedJob, JobResponseDTO.class);
     }
 
-    public JobResponseDTO getJobById(Long jobId)
+    public JobResponseDTO getJobByPublicId(UUID publicId)
     {
-        Job job = jobRepository.findById(jobId).orElseThrow(() -> new ResourceNotFoundException(String.format(JOB_NOT_FOUND_MESSAGE, jobId)));
+        Job job = jobRepository.findByPublicId(publicId).orElseThrow(() -> new ResourceNotFoundException(String.format(JOB_NOT_FOUND_MESSAGE, publicId)));
         return modelMapper.map(job, JobResponseDTO.class);
     }
 
-    public List<JobResponseDTO> getAllJobs()
+    public PageResponse<JobResponseDTO> getAllJobs(Pageable pageable)
     {
-        return jobRepository.findAll().stream()
-                .map(job -> modelMapper.map(job, JobResponseDTO.class))
-                .toList();
+        return PageResponse.from(jobRepository.findAll(pageable),
+                job -> modelMapper.map(job, JobResponseDTO.class));
     }
 
-    public JobResponseDTO updateJob(Long jobId, JobUpdateDTO jobUpdateDTO)
+    public JobResponseDTO updateJob(UUID publicId, JobUpdateDTO jobUpdateDTO)
     {
-        Job existingJob = jobRepository.findById(jobId).orElseThrow(() -> new ResourceNotFoundException(String.format(JOB_NOT_FOUND_MESSAGE, jobId)));
+        Job existingJob = jobRepository.findByPublicId(publicId).orElseThrow(() -> new ResourceNotFoundException(String.format(JOB_NOT_FOUND_MESSAGE, publicId)));
 
         updateJobFromDto(existingJob, jobUpdateDTO);
 
@@ -79,9 +80,9 @@ public class JobService
         return modelMapper.map(updatedJob, JobResponseDTO.class);
     }
 
-    public JobResponseDTO patchJob(Long jobId, JobUpdateDTO jobUpdateDTO)
+    public JobResponseDTO patchJob(UUID publicId, JobUpdateDTO jobUpdateDTO)
     {
-        Job existingJob = jobRepository.findById(jobId).orElseThrow(() -> new ResourceNotFoundException(String.format(JOB_NOT_FOUND_MESSAGE, jobId)));
+        Job existingJob = jobRepository.findByPublicId(publicId).orElseThrow(() -> new ResourceNotFoundException(String.format(JOB_NOT_FOUND_MESSAGE, publicId)));
 
         patchJobFromDto(existingJob, jobUpdateDTO);
 

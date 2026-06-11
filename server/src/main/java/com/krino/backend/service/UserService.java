@@ -1,5 +1,6 @@
 package com.krino.backend.service;
 
+import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.dto.user.UserUpdatePasswordDTO;
@@ -16,18 +17,20 @@ import com.krino.backend.utility.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Transactional
 @Service
 @RequiredArgsConstructor
 public class UserService
 {
-    private static final String USER_NOT_FOUND_MESSAGE = "User with ID '%s' not found";
+    private static final String USER_NOT_FOUND_MESSAGE = "User with public ID '%s' not found";
     private static final String USERNAME_ALREADY_TAKEN_MESSAGE = "Username '%s' is already taken.";
     private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
     private final UserRepository userRepository;
@@ -59,30 +62,27 @@ public class UserService
         return userRepository.save(user);
     }
 
-    public User getUserById(Long userId)
+    public User getUserByPublicId(UUID publicId)
     {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
+        return userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
     }
 
-    public List<UserResponseDTO> getAllUsers()
+    public PageResponse<UserResponseDTO> getAllUsers(Pageable pageable)
     {
-        List<User> users = userRepository.findAll();
-
-        return users.stream()
-                .map(user -> modelMapper.map(user, UserResponseDTO.class))
-                .toList();
+        return PageResponse.from(userRepository.findAll(pageable),
+                user -> modelMapper.map(user, UserResponseDTO.class));
     }
 
-    public UserResponseDTO updateUserPartially(Long userId, UserUpdateDTO userUpdateDTO)
+    public UserResponseDTO updateUserPartially(UUID publicId, UserUpdateDTO userUpdateDTO)
     {
-        User currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
+        User currentUser = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
         if (userUpdateDTO.getUsername() != null && !userUpdateDTO.getUsername().equals(currentUser.getUsername()))
         {
             userRepository.findByUsername(userUpdateDTO.getUsername())
-                    .filter(user -> !user.getId().equals(userId))
+                    .filter(user -> !user.getPublicId().equals(publicId))
                     .ifPresent(user ->
                     {
                         throw new ResourceConflictException(String.format(USERNAME_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getUsername()), ErrorCode.USERNAME_ALREADY_EXISTS);
@@ -93,7 +93,7 @@ public class UserService
         if (userUpdateDTO.getEmail() != null && !userUpdateDTO.getEmail().equals(currentUser.getEmail()))
         {
             userRepository.findByEmail(userUpdateDTO.getEmail())
-                    .filter(user -> !user.getId().equals(userId))
+                    .filter(user -> !user.getPublicId().equals(publicId))
                     .ifPresent(user ->
                     {
                         throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getEmail()), ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -118,10 +118,10 @@ public class UserService
         return modelMapper.map(updatedPartially, UserResponseDTO.class);
     }
 
-    public UserResponseDTO updateUserFully(Long userId, UserUpdateDTO userUpdateDTO)
+    public UserResponseDTO updateUserFully(UUID publicId, UserUpdateDTO userUpdateDTO)
     {
-        User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
+        User existingUser = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
         if (userUpdateDTO.getUsername() == null || userUpdateDTO.getEmail() == null
                 || userUpdateDTO.getFirstName() == null || userUpdateDTO.getLastName() == null
@@ -133,7 +133,7 @@ public class UserService
         if (!userUpdateDTO.getUsername().equals(existingUser.getUsername()))
         {
             userRepository.findByUsername(userUpdateDTO.getUsername())
-                    .filter(user -> !user.getId().equals(userId))
+                    .filter(user -> !user.getPublicId().equals(publicId))
                     .ifPresent(user ->
                     {
                         throw new ResourceConflictException(String.format(USERNAME_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getUsername()), ErrorCode.USERNAME_ALREADY_EXISTS);
@@ -143,7 +143,7 @@ public class UserService
         if (!userUpdateDTO.getEmail().equals(existingUser.getEmail()))
         {
             userRepository.findByEmail(userUpdateDTO.getEmail())
-                    .filter(user -> !user.getId().equals(userId))
+                    .filter(user -> !user.getPublicId().equals(publicId))
                     .ifPresent(user ->
                     {
                         throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getEmail()), ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -160,10 +160,10 @@ public class UserService
         return modelMapper.map(updatedUser, UserResponseDTO.class);
     }
 
-    public void changePassword(Long userId, UserUpdatePasswordDTO passwordChangeDTO)
+    public void changePassword(UUID publicId, UserUpdatePasswordDTO passwordChangeDTO)
     {
-        User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
+        User existingUser = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
         if (!passwordEncoder.matches(passwordChangeDTO.getCurrentPassword(), existingUser.getPassword()))
         {
@@ -180,29 +180,27 @@ public class UserService
         userRepository.save(existingUser);
     }
 
-    public void deleteUserById(Long userId)
+    public void deleteUserByPublicId(UUID publicId)
     {
-        User userToDelete = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
+        User userToDelete = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
-        refreshTokenRepository.deleteAllByUserId(userId);
+        refreshTokenRepository.deleteAllByUserId(userToDelete.getId());
         userRepository.delete(userToDelete);
     }
 
-    public void approveUser(Long id)
+    public void approveUser(UUID publicId)
     {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", id));
+        User user = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
         user.setApproved(true);
     }
 
-    public List<UserResponseDTO> getNonApprovedUsers()
+    public PageResponse<UserResponseDTO> getNonApprovedUsers(Pageable pageable)
     {
-        List<User> nonApprovedUsers = userRepository.findByIsApprovedFalse();
-        return nonApprovedUsers.stream()
-                .map(user -> modelMapper.map(user, UserResponseDTO.class))
-                .toList();
+        return PageResponse.from(userRepository.findByIsApprovedFalse(pageable),
+                user -> modelMapper.map(user, UserResponseDTO.class));
     }
 
     public CustomUserDetails loadUserById(Long userId)
