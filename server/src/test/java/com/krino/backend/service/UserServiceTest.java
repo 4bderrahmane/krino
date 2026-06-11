@@ -11,9 +11,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class UserServiceTest
@@ -37,7 +38,7 @@ class UserServiceTest
     {
         User user = new User();
         user.setPassword("encodedPassword");
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(userRepository.findByPublicId(any(UUID.class))).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), eq("encodedPassword"))).thenReturn(false);
 
         UserUpdatePasswordDTO dto = new UserUpdatePasswordDTO();
@@ -47,7 +48,7 @@ class UserServiceTest
 
         IncorrectPasswordException ex = assertThrows(
                 IncorrectPasswordException.class,
-                () -> userService.changePassword(1L, dto)
+                () -> userService.changePassword(UUID.randomUUID(), dto)
         );
         assertEquals("Current password is not correct.", ex.getMessage());
     }
@@ -57,7 +58,7 @@ class UserServiceTest
     {
         User user = new User();
         user.setPassword("encodedPassword");
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(userRepository.findByPublicId(any(UUID.class))).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), eq("encodedPassword"))).thenReturn(true);
 
         UserUpdatePasswordDTO dto = new UserUpdatePasswordDTO();
@@ -67,7 +68,7 @@ class UserServiceTest
 
         InvalidCredentialsException ex = assertThrows(
                 InvalidCredentialsException.class,
-                () -> userService.changePassword(1L, dto)
+                () -> userService.changePassword(UUID.randomUUID(), dto)
         );
         assertEquals("New password and confirmation do not match.", ex.getMessage());
     }
