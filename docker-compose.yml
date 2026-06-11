@@ -17,10 +17,11 @@ services:
     ports:
       - "8080:8080"
     restart: unless-stopped
-    # environment:
-    #   SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/interview_slots
-    #   SPRING_DATASOURCE_USERNAME: ism
-    #   SPRING_DATASOURCE_PASSWORD: change-me
+    # Loads server/.env if present (copy from server/.env.example).
+    # Optional so `docker compose up` still works before you create it.
+    env_file:
+      - path: ./server/.env
+        required: false
     # depends_on:
     #   - db
 
