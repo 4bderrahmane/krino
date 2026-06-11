@@ -2,14 +2,21 @@ package com.krino.backend.service;
 
 import com.krino.backend.entity.RefreshToken;
 import com.krino.backend.entity.User;
+import com.krino.backend.exception.TokenException;
 import com.krino.backend.repository.RefreshTokenRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -21,9 +28,26 @@ public class RefreshTokenService
     private final RefreshTokenRepository refreshTokenRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
+    @Value("${app.refresh-token.hmac-secret:${jwt.secret}}")
+    private String hmacSecret;
+
+    private SecretKeySpec hmacKey;
+
     private static final int TOKEN_LENGTH = 64;
-    private static final int SALT_LENGTH = 16;
+    private static final int HMAC_SHA256_LENGTH = 32;
+    private static final String HMAC_SHA256 = "HmacSHA256";
     private static final int EXPIRY_DAYS = 30;
+
+    @PostConstruct
+    void init()
+    {
+        if (hmacSecret == null || hmacSecret.length() < 32)
+        {
+            throw new TokenException("Invalid refresh-token HMAC secret: it must be at least 32 characters.");
+        }
+
+        this.hmacKey = new SecretKeySpec(hmacSecret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256);
+    }
 
     private String generateRandomToken()
     {
@@ -32,27 +56,16 @@ public class RefreshTokenService
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 
-    //This method returns raw bytes: [salt (16)] + [sha256(tokenWithSalt) (32)] = 48 bytes
-    private byte[] hashTokenWithSalt(String token)
+    private byte[] hmacToken(String token)
     {
         try
         {
-            byte[] salt = new byte[SALT_LENGTH];
-            secureRandom.nextBytes(salt);
-
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(salt);
-            byte[] hash = digest.digest(token.getBytes());
-
-            byte[] combined = new byte[salt.length + hash.length];
-            System.arraycopy(salt, 0, combined, 0, salt.length);
-            System.arraycopy(hash, 0, combined, salt.length, hash.length);
-
-            return combined;
-
-        } catch (NoSuchAlgorithmException e)
+            Mac mac = Mac.getInstance(HMAC_SHA256);
+            mac.init(hmacKey);
+            return mac.doFinal(token.getBytes(StandardCharsets.UTF_8));
+        } catch (GeneralSecurityException e)
         {
-            throw new RuntimeException("SHA-256 not available", e);
+            throw new IllegalStateException("HmacSHA256 is not available", e);
         }
     }
 
@@ -60,21 +73,20 @@ public class RefreshTokenService
     {
         String token = generateRandomToken();
 
-        byte[] hashedToken = hashTokenWithSalt(token);
+        byte[] tokenHash = hmacToken(token);
 
-        LocalDateTime expiresAt = LocalDateTime.now().plusDays(EXPIRY_DAYS);
-        LocalDateTime now = LocalDateTime.now();
+        Instant expiresAt = Instant.now().plus(EXPIRY_DAYS, ChronoUnit.DAYS);
+        Instant now = Instant.now();
 
         RefreshToken refreshToken = new RefreshToken();
 
         refreshToken.setUser(user);
-        refreshToken.setTokenHash(hashedToken);
+        refreshToken.setTokenHash(tokenHash);
         refreshToken.setExpiresAt(expiresAt);
         refreshToken.setCreatedAt(now);
         refreshToken.setDeviceInfo(deviceInfo);
         refreshToken.setIpAddress(ipAddress);
-        refreshToken.setIsRevoked(false);
-        refreshToken.setLastUsedAt(now);
+        refreshToken.setRevoked(false);
 
         refreshTokenRepository.save(refreshToken);
 
@@ -83,86 +95,34 @@ public class RefreshTokenService
 
     public boolean validateToken(String token, byte[] storedHash)
     {
-        try
-        {
-            if (storedHash == null || storedHash.length < SALT_LENGTH + 32)
-            {
-                return false;
-            }
-
-            byte[] salt = new byte[SALT_LENGTH];
-            byte[] originalHash = new byte[storedHash.length - SALT_LENGTH];
-            System.arraycopy(storedHash, 0, salt, 0, SALT_LENGTH);
-            System.arraycopy(storedHash, SALT_LENGTH, originalHash, 0, storedHash.length - SALT_LENGTH);
-
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(salt);
-            byte[] testHash = digest.digest(token.getBytes());
-
-            return MessageDigest.isEqual(originalHash, testHash);
-
-        } catch (Exception e)
+        if (token == null || storedHash == null || storedHash.length != HMAC_SHA256_LENGTH)
         {
             return false;
         }
+
+        return MessageDigest.isEqual(storedHash, hmacToken(token));
     }
 
     public boolean validateRefreshToken(String token)
     {
-        LocalDateTime now = LocalDateTime.now();
-
-        List<RefreshToken> validTokens = refreshTokenRepository.findAllValidTokens(now);
-
-        for (RefreshToken refreshToken : validTokens)
-        {
-            if (validateToken(token, refreshToken.getTokenHash()))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return findValidRefreshToken(token).isPresent();
     }
 
     public Optional<User> getUserFromRefreshToken(String token)
     {
-        LocalDateTime now = LocalDateTime.now();
-
-        List<RefreshToken> validTokens = refreshTokenRepository.findAllValidTokens(now);
-
-        for (RefreshToken refreshToken : validTokens)
-        {
-            if (validateToken(token, refreshToken.getTokenHash()))
-            {
-                return Optional.of(refreshToken.getUser());
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    public void updateLastUsed(String token)
-    {
-        LocalDateTime now = LocalDateTime.now();
-
-
-        List<RefreshToken> validTokens = refreshTokenRepository.findAllValidTokens(now);
-
-        for (RefreshToken refreshToken : validTokens)
-        {
-            if (validateToken(token, refreshToken.getTokenHash()))
-            {
-                refreshToken.setLastUsedAt(LocalDateTime.now());
-                refreshTokenRepository.save(refreshToken);
-                break;
-            }
-        }
+        return findValidRefreshToken(token).map(RefreshToken::getUser);
     }
 
     public void revokeToken(RefreshToken token)
     {
-        token.setIsRevoked(true);
-        token.setLastUsedAt(LocalDateTime.now());
+        token.setRevoked(true);
+        refreshTokenRepository.save(token);
+    }
+
+    public void consumeToken(RefreshToken token)
+    {
+        token.setConsumed(true);
+        token.setRevoked(true);
         refreshTokenRepository.save(token);
     }
 
@@ -173,34 +133,37 @@ public class RefreshTokenService
 
     public Optional<RefreshToken> findValidRefreshToken(String token)
     {
-        LocalDateTime now = LocalDateTime.now();
-
-        List<RefreshToken> validTokens = refreshTokenRepository.findAllValidTokens(now);
-
-        for (RefreshToken refreshToken : validTokens)
+        if (token == null || token.isBlank())
         {
-            if (validateToken(token, refreshToken.getTokenHash()))
-            {
-                return Optional.of(refreshToken);
-            }
+            return Optional.empty();
         }
 
-        return Optional.empty();
+        return refreshTokenRepository.findValidTokenByHash(hmacToken(token), Instant.now());
+    }
+
+    public Optional<RefreshToken> findValidRefreshTokenForUpdate(String token)
+    {
+        if (token == null || token.isBlank())
+        {
+            return Optional.empty();
+        }
+
+        return refreshTokenRepository.findValidTokenByHashForUpdate(hmacToken(token), Instant.now());
     }
 
     public void cleanupExpiredAndRevokedTokens()
     {
-        refreshTokenRepository.deleteExpiredAndRevokedTokens(LocalDateTime.now());
+        refreshTokenRepository.deleteExpiredAndRevokedTokens(Instant.now());
     }
 
     public List<RefreshToken> findActiveTokensByUser(Long userId)
     {
-        return refreshTokenRepository.findActiveTokensByUser(userId, LocalDateTime.now());
+        return refreshTokenRepository.findActiveTokensByUser(userId, Instant.now());
     }
 
     public long countActiveTokensByUser(Long userId)
     {
-        return refreshTokenRepository.countActiveTokensByUser(userId, LocalDateTime.now());
+        return refreshTokenRepository.countActiveTokensByUser(userId, Instant.now());
     }
 
     public void handleCompromisedToken(Long userId)

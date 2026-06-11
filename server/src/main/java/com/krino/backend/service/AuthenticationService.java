@@ -177,7 +177,7 @@ public class AuthenticationService
         }
 
 
-        RefreshToken tokenEntity = refreshTokenService.findValidRefreshToken(providedRefreshToken)
+        RefreshToken tokenEntity = refreshTokenService.findValidRefreshTokenForUpdate(providedRefreshToken)
                 .orElseThrow(() -> new InvalidRefreshTokenException("Invalid or expired refresh token"));
 
         User user = tokenEntity.getUser();
@@ -186,7 +186,7 @@ public class AuthenticationService
             throw new InvalidRefreshTokenException("User not found for refresh token");
         }
 
-        refreshTokenService.revokeToken(tokenEntity);
+        refreshTokenService.consumeToken(tokenEntity);
         String newRefreshToken = refreshTokenService.generateAndSaveRefreshToken(
                 user,
                 extractDeviceInfo(request),
@@ -212,7 +212,7 @@ public class AuthenticationService
                 .build();
     }
 
-    public String logout(HttpServletRequest request, HttpServletResponse response)
+    public void logout(HttpServletRequest request, HttpServletResponse response)
     {
         CookieUtilities.getRefreshTokenFromCookie(request)
                 .flatMap(refreshTokenService::findValidRefreshToken)
@@ -221,6 +221,5 @@ public class AuthenticationService
         CookieUtilities.clearAuthenticationCookies(response);
 
         log.info("User logged out successfully");
-        return "User logged out successfully";
     }
 }
