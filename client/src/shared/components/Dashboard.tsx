@@ -23,7 +23,6 @@ const Dashboard: React.FC = () => {
     }
 
     const dashboardUser: User = {
-        username: authUser.username,
         email: authUser.email,
         firstName: authUser.firstName,
         lastName: authUser.lastName,

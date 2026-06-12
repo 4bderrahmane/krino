@@ -26,9 +26,6 @@ const Profile: React.FC = () => {
         if (user?.firstName) {
             return user.firstName.charAt(0).toUpperCase();
         }
-        if (user?.username) {
-            return user.username.charAt(0).toUpperCase();
-        }
         return 'U';
     };
 
@@ -36,7 +33,7 @@ const Profile: React.FC = () => {
         if (user?.firstName && user?.lastName) {
             return `${user.firstName} ${user.lastName}`;
         }
-        return user?.firstName || user?.username || 'Unknown User';
+        return user?.firstName || 'Unknown User';
     };
 
     const getRoleDisplay = () => {
@@ -78,10 +75,6 @@ const Profile: React.FC = () => {
                             <div className="info-row">
                                 <span className="info-label">{t('profile.lastName')}</span>
                                 <span className="info-value">{user.lastName || 'Not provided'}</span>
-                            </div>
-                            <div className="info-row">
-                                <span className="info-label">{t('profile.username')}</span>
-                                <span className="info-value">{user.username}</span>
                             </div>
                             <div className="info-row">
                                 <span className="info-label">{t('profile.email')}</span>

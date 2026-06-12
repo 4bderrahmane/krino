@@ -14,7 +14,6 @@ export type Role = 'ADMIN' | 'CANDIDATE' | 'INTERVIEWER' | 'HR_MANAGER';
 export interface UserRegistrationDTO {
     email: string;
     password: string;
-    username: string;
     firstName: string;
     lastName: string;
     phoneNumber: string;
@@ -22,7 +21,6 @@ export interface UserRegistrationDTO {
 
 export interface UserResponseDTO {
     id: number;
-    username: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -84,12 +82,10 @@ export type AuthErrorCode =
     | 'RESOURCE_NOT_FOUND'
     | 'INVALID_TOKEN'
     | 'ACCESS_DENIED'
-    | 'USERNAME_ALREADY_EXISTS'
     | 'EMAIL_ALREADY_IN_USE'
     | 'EMAIL_ALREADY_EXISTS'
     | 'PASSWORD_TOO_WEAK'
     | 'INVALID_EMAIL_FORMAT'
-    | 'INVALID_USERNAME_FORMAT'
     | 'INVALID_CREDENTIALS'
     | 'ACCOUNT_DISABLED'
     | 'ACCOUNT_LOCKED'

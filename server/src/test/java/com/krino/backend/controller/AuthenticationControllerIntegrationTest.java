@@ -61,7 +61,7 @@ class AuthenticationControllerIntegrationTest
     @Test
     void loginWithApprovedUserSetsHttpOnlyAuthCookies() throws Exception
     {
-        createUser(CANDIDATE_EMAIL, "candidate", true, UserRole.CANDIDATE);
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
 
         MvcResult result = login(CANDIDATE_EMAIL, RAW_PASSWORD)
                 .andExpect(status().isOk())
@@ -84,7 +84,7 @@ class AuthenticationControllerIntegrationTest
     @Test
     void loginWithInvalidPasswordReturnsUnauthorizedWithoutCookies() throws Exception
     {
-        createUser(CANDIDATE_EMAIL, "candidate", true, UserRole.CANDIDATE);
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
 
         MvcResult result = login(CANDIDATE_EMAIL, "wrong-password")
                 .andExpect(status().isUnauthorized())
@@ -113,7 +113,7 @@ class AuthenticationControllerIntegrationTest
     @Test
     void accessTokenCookieAuthenticatesMeEndpoint() throws Exception
     {
-        createUser(CANDIDATE_EMAIL, "candidate", true, UserRole.CANDIDATE);
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         Cookie accessCookie = loginAndGetCookie(CANDIDATE_EMAIL, RAW_PASSWORD, "access_token");
 
         MvcResult result = mockMvc.perform(get("/api/users/me").cookie(accessCookie))
@@ -122,14 +122,14 @@ class AuthenticationControllerIntegrationTest
 
         assertThat(result.getResponse().getContentAsString()).contains(
                 "\"email\":\"" + CANDIDATE_EMAIL + "\"",
-                "\"username\":\"candidate\""
+                "\"firstName\":\"Test\""
         );
     }
 
     @Test
     void candidateAccessTokenCannotReadAllUsers() throws Exception
     {
-        createUser(CANDIDATE_EMAIL, "candidate", true, UserRole.CANDIDATE);
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         Cookie accessCookie = loginAndGetCookie(CANDIDATE_EMAIL, RAW_PASSWORD, "access_token");
 
         MvcResult result = mockMvc.perform(get("/api/users").cookie(accessCookie))
@@ -145,7 +145,7 @@ class AuthenticationControllerIntegrationTest
     @Test
     void refreshRotatesRefreshTokenAndRejectsReusedToken() throws Exception
     {
-        createUser(CANDIDATE_EMAIL, "candidate", true, UserRole.CANDIDATE);
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         MvcResult loginResult = login(CANDIDATE_EMAIL, RAW_PASSWORD)
                 .andExpect(status().isOk())
                 .andReturn();
@@ -163,11 +163,10 @@ class AuthenticationControllerIntegrationTest
                 .andExpect(status().isUnauthorized());
     }
 
-    private User createUser(String email, String username, boolean approved, UserRole... roles)
+    private User createUser(String email, boolean approved, UserRole... roles)
     {
         User user = User.builder()
                 .email(email)
-                .username(username)
                 .password(passwordEncoder.encode(RAW_PASSWORD))
                 .firstName("Test")
                 .lastName("User")

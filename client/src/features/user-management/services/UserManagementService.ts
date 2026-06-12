@@ -12,7 +12,6 @@ const ENDPOINTS = {
     preferences: '/users/preferences',
     verifyEmail: '/users/verify-email',
     requestVerification: '/users/request-verification',
-    checkUsername: '/users/check-username',
     checkEmail: '/users/check-email',
     exportData: '/users/export-data',
     activity: '/users/activity',

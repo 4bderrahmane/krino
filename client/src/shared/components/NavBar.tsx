@@ -50,7 +50,7 @@ const NavBar: React.FC = () => {
         return location.pathname === path;
     };
 
-    const username = user?.username || 'User';
+    const displayName = user?.firstName || 'User';
 
     return (
         <nav className="navbar">
@@ -89,7 +89,7 @@ const NavBar: React.FC = () => {
 
                     <div className="navbar-user" ref={dropdownRef}>
                         <button className="user-profile" onClick={toggleDropdown}>
-                            <span className="user-name">{username}</span>
+                            <span className="user-name">{displayName}</span>
                             <span className="dropdown-icon">▼</span>
                         </button>
 

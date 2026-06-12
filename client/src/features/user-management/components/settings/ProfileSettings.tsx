@@ -7,7 +7,6 @@ import {useSuccessToast} from "../../../../shared/hooks/useSuccessToast.ts";
 const ProfileSettings = () => {
     const {t} = useTranslation();
     const [form, setForm] = useState({
-        username: '',
         firstName: '',
         lastName: '',
         email: '',
@@ -24,7 +23,6 @@ const ProfileSettings = () => {
             try {
                 const user = await getCurrentUser();
                 const userData = {
-                    username: user.username || '',
                     firstName: user.firstName || '',
                     lastName: user.lastName || '',
                     email: user.email || '',
@@ -89,18 +87,6 @@ const ProfileSettings = () => {
             <form className="settings-card" onSubmit={handleProfileSubmit}>
                 <h2>{t('settings.updateProfile')}</h2>
                 <div className="form-content">
-                    <div className="info-row">
-                        <label className="info-label" htmlFor="username">{t('profile.username') || 'Username'}</label>
-                        <input
-                            className="info-value"
-                            type="text"
-                            id="username"
-                            name="username"
-                            value={form.username}
-                            onChange={handleChange}
-                            autoComplete="username"
-                        />
-                    </div>
                     <div className="info-row">
                         <label className="info-label" htmlFor="firstName">{t('profile.firstName')}</label>
                         <input

@@ -17,8 +17,6 @@ public interface UserRepository extends JpaRepository<User, Long>
 
     Optional<User> findByEmail(String email);
 
-    Optional<User> findByUsername(String username);
-
     List<User> findByRolesContaining(UserRole role);
 
     List<User> findByIsApprovedFalse();
@@ -26,7 +24,5 @@ public interface UserRepository extends JpaRepository<User, Long>
     Page<User> findByIsApprovedFalse(Pageable pageable);
 
     boolean existsByEmail(String email);
-
-    boolean existsByUsername(String username);
 
 }

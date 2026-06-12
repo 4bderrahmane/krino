@@ -12,9 +12,6 @@ import lombok.*;
 public class UserUpdateDTO
 {
 
-    @Size(min = 2, max = 100)
-    private String username;
-
     @Size(min = 2, max = 50)
     private String firstName;
 

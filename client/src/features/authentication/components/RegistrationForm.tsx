@@ -14,7 +14,6 @@ const RegistrationForm: React.FC = () => {
 
     const [credentials, setCredentials] = useState<UserRegistrationDTO>({
         email: '',
-        username: '',
         firstName: '',
         lastName: '',
         phoneNumber: '',
@@ -123,18 +122,6 @@ const RegistrationForm: React.FC = () => {
                     <div className="form-row">
                         <div className="form-group">
                             <input
-                                id="username"
-                                name="username"
-                                type="text"
-                                value={credentials.username}
-                                onChange={handleChange}
-                                required
-                                className="form-input"
-                                placeholder={t('auth.username')}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <input
                                 id="email"
                                 name="email"
                                 type="email"
@@ -145,9 +132,6 @@ const RegistrationForm: React.FC = () => {
                                 placeholder={t('auth.email')}
                             />
                         </div>
-                    </div>
-
-                    <div className="form-row">
                         <div className="form-group">
                             <input
                                 id="phoneNumber"
@@ -160,6 +144,9 @@ const RegistrationForm: React.FC = () => {
                                 placeholder={t('auth.phoneNumber')}
                             />
                         </div>
+                    </div>
+
+                    <div className="form-row">
                         <div className="form-group">
                             <input
                                 id="password"

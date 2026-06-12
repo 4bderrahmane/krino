@@ -20,7 +20,6 @@
     "lastName": "Nom de famille",
     "phoneNumber": "Numéro de téléphone",
     "email": "Entrez l'e-mail",
-    "username": "Nom d'utilisateur",
     "haveAccount": "Vous avez déjà un compte ?",
     "success": {
       "loginSuccess": "Connexion réussie ! Bon retour.",
@@ -40,13 +39,11 @@
         "ACCESS_DENIED": "Accès refusé. Vous n'avez pas la permission d'effectuer cette action."
       },
       "registration": {
-        "USERNAME_ALREADY_EXISTS": "Ce nom d'utilisateur est déjà pris. Veuillez en choisir un autre.",
         "EMAIL_ALREADY_IN_USE": "Un compte avec cet e-mail existe déjà.",
         "EMAIL_ALREADY_EXISTS": "Cette adresse e-mail est déjà enregistrée.",
         "USER_ALREADY_EXISTS": "Un utilisateur avec ces informations existe déjà.",
         "PASSWORD_TOO_WEAK": "Le mot de passe est trop faible. Veuillez utiliser un mot de passe plus fort avec au moins 8 caractères, incluant majuscules, minuscules et chiffres.",
         "INVALID_EMAIL_FORMAT": "Veuillez entrer une adresse e-mail valide.",
-        "INVALID_USERNAME_FORMAT": "Le nom d'utilisateur doit contenir 3 à 20 caractères et ne peut contenir que des lettres, chiffres et underscores.",
         "VALIDATION_FAILED": "Échec de la validation. Veuillez vérifier votre saisie et réessayer.",
         "INVALID_REQUEST_BODY": "Données de requête invalides. Veuillez vérifier votre saisie."
       },
@@ -82,7 +79,6 @@
     "lastName": "Nom de famille:",
     "email": "Email:",
     "phoneNumber": "Numéro de téléphone:",
-    "username": "Nom d'utilisateur:",
     "editProfile": "Modifier le profil",
     "saveChanges": "Enregistrer les modifications",
     "changePassword": "Changer le mot de passe",

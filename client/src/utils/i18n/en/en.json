@@ -20,7 +20,6 @@
     "lastName": "Last Name",
     "phoneNumber": "Phone Number",
     "email": "Enter email",
-    "username": "Username",
     "haveAccount": "Already have an account?",
     "success": {
       "loginSuccess": "Successfully logged in! Welcome back.",
@@ -40,13 +39,11 @@
         "ACCESS_DENIED": "Access denied. You don't have permission to perform this action."
       },
       "registration": {
-        "USERNAME_ALREADY_EXISTS": "This username is already taken. Please choose another.",
         "EMAIL_ALREADY_IN_USE": "An account with this email already exists.",
         "EMAIL_ALREADY_EXISTS": "This email address is already registered.",
         "USER_ALREADY_EXISTS": "A user with this information already exists.",
         "PASSWORD_TOO_WEAK": "Password is too weak. Please use a stronger password with at least 8 characters, including uppercase, lowercase, and numbers.",
         "INVALID_EMAIL_FORMAT": "Please enter a valid email address.",
-        "INVALID_USERNAME_FORMAT": "Username must be 3-20 characters long and contain only letters, numbers, and underscores.",
         "VALIDATION_FAILED": "Validation failed. Please check your input and try again.",
         "INVALID_REQUEST_BODY": "Invalid request data. Please check your input."
       },
@@ -89,7 +86,6 @@
     "lastName": "Last Name:",
     "email": "Email:",
     "phoneNumber": "Phone Number:",
-    "username": "Username:",
     "editProfile": "Edit Profile:",
     "saveChanges": "Save Changes",
     "profileUpdated": "Profile updated successfully.",

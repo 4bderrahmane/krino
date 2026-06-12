@@ -37,7 +37,6 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService
 {
 
-    private static final String USERNAME_ALREADY_TAKEN_MESSAGE = "Username '%s' is already taken.";
     private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -54,22 +53,12 @@ public class AuthenticationService
         {
             throw new IllegalArgumentException("Email cannot be null or empty");
         }
-        if (request.getUsername() == null || request.getUsername().trim().isEmpty())
-        {
-            throw new IllegalArgumentException("Username cannot be null or empty");
-        }
         if (request.getPassword() == null || request.getPassword().trim().isEmpty())
         {
             throw new IllegalArgumentException("Password cannot be null or empty");
         }
 
         String normalizedEmail = request.getEmail().trim().toLowerCase();
-        String normalizedUsername = request.getUsername().trim().toLowerCase();
-
-        if (userRepository.findByUsername(normalizedUsername).isPresent())
-        {
-            throw new ResourceConflictException(String.format(USERNAME_ALREADY_TAKEN_MESSAGE, normalizedUsername), ErrorCode.USERNAME_ALREADY_EXISTS);
-        }
 
         if (userRepository.findByEmail(normalizedEmail).isPresent())
         {
@@ -80,7 +69,6 @@ public class AuthenticationService
         {
             User user = new User(
                     normalizedEmail,
-                    normalizedUsername,
                     passwordEncoder.encode(request.getPassword()),
                     request.getFirstName() != null ? request.getFirstName().trim() : "",
                     request.getLastName() != null ? request.getLastName().trim() : "",

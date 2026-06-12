@@ -39,9 +39,6 @@ public class User
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(unique = true, nullable = false)
-    private String username;
-
     @Column(nullable = false)
     private String password;
 
@@ -55,10 +52,9 @@ public class User
 
     private boolean isApproved = false;
 
-    public User(String email, String username, String password, String firstName, String lastName, String phoneNumber)
+    public User(String email, String password, String firstName, String lastName, String phoneNumber)
     {
         this.email = email;
-        this.username = username;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;

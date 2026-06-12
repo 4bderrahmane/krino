@@ -31,7 +31,6 @@ import java.util.UUID;
 public class UserService
 {
     private static final String USER_NOT_FOUND_MESSAGE = "User with public ID '%s' not found";
-    private static final String USERNAME_ALREADY_TAKEN_MESSAGE = "Username '%s' is already taken.";
     private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -46,11 +45,6 @@ public class UserService
     public Optional<User> findByEmail(String email)
     {
         return userRepository.findByEmail(email);
-    }
-
-    public Optional<User> findByUsername(String username)
-    {
-        return userRepository.findByUsername(username);
     }
 
     public User addRoleToUser(Long userId, UserRole role)
@@ -78,17 +72,6 @@ public class UserService
     {
         User currentUser = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
-
-        if (userUpdateDTO.getUsername() != null && !userUpdateDTO.getUsername().equals(currentUser.getUsername()))
-        {
-            userRepository.findByUsername(userUpdateDTO.getUsername())
-                    .filter(user -> !user.getPublicId().equals(publicId))
-                    .ifPresent(user ->
-                    {
-                        throw new ResourceConflictException(String.format(USERNAME_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getUsername()), ErrorCode.USERNAME_ALREADY_EXISTS);
-                    });
-            currentUser.setUsername(userUpdateDTO.getUsername());
-        }
 
         if (userUpdateDTO.getEmail() != null && !userUpdateDTO.getEmail().equals(currentUser.getEmail()))
         {
@@ -123,21 +106,11 @@ public class UserService
         User existingUser = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
-        if (userUpdateDTO.getUsername() == null || userUpdateDTO.getEmail() == null
+        if (userUpdateDTO.getEmail() == null
                 || userUpdateDTO.getFirstName() == null || userUpdateDTO.getLastName() == null
                 || userUpdateDTO.getPhoneNumber() == null)
         {
             throw new IllegalArgumentException("All fields must be provided for a full update.");
-        }
-
-        if (!userUpdateDTO.getUsername().equals(existingUser.getUsername()))
-        {
-            userRepository.findByUsername(userUpdateDTO.getUsername())
-                    .filter(user -> !user.getPublicId().equals(publicId))
-                    .ifPresent(user ->
-                    {
-                        throw new ResourceConflictException(String.format(USERNAME_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getUsername()), ErrorCode.USERNAME_ALREADY_EXISTS);
-                    });
         }
 
         if (!userUpdateDTO.getEmail().equals(existingUser.getEmail()))
@@ -150,7 +123,6 @@ public class UserService
                     });
         }
 
-        existingUser.setUsername(userUpdateDTO.getUsername());
         existingUser.setEmail(userUpdateDTO.getEmail());
         existingUser.setFirstName(userUpdateDTO.getFirstName());
         existingUser.setLastName(userUpdateDTO.getLastName());

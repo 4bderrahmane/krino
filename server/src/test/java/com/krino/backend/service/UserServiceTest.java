@@ -78,7 +78,7 @@ class UserServiceTest
     {
         User user = new User();
         user.setPassword("encodedPassword");
-        when(userRepository.findByUsername("user")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("user@test.local")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrongPassword", "encodedPassword")).thenReturn(false);
 
         InvalidCredentialsException ex = assertThrows(
@@ -86,14 +86,14 @@ class UserServiceTest
                 () ->
                 {
                     // Simulate login logic as per your service (add this method if not present)
-                    Optional<User> foundUser = userRepository.findByUsername("user");
+                    Optional<User> foundUser = userRepository.findByEmail("user@test.local");
                     if (foundUser.isEmpty() || !passwordEncoder.matches("wrongPassword", foundUser.get().getPassword()))
                     {
-                        throw new InvalidCredentialsException("Invalid username or password.");
+                        throw new InvalidCredentialsException("Invalid email or password.");
                     }
                 }
         );
-        assertEquals("Invalid username or password.", ex.getMessage());
+        assertEquals("Invalid email or password.", ex.getMessage());
     }
 }
 

@@ -45,6 +45,7 @@ public class Job
 
     private LocalDate applyingDeadline;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private JobType type;
 

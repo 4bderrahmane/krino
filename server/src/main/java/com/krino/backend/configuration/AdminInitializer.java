@@ -44,7 +44,6 @@ public class AdminInitializer implements CommandLineRunner
         }
 
         var admin = User.builder()
-                .username("Admin")
                 .firstName("Abderrahmane")
                 .lastName("Khbabez")
                 .email(adminEmail)

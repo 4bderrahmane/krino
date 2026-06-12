@@ -11,10 +11,6 @@ import lombok.*;
 public class UserRegistrationDTO
 {
 
-    @NotBlank(message = "Username cannot be blank")
-    @Size(min = 3, max = 50, message = "Username must be between 2 and 50 characters")
-    private String username;
-
     @NotBlank(message = "First name cannot be blank")
     @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
     private String firstName;

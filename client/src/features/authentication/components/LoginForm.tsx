@@ -116,7 +116,7 @@ const LoginForm: React.FC = () => {
                             onChange={handleChange}
                             required
                             className="form-input with-icon"
-                            placeholder={t('auth.username')}
+                            placeholder={t('auth.email')}
                         />
                     </div>
 
