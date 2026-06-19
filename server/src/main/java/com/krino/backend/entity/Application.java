@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-//import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
@@ -14,7 +14,6 @@ import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-//@SuperBuilder
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,9 +21,10 @@ import java.util.UUID;
 @Entity
 @Table(name = "applications", indexes = {
         @Index(name = "idx_applications_public_id", columnList = "public_id")
+}, uniqueConstraints = {
+        @UniqueConstraint(name = "uk_applications_job_candidate", columnNames = {"job_id", "user_id"})
 })
-public class Application
-{
+public class Application {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -49,6 +49,8 @@ public class Application
 
     private String resumeUrl;
 
+    @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime appliedAt;
 
     @UpdateTimestamp
