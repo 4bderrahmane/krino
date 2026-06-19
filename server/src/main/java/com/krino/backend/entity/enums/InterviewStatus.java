@@ -1,4 +1,4 @@
-package com.krino.backend.entity;
+package com.krino.backend.entity.enums;
 
 public enum InterviewStatus
 {

@@ -1,5 +1,6 @@
 package com.krino.backend.dto.interview;
 
+import com.krino.backend.entity.enums.InterviewStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -23,7 +24,11 @@ public class InterviewRequestDTO
     @NotNull(message = "Slot ID cannot be null")
     private UUID slotId;
 
+    private InterviewStatus status;
+
     private String notes;
 
     private Boolean isOnline;
+
+    private String meetingUrl;
 }

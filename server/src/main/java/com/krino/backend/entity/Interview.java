@@ -1,5 +1,6 @@
 package com.krino.backend.entity;
 
+import com.krino.backend.entity.enums.InterviewStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,8 +22,7 @@ import java.util.UUID;
         @Index(name = "idx_interviews_public_id", columnList = "public_id")
 })
 
-public class Interview
-{
+public class Interview {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,15 +34,15 @@ public class Interview
     private UUID publicId;
 
     @ManyToOne
-    @JoinColumn(name = "interviewer_id")
+    @JoinColumn(name = "interviewer_id", nullable = false)
     private User interviewer;
 
     @ManyToOne
-    @JoinColumn(name = "candidate_id")
+    @JoinColumn(name = "candidate_id", nullable = false)
     private User candidate;
 
     @ManyToOne
-    @JoinColumn(name = "job_id")
+    @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
     @Setter(AccessLevel.NONE)
@@ -50,22 +50,25 @@ public class Interview
     @JoinColumn(name = "slot_id", unique = true)
     private Slot slot;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private InterviewStatus status = InterviewStatus.SCHEDULED;
+
     @Lob
     private String notes;
 
     private Boolean isOnline;
 
-    public void setSlot(Slot slot)
-    {
-        if (this.slot != null)
-        {
+    private String meetingUrl;
+
+    public void setSlot(Slot slot) {
+        if (this.slot != null) {
             Slot previous = this.slot;
             this.slot = null;
             previous.setInterview(null);
         }
 
-        if (slot != null)
-        {
+        if (slot != null) {
             this.slot = slot;
             slot.setInterview(this);
         }
