@@ -15,6 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -31,6 +32,15 @@ public class DepartmentService
         // use object-name constructor to get DEPARTMENT_NOT_FOUND ErrorCode
         Department department = departmentRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId", publicId));
+
+        if (department.getJobs() != null && !department.getJobs().isEmpty())
+        {
+            throw new ResourceConflictException(
+                    String.format("Department '%s' still has jobs and cannot be deleted.", department.getName()),
+                    ErrorCode.OPERATION_NOT_ALLOWED,
+                    Map.of("resource", "Department", "name", department.getName()));
+        }
+
         departmentRepository.delete(department);
     }
 
@@ -38,7 +48,8 @@ public class DepartmentService
     {
         if (departmentRepository.findByName(department.getName()).isPresent())
         {
-            throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, department.getName()), ErrorCode.DEPARTMENT_ALREADY_EXISTS);
+            throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, department.getName()), ErrorCode.DATA_CONFLICT,
+                    Map.of("field", "name", "value", department.getName()));
         }
         Department newDepartment = new Department();
 
@@ -57,7 +68,8 @@ public class DepartmentService
 
         if (departmentRepository.findByName(departmentUpdateDTO.getName()).isPresent() && !existingDepartment.getName().equals(departmentUpdateDTO.getName()))
         {
-            throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, departmentUpdateDTO.getName()), ErrorCode.DEPARTMENT_ALREADY_EXISTS);
+            throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, departmentUpdateDTO.getName()), ErrorCode.DATA_CONFLICT,
+                    Map.of("field", "name", "value", departmentUpdateDTO.getName()));
         }
 
         existingDepartment.setName(departmentUpdateDTO.getName());
@@ -76,7 +88,8 @@ public class DepartmentService
         {
             if (departmentRepository.findByName(departmentUpdateDTO.getName()).isPresent() && !existingDepartment.getName().equals(departmentUpdateDTO.getName()))
             {
-                throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, departmentUpdateDTO.getName()), ErrorCode.DEPARTMENT_ALREADY_EXISTS);
+                throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, departmentUpdateDTO.getName()), ErrorCode.DATA_CONFLICT,
+                        Map.of("field", "name", "value", departmentUpdateDTO.getName()));
             }
             existingDepartment.setName(departmentUpdateDTO.getName());
         }

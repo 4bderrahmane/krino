@@ -23,8 +23,7 @@ import java.util.UUID;
         @Index(name = "idx_departments_public_id", columnList = "public_id")
 })
 
-public class Department
-{
+public class Department {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,10 +31,10 @@ public class Department
 
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "public_id", unique = true, nullable = false, updatable = false,
-            columnDefinition = "VARCHAR(36)")
+    @Column(name = "public_id", unique = true, nullable = false, updatable = false, columnDefinition = "VARCHAR(36)")
     private UUID publicId;
 
+    @Column(unique = true, nullable = false)
     private String name;
 
     private String description;
