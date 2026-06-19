@@ -1,15 +1,16 @@
 package com.krino.backend.exception;
 
-public class RegistrationException extends RuntimeException
+import com.krino.backend.utility.ErrorCode;
+
+public class RegistrationException extends BaseException
 {
     public RegistrationException(String message)
     {
-        super(message);
+        super(ErrorCode.INTERNAL_SERVER_ERROR, message);
     }
 
     public RegistrationException(String message, Throwable cause)
     {
-        super(message, cause);
+        super(ErrorCode.INTERNAL_SERVER_ERROR, message, cause);
     }
 }
-

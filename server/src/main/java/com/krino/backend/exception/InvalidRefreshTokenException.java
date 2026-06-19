@@ -1,9 +1,11 @@
 package com.krino.backend.exception;
 
-public class InvalidRefreshTokenException extends RuntimeException
+import com.krino.backend.utility.ErrorCode;
+
+public class InvalidRefreshTokenException extends BaseException
 {
     public InvalidRefreshTokenException(String message)
     {
-        super(message);
+        super(ErrorCode.UNAUTHORIZED, message);
     }
 }

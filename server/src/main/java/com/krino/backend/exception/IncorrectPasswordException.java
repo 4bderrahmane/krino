@@ -1,12 +1,16 @@
 package com.krino.backend.exception;
 
-public class IncorrectPasswordException extends RuntimeException {
+import com.krino.backend.utility.ErrorCode;
 
-    public IncorrectPasswordException() {
-        super("The password provided is incorrect.");
+public class IncorrectPasswordException extends BaseException
+{
+    public IncorrectPasswordException()
+    {
+        super(ErrorCode.INVALID_CREDENTIALS, "The password provided is incorrect.");
     }
 
-    public IncorrectPasswordException(String message) {
-        super(message);
+    public IncorrectPasswordException(String message)
+    {
+        super(ErrorCode.INVALID_CREDENTIALS, message);
     }
 }

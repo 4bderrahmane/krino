@@ -1,14 +1,16 @@
 package com.krino.backend.exception;
 
-public class TokenException extends RuntimeException
+import com.krino.backend.utility.ErrorCode;
+
+public class TokenException extends BaseException
 {
     public TokenException(String message)
     {
-        super(message);
+        super(ErrorCode.UNAUTHORIZED, message);
     }
 
     public TokenException(String message, Throwable cause)
     {
-        super(message, cause);
+        super(ErrorCode.UNAUTHORIZED, message, cause);
     }
 }

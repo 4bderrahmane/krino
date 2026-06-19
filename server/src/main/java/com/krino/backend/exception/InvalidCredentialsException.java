@@ -1,9 +1,11 @@
 package com.krino.backend.exception;
 
-public class InvalidCredentialsException extends RuntimeException
+import com.krino.backend.utility.ErrorCode;
+
+public class InvalidCredentialsException extends BaseException
 {
     public InvalidCredentialsException(String message)
     {
-        super(message);
+        super(ErrorCode.INVALID_CREDENTIALS, message);
     }
 }
