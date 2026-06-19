@@ -11,6 +11,10 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.UUID;
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
@@ -24,8 +28,7 @@ import org.hibernate.type.SqlTypes;
         @Index(name = "idx_jobs_public_id", columnList = "public_id")
 })
 @Entity
-public class Job
-{
+public class Job {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,8 +36,7 @@ public class Job
 
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "public_id", unique = true, nullable = false, updatable = false,
-            columnDefinition = "VARCHAR(36)")
+    @Column(name = "public_id", unique = true, nullable = false, updatable = false, columnDefinition = "VARCHAR(36)")
     private UUID publicId;
 
     @ManyToOne
@@ -42,14 +44,13 @@ public class Job
     @JsonBackReference
     private Department department;
 
+    @Column(nullable = false)
     private String title;
 
     private String description;
 
     private LocalDate applyingDeadline;
 
-    // Two orthogonal classifications: how much time the role takes, and the
-    // nature of the contract. A full-time internship is FULL_TIME + INTERNSHIP.
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EmploymentType employmentType;
@@ -60,5 +61,11 @@ public class Job
 
     @Enumerated(EnumType.STRING)
     private JobStatus status = JobStatus.OPEN;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
 }
