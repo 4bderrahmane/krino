@@ -8,6 +8,7 @@ public class JobUpdateDTO
     private String title;
     private String description;
     private String departmentName;
-    private String type;
+    private String employmentType;
+    private String contractType;
     private String status;
 }

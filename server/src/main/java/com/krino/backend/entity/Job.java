@@ -1,5 +1,8 @@
 package com.krino.backend.entity;
 
+import com.krino.backend.entity.enums.ContractType;
+import com.krino.backend.entity.enums.EmploymentType;
+import com.krino.backend.entity.enums.JobStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -45,20 +48,17 @@ public class Job
 
     private LocalDate applyingDeadline;
 
+    // Two orthogonal classifications: how much time the role takes, and the
+    // nature of the contract. A full-time internship is FULL_TIME + INTERNSHIP.
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private JobType type;
+    private EmploymentType employmentType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ContractType contractType;
 
     @Enumerated(EnumType.STRING)
     private JobStatus status = JobStatus.OPEN;
 
-    public enum JobStatus
-    {
-        DRAFT, OPEN, CLOSED, FILLED
-    }
-
-    public enum JobType
-    {
-        FULL_TIME, PART_TIME, INTERNSHIP, CONTRACT
-    }
 }

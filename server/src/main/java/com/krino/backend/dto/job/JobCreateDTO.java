@@ -23,5 +23,8 @@ public class JobCreateDTO
     private LocalDate applyingDeadline;
 
     @NotNull
-    private String type;
+    private String employmentType;
+
+    @NotNull
+    private String contractType;
 }
