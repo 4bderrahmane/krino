@@ -1,165 +1,220 @@
 package com.krino.backend.exception;
 
-import com.krino.backend.configuration.ErrorResponse;
 import com.krino.backend.utility.ErrorCode;
-import com.krino.backend.utility.SanitizationUtilities;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authorization.AuthorizationDeniedException;
-import org.springframework.validation.FieldError;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.transaction.CannotCreateTransactionException;
+import org.springframework.transaction.TransactionSystemException;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.time.Instant;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @RestControllerAdvice
-@Slf4j
-public class GlobalExceptionHandler
-{
-
-    private ResponseEntity<ErrorResponse> createErrorResponse(HttpStatus status, String message, ErrorCode errorCode, HttpServletRequest request, Map<String, Object> details)
-    {
-        ErrorResponse errorResponse = new ErrorResponse(Instant.now(), status.value(), message, SanitizationUtilities.escapeForHtml(request.getRequestURI()), errorCode, details);
-        return new ResponseEntity<>(errorResponse, status);
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request)
-    {
-        Map<String, Object> validationErrors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(error ->
-        {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            validationErrors.put(fieldName, errorMessage);
-        });
-
-        log.warn("Validation failed for request {}: {}", request.getRequestURI(), validationErrors);
-        return createErrorResponse(HttpStatus.BAD_REQUEST, "Validation Failed", ErrorCode.VALIDATION_FAILED, request, validationErrors);
-    }
+@RequiredArgsConstructor
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+    private final ExceptionProblemDetailFactory problemDetailFactory;
+    private final ExceptionLogService exceptionLogService;
 
     @ExceptionHandler(ResourceConflictException.class)
-    public ResponseEntity<ErrorResponse> handleResourceConflict(ResourceConflictException ex, HttpServletRequest request)
-    {
-        log.warn("There is a Conflict error for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), ex.getErrorCode(), request, null);
+    public ResponseEntity<ProblemDetail> handleResourceConflict(ResourceConflictException ex, HttpServletRequest request) {
+        return respond(ex, ex.getErrorCode(), ex.getClientDetail(), request, ex.getDetails());
     }
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request)
-    {
-        log.warn("Resource not found for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ex.getErrorCode() != null ? ex.getErrorCode() : ErrorCode.RESOURCE_NOT_FOUND, request, null);
+    @ExceptionHandler(BaseException.class)
+    public ResponseEntity<ProblemDetail> handleBaseException(BaseException ex, HttpServletRequest request) {
+        return respond(ex, ex.getErrorCode(), ex.getClientDetail(), request, null);
     }
 
-    @ExceptionHandler({BadCredentialsException.class, InvalidCredentialsException.class})
-    public ResponseEntity<ErrorResponse> handleBadCredentials(Exception ex, HttpServletRequest request)
-    {
-        log.warn("Invalid credentials attempt for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password", ErrorCode.INVALID_CREDENTIALS, request, null);
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        return respond(ex, ErrorCode.ACCESS_DENIED, "You do not have permission to perform this action.", request,
+                null);
     }
 
-    @ExceptionHandler(IncorrectPasswordException.class)
-    public ResponseEntity<ErrorResponse> handleWrongPassword(IncorrectPasswordException ex, HttpServletRequest request)
-    {
-        log.warn("Incorrect password attempt for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.UNAUTHORIZED, "The password provided is incorrect", ErrorCode.INCORRECT_PASSWORD, request, null);
-    }
-
-    @ExceptionHandler(TokenException.class)
-    public ResponseEntity<ErrorResponse> handleTokenException(TokenException ex, HttpServletRequest request)
-    {
-        log.warn("Token exception for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), ErrorCode.INVALID_TOKEN, request, null);
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ProblemDetail> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+        return respond(ex, ErrorCode.UNAUTHORIZED, "Authentication required.", request, null);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request)
-    {
-        String message = String.format("Parameter '%s' with value '%s' could not be converted to type '%s'",
-                ex.getName(), ex.getValue(), Objects.requireNonNull(ex.getRequiredType()).getSimpleName());
-        log.warn("Type mismatch for request {}: {}", request.getRequestURI(), message);
-        return createErrorResponse(HttpStatus.BAD_REQUEST, message, ErrorCode.INVALID_REQUEST_BODY, request, null);
-    }
-
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request)
-    {
-        String message = String.format("Method '%s' is not supported for this endpoint. Supported methods are %s.",
-                ex.getMethod(), ex.getSupportedHttpMethods());
-        log.warn("Unsupported HTTP method for request {}: {}", request.getRequestURI(), message);
-        return createErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, message, ErrorCode.METHOD_NOT_SUPPORTED, request, null);
+    public ResponseEntity<ProblemDetail> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+                                                            HttpServletRequest request) {
+        String detail = "Invalid value for parameter '" + ex.getName() + "'.";
+        return respond(ex, ErrorCode.VALIDATION_ERROR, detail, request, null);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request)
-    {
-        log.warn("Illegal argument for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ErrorCode.INVALID_REQUEST_BODY, request, null);
+    public ResponseEntity<ProblemDetail> handleIllegalArgument(IllegalArgumentException ex,
+                                                               HttpServletRequest request) {
+        return respond(ex, ErrorCode.VALIDATION_ERROR, ex.getMessage(), request, null);
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleMalformedJson(HttpMessageNotReadableException ex, HttpServletRequest request)
-    {
-        log.warn("Malformed JSON for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.BAD_REQUEST, "Malformed JSON request body.", ErrorCode.MALFORMED_JSON, request, null);
-    }
-
-    @ExceptionHandler(InvalidJobTypeException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidJobType(InvalidJobTypeException ex, HttpServletRequest request)
-    {
-        log.warn("Invalid job type for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ErrorCode.INVALID_JOB_TYPE, request, null);
-    }
-
-    @ExceptionHandler(InvalidRefreshTokenException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(InvalidRefreshTokenException ex, HttpServletRequest request)
-    {
-        log.warn("Invalid refresh token for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(
-                HttpStatus.UNAUTHORIZED,
-                ex.getMessage(),
-                ErrorCode.INVALID_REFRESH_TOKEN,
-                request,
-                null
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ProblemDetail> handleConstraintViolation(ConstraintViolationException ex,
+                                                                   HttpServletRequest request) {
+        Map<String, List<String>> errors = new LinkedHashMap<>();
+        ex.getConstraintViolations().forEach(violation ->
+                addValidationError(errors, violation.getPropertyPath().toString(), violation.getMessage())
         );
+        return respond(ex, ErrorCode.VALIDATION_ERROR, "Validation failed for one or more parameters.", request,
+                errors);
     }
 
-    @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
-    public ResponseEntity<ErrorResponse> handleAccessDenied(Exception ex, HttpServletRequest request)
-    {
-        log.warn("Access denied for request {}: {}", request.getRequestURI(), ex.getMessage());
-        return createErrorResponse(
-                HttpStatus.FORBIDDEN,
-                "You do not have permission to perform this action.",
-                ErrorCode.ACCESS_DENIED,
-                request,
-                null
-        );
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(DataIntegrityViolationException ex,
+                                                                      HttpServletRequest request) {
+        return respond(ex, ErrorCode.DATA_CONFLICT, "Data integrity constraint violated.", request, null);
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ProblemDetail> handleOptimisticLocking(OptimisticLockingFailureException ex,
+                                                                 HttpServletRequest request) {
+        return respond(ex, ErrorCode.DATA_CONFLICT, "Concurrent modification detected. Retry the request.", request,
+                null);
+    }
+
+    @ExceptionHandler({TransactionSystemException.class, CannotCreateTransactionException.class})
+    public ResponseEntity<ProblemDetail> handleTransactionFailure(Exception ex, HttpServletRequest request) {
+        return respond(ex, ErrorCode.INTERNAL_SERVER_ERROR, "Database transaction failed.", request, null);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request)
-    {
-        log.error("Unexpected error for request {}: {}", request.getRequestURI(), ex.getMessage(), ex);
-        return createErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected internal server error occurred.",
-                ErrorCode.INTERNAL_SERVER_ERROR,
-                request,
-                null
-        );
+    public ResponseEntity<ProblemDetail> handleUnknown(Exception ex, HttpServletRequest request) {
+        return respond(ex, ErrorCode.INTERNAL_SERVER_ERROR, "An unexpected error occurred. Please contact support.", request, null);
     }
 
+    @Override
+    protected @NonNull ResponseEntity<@NonNull Object> handleMethodArgumentNotValid(
+            @NonNull MethodArgumentNotValidException ex,
+            @NonNull HttpHeaders headers,
+            @NonNull HttpStatusCode status,
+            @NonNull WebRequest request
+    ) {
+        HttpServletRequest servletRequest = extractRequest(request);
+        Map<String, List<String>> errors = extractBindingErrors(ex.getBindingResult());
+
+        exceptionLogService.logForStatus(status, ex, servletRequest, ErrorCode.VALIDATION_ERROR);
+        ProblemDetail problemDetail = problemDetailFactory.buildProblemDetail(
+                ErrorCode.VALIDATION_ERROR,
+                "Validation failed for one or more fields.",
+                servletRequest,
+                errors,
+                status
+        );
+        return ResponseEntity.status(status).headers(headers).body(problemDetail);
+    }
+
+    @Override
+    protected @NonNull ResponseEntity<@NonNull Object> handleExceptionInternal(
+            @NonNull Exception ex,
+            @Nullable Object body,
+            @NonNull HttpHeaders headers,
+            @NonNull HttpStatusCode statusCode,
+            @NonNull WebRequest request
+    ) {
+        HttpServletRequest servletRequest = extractRequest(request);
+        ErrorCode errorCode = mapStatusToErrorCode(statusCode);
+        exceptionLogService.logForStatus(statusCode, ex, servletRequest, errorCode);
+
+        if (body instanceof ProblemDetail problemDetail) {
+            problemDetailFactory.enrichProblemDetail(problemDetail, errorCode, servletRequest);
+            return ResponseEntity.status(statusCode).headers(headers).body(problemDetail);
+        }
+
+        ProblemDetail problemDetail = problemDetailFactory.buildProblemDetail(
+                errorCode,
+                ExceptionProblemDetailFactory.reasonPhrase(statusCode),
+                servletRequest,
+                null,
+                statusCode
+        );
+        return ResponseEntity.status(statusCode).headers(headers).body(problemDetail);
+    }
+
+    // Single chokepoint for our own handlers: logs exactly once, then builds the response.
+    private ResponseEntity<ProblemDetail> respond(
+            Exception ex,
+            ErrorCode errorCode,
+            String detail,
+            @Nullable HttpServletRequest request,
+            @Nullable Object errors
+    ) {
+        exceptionLogService.logForStatus(errorCode.getStatus(), ex, request, errorCode);
+        ProblemDetail problemDetail = problemDetailFactory.buildProblemDetail(errorCode, detail, request, errors, null);
+        return ResponseEntity.status(errorCode.getStatus()).body(problemDetail);
+    }
+
+    private Map<String, List<String>> extractBindingErrors(BindingResult bindingResult) {
+        Map<String, List<String>> errors = new LinkedHashMap<>();
+
+        bindingResult.getFieldErrors().forEach(error ->
+                addValidationError(errors, error.getField(), error.getDefaultMessage())
+        );
+        bindingResult.getGlobalErrors().forEach(error ->
+                addValidationError(errors, error.getObjectName(), error.getDefaultMessage())
+        );
+        return errors;
+    }
+
+    private static void addValidationError(Map<String, List<String>> errors, @Nullable String key, @Nullable String message) {
+        String normalizedKey;
+        if (key == null || key.isBlank())
+            normalizedKey = "request";
+        else
+            normalizedKey = key;
+
+        String normalizedMessage;
+        if (message == null || message.isBlank())
+            normalizedMessage = "Validation failed";
+        else
+            normalizedMessage = message;
+
+        errors.computeIfAbsent(normalizedKey, ignored -> new ArrayList<>()).add(normalizedMessage);
+    }
+
+    private static @Nullable HttpServletRequest extractRequest(WebRequest request) {
+        if (request instanceof ServletWebRequest servletWebRequest)
+            return servletWebRequest.getRequest();
+
+        return null;
+    }
+
+    private static ErrorCode mapStatusToErrorCode(HttpStatusCode status) {
+        return switch (status.value()) {
+            case 400, 422 -> ErrorCode.VALIDATION_ERROR;
+            case 401 -> ErrorCode.UNAUTHORIZED;
+            case 403 -> ErrorCode.ACCESS_DENIED;
+            case 404 -> ErrorCode.RESOURCE_NOT_FOUND;
+            case 405 -> ErrorCode.METHOD_NOT_ALLOWED;
+            case 406 -> ErrorCode.NOT_ACCEPTABLE;
+            case 409 -> ErrorCode.DATA_CONFLICT;
+            case 413 -> ErrorCode.PAYLOAD_TOO_LARGE;
+            case 415 -> ErrorCode.UNSUPPORTED_MEDIA_TYPE;
+            case 429 -> ErrorCode.RATE_LIMITED;
+            case 408, 504 -> ErrorCode.TIMEOUT_OCCURRED;
+            case 502, 503 -> ErrorCode.EXTERNAL_SERVICE_FAILURE;
+            default -> ErrorCode.INTERNAL_SERVER_ERROR;
+        };
+    }
 }
