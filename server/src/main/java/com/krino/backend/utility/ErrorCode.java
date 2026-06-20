@@ -1,52 +1,44 @@
 package com.krino.backend.utility;
 
-public enum ErrorCode
-{
-    METHOD_NOT_SUPPORTED,
-    MALFORMED_JSON,
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
-    UNEXPECTED_ERROR,
-    INVALID_REQUEST_BODY,
-    RESOURCE_NOT_FOUND,
-    INVALID_REFRESH_TOKEN,
-    INVALID_TOKEN,
-    TOKEN_ERROR,
-    ACCESS_DENIED,
+import java.net.URI;
 
-    EMAIL_ALREADY_IN_USE,
-    EMAIL_ALREADY_EXISTS,
-    PASSWORD_TOO_WEAK,
-    INVALID_EMAIL_FORMAT,
+@Getter
+public enum ErrorCode {
 
-    INVALID_CREDENTIALS,
-    ACCOUNT_DISABLED,
-    ACCOUNT_LOCKED,
-    ACCOUNT_NOT_VERIFIED,
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "internal-server-error"),
+    VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "validation-error"),
+    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "resource-not-found"),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "unauthorized"),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "invalid-credentials"),
+    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "token-expired"),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "access-denied"),
+    ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "account-locked"),
+    DATA_CONFLICT(HttpStatus.CONFLICT, "data-conflict"),
+    OPERATION_NOT_ALLOWED(HttpStatus.CONFLICT, "operation-not-allowed"),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "method-not-allowed"),
+    NOT_ACCEPTABLE(HttpStatus.NOT_ACCEPTABLE, "not-acceptable"),
+    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "unsupported-media-type"),
+    PAYLOAD_TOO_LARGE(HttpStatus.CONTENT_TOO_LARGE, "payload-too-large"),
+    RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "rate-limited"),
+    EXTERNAL_SERVICE_FAILURE(HttpStatus.BAD_GATEWAY, "external-service-failure"),
+    TIMEOUT_OCCURRED(HttpStatus.GATEWAY_TIMEOUT, "timeout-occurred");
 
-    PASSWORD_CHANGE_FAILED,
-    PASSWORD_RESET_TOKEN_EXPIRED,
-    INVALID_PASSWORD_RESET_TOKEN,
-    NEW_PASSWORD_SAME_AS_OLD,
-    AUTHENTICATION_REQUIRED,
-    AUTHENTICATION_FAILED,
-    INCORRECT_PASSWORD,
+    private static final String TYPE_PREFIX = "urn:problem-type:";
 
-    USER_NOT_FOUND,
-    USER_ALREADY_EXISTS,
-    VALIDATION_FAILED,
-    RESOURCE_CONFLICT, INTERNAL_SERVER_ERROR,
+    private final HttpStatus status;
+    private final String slug;
+    private final URI type;
 
-    DEPARTMENT_NOT_FOUND,
-    DEPARTMENT_ALREADY_EXISTS,
-    DEPARTMENT_ID_NOT_FOUND,
-    DEPARTMENT_NAME_NOT_FOUND,
-    DEPARTMENT_DESCRIPTION_NOT_FOUND,
+    ErrorCode(HttpStatus status, String slug) {
+        this.status = status;
+        this.slug = slug;
+        this.type = URI.create(TYPE_PREFIX + slug);
+    }
 
-    JOB_NOT_FOUND,
-    JOB_ALREADY_EXISTS,
-    JOB_ID_NOT_FOUND,
-    JOB_NAME_NOT_FOUND,
-    JOB_DESCRIPTION_NOT_FOUND,
-    JOB_STATUS_NOT_FOUND,
-    INVALID_JOB_TYPE,
+    public int httpStatus() {
+        return status.value();
+    }
 }
