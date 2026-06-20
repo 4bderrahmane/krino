@@ -1,6 +1,8 @@
 package com.krino.backend.service;
 
 import com.krino.backend.dto.user.UserUpdatePasswordDTO;
+import com.krino.backend.dto.user.UserResponseDTO;
+import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.entity.User;
 import com.krino.backend.exception.IncorrectPasswordException;
 import com.krino.backend.exception.InvalidCredentialsException;
@@ -13,8 +15,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class UserServiceTest
@@ -30,7 +34,7 @@ class UserServiceTest
         userRepository = mock(UserRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         modelMapper = mock(ModelMapper.class);
-        userService = new UserService(userRepository, passwordEncoder, modelMapper, null);
+        userService = new UserService(userRepository, passwordEncoder, modelMapper, null, null, null, null);
     }
 
     @Test
@@ -95,5 +99,47 @@ class UserServiceTest
         );
         assertEquals("Invalid email or password.", ex.getMessage());
     }
-}
 
+    @Test
+    void updateUserPartially_normalizesEmailBeforeSaving()
+    {
+        UUID publicId = UUID.randomUUID();
+        User user = new User();
+        user.setPublicId(publicId);
+        user.setEmail("old@test.local");
+
+        UserUpdateDTO dto = new UserUpdateDTO();
+        dto.setEmail("New@TEST.Local");
+
+        when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("new@test.local")).thenReturn(Optional.empty());
+        when(userRepository.save(user)).thenReturn(user);
+        when(modelMapper.map(user, UserResponseDTO.class)).thenReturn(new UserResponseDTO());
+
+        userService.updateUserPartially(publicId, dto);
+
+        assertThat(user.getEmail()).isEqualTo("new@test.local");
+        verify(userRepository).findByEmail("new@test.local");
+    }
+
+    @Test
+    void updateUserFully_normalizesEmailBeforeSaving()
+    {
+        UUID publicId = UUID.randomUUID();
+        User user = new User();
+        user.setPublicId(publicId);
+        user.setEmail("old@test.local");
+
+        UserUpdateDTO dto = new UserUpdateDTO("Test", "User", "New@TEST.Local", "123456789");
+
+        when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("new@test.local")).thenReturn(Optional.empty());
+        when(userRepository.save(user)).thenReturn(user);
+        when(modelMapper.map(user, UserResponseDTO.class)).thenReturn(new UserResponseDTO());
+
+        userService.updateUserFully(publicId, dto);
+
+        assertThat(user.getEmail()).isEqualTo("new@test.local");
+        verify(userRepository).findByEmail("new@test.local");
+    }
+}
