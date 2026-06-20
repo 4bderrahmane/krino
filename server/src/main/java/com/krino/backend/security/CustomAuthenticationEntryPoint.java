@@ -1,51 +1,46 @@
 package com.krino.backend.security;
 
-import com.krino.backend.configuration.ErrorResponse;
+import com.krino.backend.exception.ExceptionProblemDetailFactory;
 import com.krino.backend.utility.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
-import tools.jackson.databind.ObjectMapper;
-import org.springframework.http.MediaType;
-
-import java.time.Instant;
-
 @Component
 @Slf4j
-public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint
-{
+public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
+    private final ExceptionProblemDetailFactory problemDetailFactory;
 
-    public CustomAuthenticationEntryPoint(ObjectMapper objectMapper)
-    {
+    public CustomAuthenticationEntryPoint(ObjectMapper objectMapper,
+                                          ExceptionProblemDetailFactory problemDetailFactory) {
         this.objectMapper = objectMapper;
+        this.problemDetailFactory = problemDetailFactory;
     }
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException
-    {
-        log.error("Unauthorized error: {}", authException.getMessage());
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
+        log.warn("Unauthorized request to {}: {}", request.getRequestURI(), authException.getMessage());
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.UNAUTHORIZED.value(),
+        ProblemDetail problem = problemDetailFactory.buildProblemDetail(
+                ErrorCode.UNAUTHORIZED,
                 "Authentication required to access this resource.",
-                request.getRequestURI(),
-                ErrorCode.AUTHENTICATION_REQUIRED,
+                request,
+                null,
                 null
         );
 
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-
-        response.getOutputStream().write(objectMapper.writeValueAsBytes(errorResponse));
+        response.setStatus(problem.getStatus());
+        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        response.getOutputStream().write(objectMapper.writeValueAsBytes(problem));
     }
 }
