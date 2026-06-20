@@ -129,17 +129,11 @@ public class ApplicationService
                 .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
 
         if (applicationUpdateDTO.getStatus() != null)
-        {
             existingApplication.setStatus(applicationUpdateDTO.getStatus());
-        }
         if (applicationUpdateDTO.getResumeUrl() != null)
-        {
             existingApplication.setResumeUrl(applicationUpdateDTO.getResumeUrl());
-        }
         if (applicationUpdateDTO.getJobId() != null)
-        {
             existingApplication.setJob(resolveJob(applicationUpdateDTO.getJobId()));
-        }
 
         Application patchedApplication = applicationRepository.save(existingApplication);
         return modelMapper.map(patchedApplication, ApplicationResponseDTO.class);
