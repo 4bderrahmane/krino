@@ -4,43 +4,40 @@ import com.krino.backend.utility.ErrorCode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class ResourceNotFoundExceptionTest
 {
 
     @Test
-    void departmentSimpleNameMapsToDepartmentNotFound()
+    void resourceFieldValueConstructorAlwaysMapsToResourceNotFound()
     {
         ResourceNotFoundException ex = new ResourceNotFoundException("Department", "id", 1L);
-        assertEquals(ErrorCode.DEPARTMENT_NOT_FOUND, ex.getErrorCode());
+
+        assertEquals(ErrorCode.RESOURCE_NOT_FOUND, ex.getErrorCode());
+        assertEquals("Department", ex.getResource());
+        assertEquals("id", ex.getField());
+        assertEquals(1L, ex.getValue());
     }
 
     @Test
-    void departmentFullyQualifiedNameMapsToDepartmentNotFound()
+    void resourceFieldValueConstructorBuildsReadableMessage()
     {
-        ResourceNotFoundException ex = new ResourceNotFoundException("com.jesa.interviewslotmanager.entity.Department", "id", 1L);
-        assertEquals(ErrorCode.DEPARTMENT_NOT_FOUND, ex.getErrorCode());
-    }
+        ResourceNotFoundException ex = new ResourceNotFoundException("User", "publicId", "abc");
 
-    @Test
-    void userSimpleNameMapsToUserNotFound()
-    {
-        ResourceNotFoundException ex = new ResourceNotFoundException("User", "id", 1L);
-        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
-    }
-
-    @Test
-    void jobSimpleNameMapsToJobNotFound()
-    {
-        ResourceNotFoundException ex = new ResourceNotFoundException("Job", "id", 1L);
-        assertEquals(ErrorCode.JOB_NOT_FOUND, ex.getErrorCode());
-    }
-
-    @Test
-    void unknownNameFallsBackToResourceNotFound()
-    {
-        ResourceNotFoundException ex = new ResourceNotFoundException("Application", "id", 1L);
+        assertEquals("User not found with publicId: 'abc'", ex.getMessage());
         assertEquals(ErrorCode.RESOURCE_NOT_FOUND, ex.getErrorCode());
     }
-}
 
+    @Test
+    void messageOnlyConstructorMapsToResourceNotFoundWithoutDetails()
+    {
+        ResourceNotFoundException ex = new ResourceNotFoundException("Job not found");
+
+        assertEquals(ErrorCode.RESOURCE_NOT_FOUND, ex.getErrorCode());
+        assertEquals("Job not found", ex.getMessage());
+        assertNull(ex.getResource());
+        assertNull(ex.getField());
+        assertNull(ex.getValue());
+    }
+}
