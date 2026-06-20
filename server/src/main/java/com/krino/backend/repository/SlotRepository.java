@@ -2,6 +2,7 @@ package com.krino.backend.repository;
 
 import com.krino.backend.entity.Interview;
 import com.krino.backend.entity.Slot;
+import com.krino.backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Date;
@@ -18,4 +19,6 @@ public interface SlotRepository extends JpaRepository<Slot, Long>
     List<Slot> findByAvailableTrue();
 
     List<Slot> findByInterviewDateAndAvailableTrue(Date interviewDate);
+
+    boolean existsByInterviewer(User interviewer);
 }
