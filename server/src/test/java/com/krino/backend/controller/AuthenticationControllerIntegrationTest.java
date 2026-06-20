@@ -82,6 +82,56 @@ class AuthenticationControllerIntegrationTest
     }
 
     @Test
+    void loginWithUppercaseEmailAuthenticatesNormalizedAccount() throws Exception
+    {
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+
+        MvcResult result = login(CANDIDATE_EMAIL.toUpperCase(), RAW_PASSWORD)
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsString()).contains("\"email\":\"" + CANDIDATE_EMAIL + "\"");
+        assertThat(result.getResponse().getCookie("access_token")).isNotNull();
+        assertThat(result.getResponse().getCookie("refresh_token")).isNotNull();
+    }
+
+    @Test
+    void loginWithUnapprovedUserReturnsUnauthorizedWithoutCookies() throws Exception
+    {
+        createUser(CANDIDATE_EMAIL, false, UserRole.CANDIDATE);
+
+        MvcResult result = login(CANDIDATE_EMAIL, RAW_PASSWORD)
+                .andExpect(status().isUnauthorized())
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsString()).contains("\"errorCode\":\"INVALID_CREDENTIALS\"");
+        assertThat(setCookieHeaders(result)).isEmpty();
+    }
+
+    @Test
+    void registerNormalizesEmailAndCreatesCandidate() throws Exception
+    {
+        MvcResult result = mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName": " Test ",
+                                  "lastName": " User ",
+                                  "email": "CANDIDATE@TEST.LOCAL",
+                                  "password": "%s",
+                                  "phoneNumber": "123456789"
+                                }
+                                """.formatted(RAW_PASSWORD)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsString()).contains("\"email\":\"" + CANDIDATE_EMAIL + "\"");
+        User savedUser = userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow();
+        assertThat(savedUser.getRoles()).contains(UserRole.CANDIDATE);
+        assertThat(savedUser.isApproved()).isFalse();
+    }
+
+    @Test
     void loginWithInvalidPasswordReturnsUnauthorizedWithoutCookies() throws Exception
     {
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
@@ -92,7 +142,7 @@ class AuthenticationControllerIntegrationTest
 
         assertThat(result.getResponse().getContentAsString()).contains(
                 "\"errorCode\":\"INVALID_CREDENTIALS\"",
-                "\"message\":\"Invalid email or password\""
+                "\"detail\":\"Invalid email or password\""
         );
         assertThat(setCookieHeaders(result)).isEmpty();
     }
@@ -105,8 +155,8 @@ class AuthenticationControllerIntegrationTest
                 .andReturn();
 
         assertThat(result.getResponse().getContentAsString()).contains(
-                "\"errorCode\":\"AUTHENTICATION_REQUIRED\"",
-                "\"path\":\"/api/users/me\""
+                "\"errorCode\":\"UNAUTHORIZED\"",
+                "\"instance\":\"/api/users/me\""
         );
     }
 
@@ -138,7 +188,7 @@ class AuthenticationControllerIntegrationTest
 
         assertThat(result.getResponse().getContentAsString()).contains(
                 "\"errorCode\":\"ACCESS_DENIED\"",
-                "\"path\":\"/api/users\""
+                "\"instance\":\"/api/users\""
         );
     }
 
@@ -161,6 +211,44 @@ class AuthenticationControllerIntegrationTest
 
         mockMvc.perform(post("/api/auth/refresh").cookie(originalRefreshCookie))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refreshWithoutCookieReturnsProblemDetail() throws Exception
+    {
+        MvcResult result = mockMvc.perform(post("/api/auth/refresh"))
+                .andExpect(status().isUnauthorized())
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsString()).contains(
+                "\"errorCode\":\"UNAUTHORIZED\"",
+                "\"detail\":\"No refresh token provided\"",
+                "\"instance\":\"/api/auth/refresh\""
+        );
+    }
+
+    @Test
+    void logoutRevokesRefreshTokenAndClearsAuthenticationCookies() throws Exception
+    {
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        MvcResult loginResult = login(CANDIDATE_EMAIL, RAW_PASSWORD)
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Cookie refreshCookie = cookie(loginResult, "refresh_token");
+        assertThat(refreshTokenRepository.count()).isEqualTo(1);
+
+        MvcResult logoutResult = mockMvc.perform(post("/api/auth/logout").cookie(refreshCookie))
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        assertThat(refreshTokenRepository.findAll()).allSatisfy(token -> assertThat(token.isRevoked()).isTrue());
+        assertThat(setCookieHeaders(logoutResult)).anySatisfy(cookie -> assertThat(cookie)
+                .startsWith("access_token=")
+                .contains("Max-Age=0"));
+        assertThat(setCookieHeaders(logoutResult)).anySatisfy(cookie -> assertThat(cookie)
+                .startsWith("refresh_token=")
+                .contains("Max-Age=0"));
     }
 
     private User createUser(String email, boolean approved, UserRole... roles)
