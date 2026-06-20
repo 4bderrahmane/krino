@@ -11,7 +11,6 @@ import com.krino.backend.entity.UserRole;
 import com.krino.backend.entity.RefreshToken;
 import com.krino.backend.exception.InvalidCredentialsException;
 import com.krino.backend.exception.InvalidRefreshTokenException;
-import com.krino.backend.exception.RegistrationException;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.utility.CookieUtilities;
@@ -31,11 +30,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AuthenticationService
-{
+public class AuthenticationService {
 
     private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
     private final UserRepository userRepository;
@@ -47,122 +47,84 @@ public class AuthenticationService
     private final CookieUtilities cookieUtilities;
 
     @Transactional
-    public RegistrationResponseDTO register(@NonNull final UserRegistrationDTO request)
-    {
+    public RegistrationResponseDTO register(@NonNull final UserRegistrationDTO request) {
         if (request.getEmail() == null || request.getEmail().trim().isEmpty())
-        {
             throw new IllegalArgumentException("Email cannot be null or empty");
-        }
+
         if (request.getPassword() == null || request.getPassword().trim().isEmpty())
-        {
             throw new IllegalArgumentException("Password cannot be null or empty");
+
+        String normalizedEmail = normalizeEmail(request.getEmail());
+
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
+            throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, normalizedEmail),
+                    ErrorCode.DATA_CONFLICT,
+                    Map.of("field", "email", "value", normalizedEmail));
         }
 
-        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        User user = new User(
+                normalizedEmail,
+                passwordEncoder.encode(request.getPassword()),
+                request.getFirstName() != null ? request.getFirstName().trim() : "",
+                request.getLastName() != null ? request.getLastName().trim() : "",
+                request.getPhoneNumber() != null ? request.getPhoneNumber().trim() : null
+        );
 
-        if (userRepository.findByEmail(normalizedEmail).isPresent())
-        {
-            throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, normalizedEmail), ErrorCode.EMAIL_ALREADY_EXISTS);
-        }
+        user.addRole(UserRole.CANDIDATE);
 
-        try
-        {
-            User user = new User(
-                    normalizedEmail,
-                    passwordEncoder.encode(request.getPassword()),
-                    request.getFirstName() != null ? request.getFirstName().trim() : "",
-                    request.getLastName() != null ? request.getLastName().trim() : "",
-                    request.getPhoneNumber() != null ? request.getPhoneNumber().trim() : null
-            );
+        User savedUser = userRepository.save(user);
 
-            user.addRole(UserRole.CANDIDATE);
+        UserResponseDTO userResponse = modelMapper.map(savedUser, UserResponseDTO.class);
 
-            User savedUser = userRepository.save(user);
-
-            UserResponseDTO userResponse = modelMapper.map(savedUser, UserResponseDTO.class);
-
-            log.info("User registered successfully with email: {}", normalizedEmail);
-            return new RegistrationResponseDTO(userResponse, "User registered successfully.");
-
-        } catch (Exception e)
-        {
-            log.error("Error during user registration for email {}: {}", normalizedEmail, e.getMessage(), e);
-            throw new RegistrationException("Registration failed: " + e.getMessage(), e);
-        }
+        log.info("User registered successfully with email: {}", normalizedEmail);
+        return new RegistrationResponseDTO(userResponse, "User registered successfully.");
     }
 
     @Transactional
-    public AuthenticationResponseDTO login(@NonNull final UserLoginDTO request, HttpServletResponse response, HttpServletRequest httpRequest)
-    {
+    public AuthenticationResponseDTO login(@NonNull final UserLoginDTO request, HttpServletResponse response, HttpServletRequest httpRequest) {
 
-        authenticateUser(request.getEmail(), request.getPassword());
+        String normalizedEmail = normalizeEmail(request.getEmail());
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException(String.format("User not found with email: %s", request.getEmail())));
+        authenticateUser(normalizedEmail, request.getPassword());
+
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new UsernameNotFoundException(String.format("User not found with email: %s",
+                        normalizedEmail)));
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
         UserResponseDTO userResponse = modelMapper.map(user, UserResponseDTO.class);
 
         String accessToken = jwtService.generateAccessToken(userDetails);
-        String refreshToken = refreshTokenService.generateAndSaveRefreshToken(user, extractDeviceInfo(httpRequest), extractIpAddress(httpRequest));
+        String refreshToken = refreshTokenService.generateAndSaveRefreshToken(user, extractDeviceInfo(httpRequest),
+                extractIpAddress(httpRequest));
 
         cookieUtilities.setCookies(accessToken, refreshToken, response, "/", "/api/auth/");
 
         return new AuthenticationResponseDTO("Bearer", jwtService.getAccessTokenExpiryInSeconds(), userResponse);
     }
 
-    private String extractDeviceInfo(HttpServletRequest request)
-    {
-        String userAgent = request.getHeader("User-Agent");
-        return userAgent != null ? userAgent : "Unknown Device";
-    }
-
-    private String extractIpAddress(HttpServletRequest request)
-    {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty())
-        {
-            return xForwardedFor.split(",")[0].trim();
-        }
-
-        String xRealIp = request.getHeader("X-Real-IP");
-        if (xRealIp != null && !xRealIp.isEmpty())
-        {
-            return xRealIp;
-        }
-
-        return request.getRemoteAddr();
-    }
-
-    private void authenticateUser(String email, String password)
-    {
-        try
-        {
+    private void authenticateUser(String email, String password) {
+        try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password)
             );
 
-            if (!authentication.isAuthenticated())
-            {
+            if (!authentication.isAuthenticated()) {
                 log.warn("Authentication was not successful for email: {}", email);
                 throw new InvalidCredentialsException("Authentication failed");
             }
 
-        } catch (AuthenticationException e)
-        {
+        } catch (AuthenticationException e) {
             log.warn("Authentication failed for email: {}", email);
             throw new InvalidCredentialsException("Invalid email or password");
         }
     }
 
     @Transactional
-    public AuthenticationResponseDTO refresh(HttpServletRequest request, HttpServletResponse response)
-    {
+    public AuthenticationResponseDTO refresh(HttpServletRequest request, HttpServletResponse response) {
         String providedRefreshToken = cookieUtilities.getCookieValueByName(request, "refresh_token");
         if (providedRefreshToken == null)
-        {
             throw new InvalidRefreshTokenException("No refresh token provided");
-        }
 
 
         RefreshToken tokenEntity = refreshTokenService.findValidRefreshTokenForUpdate(providedRefreshToken)
@@ -170,9 +132,7 @@ public class AuthenticationService
 
         User user = tokenEntity.getUser();
         if (user == null)
-        {
             throw new InvalidRefreshTokenException("User not found for refresh token");
-        }
 
         refreshTokenService.consumeToken(tokenEntity);
         String newRefreshToken = refreshTokenService.generateAndSaveRefreshToken(
@@ -200,8 +160,7 @@ public class AuthenticationService
                 .build();
     }
 
-    public void logout(HttpServletRequest request, HttpServletResponse response)
-    {
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
         CookieUtilities.getRefreshTokenFromCookie(request)
                 .flatMap(refreshTokenService::findValidRefreshToken)
                 .ifPresent(refreshTokenService::revokeToken);
@@ -210,4 +169,28 @@ public class AuthenticationService
 
         log.info("User logged out successfully");
     }
+
+    private String extractDeviceInfo(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        return userAgent != null ? userAgent : "Unknown Device";
+    }
+
+    private static String normalizeEmail(String email) {
+        return email.trim().toLowerCase();
+    }
+
+    private String extractIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty()) {
+            return xRealIp;
+        }
+
+        return request.getRemoteAddr();
+    }
+
 }
