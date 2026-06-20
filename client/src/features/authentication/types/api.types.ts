@@ -49,26 +49,21 @@ export interface RegistrationComponentProps {
     onRegistrationSuccess: (credentials: UserRegistrationDTO) => void;
 }
 
-export interface ApiErrorResponse {
-    message: string;
-    errorCode: string;
-    details?: string[];
-}
-
-export interface ValidationErrorResponse extends ApiErrorResponse {
-    field: string;
-}
-
 export interface AuthResponse {
     user: UserResponseDTO;
     message?: string;
 }
 
+/** RFC 9457 problem detail (application/problem+json) with our extensions. */
 export interface BackendErrorResponse {
-    timestamp: string;
+    type?: string;
+    title?: string;
     status: number;
+    detail?: string;
+    instance?: string;
+    timestamp?: string;
     errorCode: string;
-    data?: Record<string, unknown>;
+    details?: Record<string, unknown>;
 }
 
 export interface EnhancedError extends Error {
