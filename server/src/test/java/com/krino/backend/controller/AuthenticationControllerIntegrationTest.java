@@ -5,13 +5,14 @@ import com.krino.backend.entity.UserRole;
 import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -29,28 +30,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-class AuthenticationControllerIntegrationTest
-{
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@RequiredArgsConstructor
+class AuthenticationControllerIntegrationTest {
     private static final String RAW_PASSWORD = "Password123!";
     private static final String CANDIDATE_EMAIL = "candidate@test.local";
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private RefreshTokenRepository refreshTokenRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private WebApplicationContext webApplicationContext;
-
+    private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final WebApplicationContext webApplicationContext;
     private MockMvc mockMvc;
 
     @BeforeEach
-    void setUp()
-    {
+    void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();
@@ -59,8 +52,7 @@ class AuthenticationControllerIntegrationTest
     }
 
     @Test
-    void loginWithApprovedUserSetsHttpOnlyAuthCookies() throws Exception
-    {
+    void loginWithApprovedUserSetsHttpOnlyAuthCookies() throws Exception {
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
 
         MvcResult result = login(CANDIDATE_EMAIL, RAW_PASSWORD)
@@ -82,8 +74,7 @@ class AuthenticationControllerIntegrationTest
     }
 
     @Test
-    void loginWithUppercaseEmailAuthenticatesNormalizedAccount() throws Exception
-    {
+    void loginWithUppercaseEmailAuthenticatesNormalizedAccount() throws Exception {
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
 
         MvcResult result = login(CANDIDATE_EMAIL.toUpperCase(), RAW_PASSWORD)
@@ -96,8 +87,7 @@ class AuthenticationControllerIntegrationTest
     }
 
     @Test
-    void loginWithUnapprovedUserReturnsUnauthorizedWithoutCookies() throws Exception
-    {
+    void loginWithUnapprovedUserReturnsUnauthorizedWithoutCookies() throws Exception {
         createUser(CANDIDATE_EMAIL, false, UserRole.CANDIDATE);
 
         MvcResult result = login(CANDIDATE_EMAIL, RAW_PASSWORD)
@@ -109,8 +99,7 @@ class AuthenticationControllerIntegrationTest
     }
 
     @Test
-    void registerNormalizesEmailAndCreatesCandidate() throws Exception
-    {
+    void registerNormalizesEmailAndCreatesCandidate() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -132,8 +121,7 @@ class AuthenticationControllerIntegrationTest
     }
 
     @Test
-    void loginWithInvalidPasswordReturnsUnauthorizedWithoutCookies() throws Exception
-    {
+    void loginWithInvalidPasswordReturnsUnauthorizedWithoutCookies() throws Exception {
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
 
         MvcResult result = login(CANDIDATE_EMAIL, "wrong-password")
@@ -148,8 +136,7 @@ class AuthenticationControllerIntegrationTest
     }
 
     @Test
-    void protectedEndpointWithoutAccessCookieReturnsUnauthorized() throws Exception
-    {
+    void protectedEndpointWithoutAccessCookieReturnsUnauthorized() throws Exception {
         MvcResult result = mockMvc.perform(get("/api/users/me"))
                 .andExpect(status().isUnauthorized())
                 .andReturn();
@@ -161,8 +148,7 @@ class AuthenticationControllerIntegrationTest
     }
 
     @Test
-    void accessTokenCookieAuthenticatesMeEndpoint() throws Exception
-    {
+    void accessTokenCookieAuthenticatesMeEndpoint() throws Exception {
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         Cookie accessCookie = loginAndGetCookie(CANDIDATE_EMAIL, RAW_PASSWORD, "access_token");
 
@@ -177,8 +163,7 @@ class AuthenticationControllerIntegrationTest
     }
 
     @Test
-    void candidateAccessTokenCannotReadAllUsers() throws Exception
-    {
+    void candidateAccessTokenCannotReadAllUsers() throws Exception {
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         Cookie accessCookie = loginAndGetCookie(CANDIDATE_EMAIL, RAW_PASSWORD, "access_token");
 
@@ -193,8 +178,7 @@ class AuthenticationControllerIntegrationTest
     }
 
     @Test
-    void refreshRotatesRefreshTokenAndRejectsReusedToken() throws Exception
-    {
+    void refreshRotatesRefreshTokenAndRejectsReusedToken() throws Exception {
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         MvcResult loginResult = login(CANDIDATE_EMAIL, RAW_PASSWORD)
                 .andExpect(status().isOk())
@@ -206,16 +190,17 @@ class AuthenticationControllerIntegrationTest
                 .andReturn();
 
         assertThat(refreshResult.getResponse().getContentAsString()).contains("\"tokenType\":\"Bearer\"");
-        assertThat(setCookieHeaders(refreshResult)).anySatisfy(cookie -> assertThat(cookie).startsWith("access_token="));
-        assertThat(setCookieHeaders(refreshResult)).anySatisfy(cookie -> assertThat(cookie).startsWith("refresh_token="));
+        assertThat(setCookieHeaders(refreshResult)).anySatisfy(cookie -> assertThat(cookie).startsWith("access_token" +
+                "="));
+        assertThat(setCookieHeaders(refreshResult)).anySatisfy(cookie -> assertThat(cookie).startsWith("refresh_token" +
+                "="));
 
         mockMvc.perform(post("/api/auth/refresh").cookie(originalRefreshCookie))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void refreshWithoutCookieReturnsProblemDetail() throws Exception
-    {
+    void refreshWithoutCookieReturnsProblemDetail() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/refresh"))
                 .andExpect(status().isUnauthorized())
                 .andReturn();
@@ -228,8 +213,7 @@ class AuthenticationControllerIntegrationTest
     }
 
     @Test
-    void logoutRevokesRefreshTokenAndClearsAuthenticationCookies() throws Exception
-    {
+    void logoutRevokesRefreshTokenAndClearsAuthenticationCookies() throws Exception {
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         MvcResult loginResult = login(CANDIDATE_EMAIL, RAW_PASSWORD)
                 .andExpect(status().isOk())
@@ -251,8 +235,7 @@ class AuthenticationControllerIntegrationTest
                 .contains("Max-Age=0"));
     }
 
-    private User createUser(String email, boolean approved, UserRole... roles)
-    {
+    private User createUser(String email, boolean approved, UserRole... roles) {
         User user = User.builder()
                 .email(email)
                 .password(passwordEncoder.encode(RAW_PASSWORD))
@@ -266,8 +249,7 @@ class AuthenticationControllerIntegrationTest
         return userRepository.save(user);
     }
 
-    private ResultActions login(String email, String password) throws Exception
-    {
+    private ResultActions login(String email, String password) throws Exception {
         String body = """
                 {
                   "email": "%s",
@@ -280,8 +262,7 @@ class AuthenticationControllerIntegrationTest
                 .content(body));
     }
 
-    private Cookie loginAndGetCookie(String email, String password, String cookieName) throws Exception
-    {
+    private Cookie loginAndGetCookie(String email, String password, String cookieName) throws Exception {
         MvcResult loginResult = login(email, password)
                 .andExpect(status().isOk())
                 .andReturn();
@@ -289,13 +270,11 @@ class AuthenticationControllerIntegrationTest
         return cookie(loginResult, cookieName);
     }
 
-    private List<String> setCookieHeaders(MvcResult result)
-    {
+    private List<String> setCookieHeaders(MvcResult result) {
         return result.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
     }
 
-    private Cookie cookie(MvcResult result, String cookieName)
-    {
+    private Cookie cookie(MvcResult result, String cookieName) {
         Cookie cookie = result.getResponse().getCookie(cookieName);
         assertThat(cookie).as("cookie %s", cookieName).isNotNull();
         return cookie;
