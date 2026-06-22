@@ -1,0 +1,43 @@
+name: CI
+
+# When does this run?
+#   - On every push to main (catches anything merged directly)
+#   - On every pull request targeting main (the important one: gates merges)
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out your repository code onto the VM
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # 2. Install Java 21 and enable built-in Maven dependency caching
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      # 3. Compile the project and run the full test suite.
+      #    `verify` runs unit + integration tests. --batch-mode keeps logs clean.
+      - name: Build and run tests
+        run: ./mvnw --batch-mode --no-transfer-progress verify
+
+      # 4. If tests fail, upload the reports so you can read them in the
+      #    Actions tab without re-running locally. Runs even on failure.
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: target/surefire-reports/
+          if-no-files-exist: ignore

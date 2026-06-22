@@ -1,4 +1,4 @@
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /workspace
 
 COPY pom.xml mvnw ./
@@ -8,7 +8,7 @@ RUN mvn -B -ntp dependency:go-offline
 COPY src ./src
 RUN mvn -B -DskipTests package
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:25-jre
 LABEL authors="4bderrahmane"
 
 RUN useradd -m springuser || true
