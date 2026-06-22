@@ -42,7 +42,8 @@ public class JobService {
     private final JobMapper jobMapper;
 
     public void deleteJobByPublicId(UUID publicId) {
-        Job job = jobRepository.findByPublicId(publicId).orElseThrow(() -> new ResourceNotFoundException(String.format(JOB_NOT_FOUND_MESSAGE, publicId)));
+        Job job =
+                jobRepository.findByPublicId(publicId).orElseThrow(() -> new ResourceNotFoundException(String.format(JOB_NOT_FOUND_MESSAGE, publicId)));
 
         if (applicationRepository.existsByJob(job) || interviewRepository.existsByJob(job)) {
             throw new ResourceConflictException(

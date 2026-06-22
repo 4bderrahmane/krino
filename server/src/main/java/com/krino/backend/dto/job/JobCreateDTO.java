@@ -8,8 +8,7 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-public class JobCreateDTO
-{
+public class JobCreateDTO {
     @NotNull
     private String departmentName;
 

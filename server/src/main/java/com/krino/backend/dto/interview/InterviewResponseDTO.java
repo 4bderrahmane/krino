@@ -13,8 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class InterviewResponseDTO
-{
+public class InterviewResponseDTO {
 
     private UUID id;
     private UserResponseDTO interviewer;

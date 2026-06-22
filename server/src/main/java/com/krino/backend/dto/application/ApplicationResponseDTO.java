@@ -12,8 +12,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApplicationResponseDTO
-{
+public class ApplicationResponseDTO {
     private UUID id;
     private UUID jobId;
     private UserResponseDTO candidate;

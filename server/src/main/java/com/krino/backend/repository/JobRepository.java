@@ -10,8 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface JobRepository extends JpaRepository<Job, Long>
-{
+public interface JobRepository extends JpaRepository<Job, Long> {
 
     Optional<Job> findByPublicId(UUID publicId);
 
@@ -27,14 +26,17 @@ public interface JobRepository extends JpaRepository<Job, Long>
 
     List<Job> findByDepartmentAndApplyingDeadlineAfter(Department department, LocalDate currentDate);
 
-    List<Job> findByDepartmentAndStatusAndApplyingDeadlineAfter(Department department, JobStatus status, LocalDate currentDate);
+    List<Job> findByDepartmentAndStatusAndApplyingDeadlineAfter(Department department, JobStatus status,
+                                                                LocalDate currentDate);
 
     List<Job> findByTitleAndApplyingDeadlineAfter(String title, LocalDate currentDate);
 
     List<Job> findByTitleAndStatusAndApplyingDeadlineAfter(String title, JobStatus status, LocalDate currentDate);
 
-    List<Job> findByTitleAndDepartmentAndApplyingDeadlineAfter(String title, Department department, LocalDate currentDate);
+    List<Job> findByTitleAndDepartmentAndApplyingDeadlineAfter(String title, Department department,
+                                                               LocalDate currentDate);
 
-    List<Job> findByTitleAndDepartmentAndStatusAndApplyingDeadlineAfter(String title, Department department, JobStatus status, LocalDate currentDate);
+    List<Job> findByTitleAndDepartmentAndStatusAndApplyingDeadlineAfter(String title, Department department,
+                                                                        JobStatus status, LocalDate currentDate);
 
 }

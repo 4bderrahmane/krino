@@ -11,13 +11,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 @Getter
 @AllArgsConstructor
 
-public enum UserRole
-{
+public enum UserRole {
     ADMIN(EnumSet.allOf(Permission.class)),
 
-    // HR_MANAGER drives the recruitment process end to end, but cannot delete users
-    // (that stays an ADMIN-only action). Applications are created by candidates, so HR
-    // only reads/updates/deletes them.
     HR_MANAGER(EnumSet.of(
             Permission.CAN_CREATE_USER,
             Permission.CAN_READ_USER,
@@ -67,8 +63,6 @@ public enum UserRole
             Permission.CAN_READ_APPLICATION
     )),
 
-    // NOTE: ownership (a candidate only seeing/editing *their own* applications and interviews)
-    // is not expressible via these coarse authorities and must be enforced in the service layer.
     CANDIDATE(EnumSet.of(
             Permission.CAN_READ_JOB,
 
@@ -87,8 +81,7 @@ public enum UserRole
     private final Set<Permission> permissions;
 
 
-    public Set<SimpleGrantedAuthority> getAuthorities()
-    {
+    public Set<SimpleGrantedAuthority> getAuthorities() {
         Set<SimpleGrantedAuthority> authorities = getPermissions()
                 .stream()
                 .map(permission -> new SimpleGrantedAuthority(permission.name()))
@@ -98,8 +91,7 @@ public enum UserRole
         return authorities;
     }
 
-    public String getName()
-    {
+    public String getName() {
         return this.name();
     }
 }

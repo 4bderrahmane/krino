@@ -28,7 +28,8 @@ public class ResourceConflictException extends BaseException {
         this(message, errorCode, null);
     }
 
-    public ResourceConflictException(String message, @Nullable ErrorCode errorCode, @Nullable Map<String, Object> details) {
+    public ResourceConflictException(String message, @Nullable ErrorCode errorCode,
+                                     @Nullable Map<String, Object> details) {
         super(Objects.requireNonNullElse(errorCode, ErrorCode.DATA_CONFLICT), message);
         this.details = details;
     }

@@ -20,8 +20,7 @@ import java.util.Set;
 @Component
 @Profile("dev")
 @RequiredArgsConstructor
-public class AdminInitializer implements CommandLineRunner
-{
+public class AdminInitializer implements CommandLineRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminInitializer.class);
 
@@ -35,10 +34,8 @@ public class AdminInitializer implements CommandLineRunner
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String @NonNull ... args)
-    {
-        if (userRepository.findByEmail(adminEmail).isPresent())
-        {
+    public void run(String @NonNull ... args) {
+        if (userRepository.findByEmail(adminEmail).isPresent()) {
             LOGGER.info("Admin '{}' already exists, skipping seed.", adminEmail);
             return;
         }

@@ -23,8 +23,7 @@ import java.util.UUID;
         @Index(name = "idx_token_hash", columnList = "token_hash"),
         @Index(name = "idx_expires_at", columnList = "expires_at")
 })
-public class RefreshToken
-{
+public class RefreshToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -65,24 +64,20 @@ public class RefreshToken
     private String deviceInfo;
     private String ipAddress;
 
-    public boolean isExpired()
-    {
+    public boolean isExpired() {
         return Instant.now().isAfter(this.expiresAt);
     }
 
     /**
      * Usable only if untouched, unrevoked, unexpired.
      */
-    public boolean isUsable()
-    {
+    public boolean isUsable() {
         return !consumed && !revoked && !isExpired();
     }
 
     @PrePersist
-    protected void onCreate()
-    {
-        if (this.createdAt == null)
-        {
+    protected void onCreate() {
+        if (this.createdAt == null) {
             this.createdAt = Instant.now();
         }
     }

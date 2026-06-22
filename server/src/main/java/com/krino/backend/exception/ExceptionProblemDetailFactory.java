@@ -59,7 +59,8 @@ public final class ExceptionProblemDetailFactory {
         return problemDetail;
     }
 
-    public void enrichProblemDetail(ProblemDetail problemDetail, ErrorCode errorCode, @Nullable HttpServletRequest request) {
+    public void enrichProblemDetail(ProblemDetail problemDetail, ErrorCode errorCode,
+                                    @Nullable HttpServletRequest request) {
         String title = problemDetail.getTitle();
         if (title == null || title.isBlank())
             problemDetail.setTitle(reasonPhrase(HttpStatusCode.valueOf(problemDetail.getStatus())));

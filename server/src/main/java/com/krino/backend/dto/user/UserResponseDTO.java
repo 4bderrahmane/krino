@@ -11,8 +11,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class UserResponseDTO
-{
+public class UserResponseDTO {
 
     private UUID id;
     private String firstName;

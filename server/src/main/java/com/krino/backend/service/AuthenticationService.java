@@ -74,7 +74,8 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public AuthenticationResponseDTO login(@NonNull final UserLoginDTO request, HttpServletResponse response, HttpServletRequest httpRequest) {
+    public AuthenticationResponseDTO login(@NonNull final UserLoginDTO request, HttpServletResponse response,
+                                           HttpServletRequest httpRequest) {
 
         String normalizedEmail = normalizeEmail(request.getEmail());
 

@@ -21,20 +21,18 @@ import java.util.UUID;
 @Service
 @AllArgsConstructor
 @Transactional
-public class DepartmentService
-{
+public class DepartmentService {
     private static final String DEPARTMENT_ALREADY_EXISTS = "Department '%s' already exists";
     private final DepartmentRepository departmentRepository;
     private final DepartmentMapper departmentMapper;
 
-    public void deleteDepartmentByPublicId(UUID publicId)
-    {
+    public void deleteDepartmentByPublicId(UUID publicId) {
         // use object-name constructor to get DEPARTMENT_NOT_FOUND ErrorCode
         Department department = departmentRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId",
+                        publicId));
 
-        if (department.getJobs() != null && !department.getJobs().isEmpty())
-        {
+        if (department.getJobs() != null && !department.getJobs().isEmpty()) {
             throw new ResourceConflictException(
                     String.format("Department '%s' still has jobs and cannot be deleted.", department.getName()),
                     ErrorCode.OPERATION_NOT_ALLOWED,
@@ -44,11 +42,10 @@ public class DepartmentService
         departmentRepository.delete(department);
     }
 
-    public DepartmentResponseDTO createDepartment(DepartmentCreateDTO department)
-    {
-        if (departmentRepository.findByName(department.getName()).isPresent())
-        {
-            throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, department.getName()), ErrorCode.DATA_CONFLICT,
+    public DepartmentResponseDTO createDepartment(DepartmentCreateDTO department) {
+        if (departmentRepository.findByName(department.getName()).isPresent()) {
+            throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, department.getName()),
+                    ErrorCode.DATA_CONFLICT,
                     Map.of("field", "name", "value", department.getName()));
         }
         Department newDepartment = departmentMapper.toEntity(department);
@@ -58,14 +55,14 @@ public class DepartmentService
         return departmentMapper.toResponse(savedDepartment);
     }
 
-    public DepartmentResponseDTO updateDepartment(UUID publicId, DepartmentUpdateDTO departmentUpdateDTO)
-    {
+    public DepartmentResponseDTO updateDepartment(UUID publicId, DepartmentUpdateDTO departmentUpdateDTO) {
         Department existingDepartment = departmentRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId",
+                        publicId));
 
-        if (departmentRepository.findByName(departmentUpdateDTO.getName()).isPresent() && !existingDepartment.getName().equals(departmentUpdateDTO.getName()))
-        {
-            throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, departmentUpdateDTO.getName()), ErrorCode.DATA_CONFLICT,
+        if (departmentRepository.findByName(departmentUpdateDTO.getName()).isPresent() && !existingDepartment.getName().equals(departmentUpdateDTO.getName())) {
+            throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS,
+                    departmentUpdateDTO.getName()), ErrorCode.DATA_CONFLICT,
                     Map.of("field", "name", "value", departmentUpdateDTO.getName()));
         }
 
@@ -75,16 +72,15 @@ public class DepartmentService
         return departmentMapper.toResponse(updatedDepartment);
     }
 
-    public DepartmentResponseDTO patchDepartment(UUID publicId, DepartmentUpdateDTO departmentUpdateDTO)
-    {
+    public DepartmentResponseDTO patchDepartment(UUID publicId, DepartmentUpdateDTO departmentUpdateDTO) {
         Department existingDepartment = departmentRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId",
+                        publicId));
 
-        if (departmentUpdateDTO.getName() != null)
-        {
-            if (departmentRepository.findByName(departmentUpdateDTO.getName()).isPresent() && !existingDepartment.getName().equals(departmentUpdateDTO.getName()))
-            {
-                throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, departmentUpdateDTO.getName()), ErrorCode.DATA_CONFLICT,
+        if (departmentUpdateDTO.getName() != null) {
+            if (departmentRepository.findByName(departmentUpdateDTO.getName()).isPresent() && !existingDepartment.getName().equals(departmentUpdateDTO.getName())) {
+                throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS,
+                        departmentUpdateDTO.getName()), ErrorCode.DATA_CONFLICT,
                         Map.of("field", "name", "value", departmentUpdateDTO.getName()));
             }
         }
@@ -95,15 +91,14 @@ public class DepartmentService
         return departmentMapper.toResponse(updatedDepartment);
     }
 
-    public DepartmentResponseDTO getDepartmentByPublicId(UUID publicId)
-    {
+    public DepartmentResponseDTO getDepartmentByPublicId(UUID publicId) {
         Department department = departmentRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId",
+                        publicId));
         return departmentMapper.toResponse(department);
     }
 
-    public PageResponse<DepartmentResponseDTO> getAllDepartments(Pageable pageable)
-    {
+    public PageResponse<DepartmentResponseDTO> getAllDepartments(Pageable pageable) {
         return PageResponse.from(departmentRepository.findAll(pageable),
                 departmentMapper::toResponse);
     }

@@ -1,7 +1,6 @@
 package com.krino.backend.entity.enums;
 
-public enum JobStatus
-{
+public enum JobStatus {
     DRAFT,
     OPEN,
     CLOSED,

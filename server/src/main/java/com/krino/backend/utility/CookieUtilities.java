@@ -18,8 +18,7 @@ import org.springframework.web.util.WebUtils;
 
 @Slf4j
 @Component
-public class CookieUtilities
-{
+public class CookieUtilities {
     private static final String COOKIE_HEADER_NAME = "Set-Cookie";
     private static final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
@@ -39,17 +38,15 @@ public class CookieUtilities
     private boolean cookieSecureProperty;
 
     @PostConstruct
-    void init()
-    {
+    void init() {
         cookieSecure = cookieSecureProperty;
-        if (!cookieSecure)
-        {
-            log.warn("Auth cookies are being issued WITHOUT the Secure flag (app.cookies.secure=false). Use this only for local HTTP development.");
+        if (!cookieSecure) {
+            log.warn("Auth cookies are being issued WITHOUT the Secure flag (app.cookies.secure=false). Use this only" +
+                    " for local HTTP development.");
         }
     }
 
-    private static ResponseCookie generateAccessCookie(String name, String value, String path)
-    {
+    private static ResponseCookie generateAccessCookie(String name, String value, String path) {
         return ResponseCookie
                 .from(name, value)
                 .httpOnly(true)
@@ -60,8 +57,7 @@ public class CookieUtilities
                 .build();
     }
 
-    private static ResponseCookie generateRefreshCookie(String name, String value, String path)
-    {
+    private static ResponseCookie generateRefreshCookie(String name, String value, String path) {
         return ResponseCookie
                 .from(name, value)
                 .httpOnly(true)
@@ -72,16 +68,14 @@ public class CookieUtilities
                 .build();
     }
 
-    public static void setAccessTokenCookie(HttpServletResponse response, String accessToken, String path)
-    {
+    public static void setAccessTokenCookie(HttpServletResponse response, String accessToken, String path) {
         ResponseCookie cookie = generateAccessCookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, path);
 
         response.addHeader(COOKIE_HEADER_NAME, cookie.toString());
         log.debug("Access token cookie set with max age: {} seconds", ACCESS_TOKEN_COOKIE_MAX_AGE.getSeconds());
     }
 
-    public static void setRefreshTokenCookie(HttpServletResponse response, String refreshToken, String path)
-    {
+    public static void setRefreshTokenCookie(HttpServletResponse response, String refreshToken, String path) {
 
         ResponseCookie cookie = generateRefreshCookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, path);
 
@@ -89,34 +83,29 @@ public class CookieUtilities
         log.debug("Refresh token cookie set with max age: {} days", REFRESH_TOKEN_COOKIE_MAX_AGE.toDays());
     }
 
-    public void setCookies(String accessToken, String refreshToken, HttpServletResponse response, String accessTokenPath, String refreshTokenPath)
-    {
+    public void setCookies(String accessToken, String refreshToken, HttpServletResponse response,
+                           String accessTokenPath, String refreshTokenPath) {
         setRefreshTokenCookie(response, refreshToken, refreshTokenPath);
         setAccessTokenCookie(response, accessToken, accessTokenPath);
     }
 
 
-    public static Optional<String> getAccessTokenFromCookie(HttpServletRequest request)
-    {
+    public static Optional<String> getAccessTokenFromCookie(HttpServletRequest request) {
         return getCookieValue(request, ACCESS_TOKEN_COOKIE_NAME);
     }
 
-    public static Optional<String> getRefreshTokenFromCookie(HttpServletRequest request)
-    {
+    public static Optional<String> getRefreshTokenFromCookie(HttpServletRequest request) {
         return getCookieValue(request, REFRESH_TOKEN_COOKIE_NAME);
     }
 
-    public static void clearAuthenticationCookies(HttpServletResponse response)
-    {
+    public static void clearAuthenticationCookies(HttpServletResponse response) {
         clearCookie(response, ACCESS_TOKEN_COOKIE_NAME, ACCESS_TOKEN_COOKIE_PATH);
         clearCookie(response, REFRESH_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_PATH);
         log.debug("Authentication cookies cleared");
     }
 
-    private static Optional<String> getCookieValue(HttpServletRequest request, String cookieName)
-    {
-        if (request.getCookies() != null)
-        {
+    private static Optional<String> getCookieValue(HttpServletRequest request, String cookieName) {
+        if (request.getCookies() != null) {
             return Arrays.stream(request.getCookies())
                     .filter(cookie -> cookieName.equals(cookie.getName()))
                     .findFirst()
@@ -126,8 +115,7 @@ public class CookieUtilities
         return Optional.empty();
     }
 
-    public static void clearCookie(HttpServletResponse response, String cookieName, String path)
-    {
+    public static void clearCookie(HttpServletResponse response, String cookieName, String path) {
         ResponseCookie cookie = ResponseCookie
                 .from(cookieName, "")
                 .httpOnly(true)
@@ -141,14 +129,11 @@ public class CookieUtilities
     }
 
 
-    public String getCookieValueByName(HttpServletRequest request, String name)
-    {
+    public String getCookieValueByName(HttpServletRequest request, String name) {
         Cookie cookie = WebUtils.getCookie(request, name);
-        if (cookie != null)
-        {
+        if (cookie != null) {
             return cookie.getValue();
-        } else
-        {
+        } else {
             return null;
         }
     }

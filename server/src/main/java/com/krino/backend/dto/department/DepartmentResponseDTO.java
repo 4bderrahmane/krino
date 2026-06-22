@@ -9,8 +9,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class DepartmentResponseDTO
-{
+public class DepartmentResponseDTO {
 
     private UUID id;
     private String name;

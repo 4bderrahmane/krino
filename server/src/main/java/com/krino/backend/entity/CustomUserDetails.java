@@ -9,9 +9,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter
-public class CustomUserDetails implements UserDetails
-{
-    private User user;
+public class CustomUserDetails implements UserDetails {
+    private static final long serialVersionUID = 1L;
+
+    private final transient User user;
     private final Long id;
     private final UUID publicId;
     private final String email;
@@ -19,15 +20,14 @@ public class CustomUserDetails implements UserDetails
     private final boolean enabled;
     private final Collection<? extends GrantedAuthority> authorities;
 
-    public CustomUserDetails(User user)
-    {
-        this.user = user; // ensure downstream services can access the User
-        this.id = user.getId();
-        this.publicId = user.getPublicId();
-        this.email = user.getEmail();
-        this.password = user.getPassword();
-        this.enabled = user.isApproved();
-        this.authorities = user.getRoles()
+    public CustomUserDetails(User user) {
+        this.user = user;
+        id = user.getId();
+        publicId = user.getPublicId();
+        email = user.getEmail();
+        password = user.getPassword();
+        enabled = user.isApproved();
+        authorities = user.getRoles()
                 .stream()
                 .flatMap(role -> role.getAuthorities()
                         .stream())
@@ -35,45 +35,22 @@ public class CustomUserDetails implements UserDetails
     }
 
     @Override
-    public String getUsername()
-    {
+    public String getUsername() {
         return email;
     }
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities()
-    {
+    public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
 
     @Override
-    public String getPassword()
-    {
+    public String getPassword() {
         return password;
     }
 
     @Override
-    public boolean isAccountNonExpired()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled()
-    {
-        // You could add logic here to check if the user is approved
+    public boolean isEnabled() {
         return enabled;
     }
 }

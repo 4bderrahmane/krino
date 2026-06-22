@@ -9,8 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class UserLoginDTO
-{
+public class UserLoginDTO {
 
     @NotBlank
     @Email

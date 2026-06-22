@@ -20,33 +20,30 @@ import java.net.URI;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthenticationController
-{
+public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity<RegistrationResponseDTO> register(@Valid @RequestBody UserRegistrationDTO request)
-    {
+    public ResponseEntity<RegistrationResponseDTO> register(@Valid @RequestBody UserRegistrationDTO request) {
         RegistrationResponseDTO registration = authenticationService.register(request);
         return ResponseEntity.created(URI.create("/api/users/" + registration.getUser().getId())).body(registration);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponseDTO> login(@Valid @RequestBody UserLoginDTO request, HttpServletResponse response, HttpServletRequest httpRequest)
-    {
+    public ResponseEntity<AuthenticationResponseDTO> login(@Valid @RequestBody UserLoginDTO request,
+                                                           HttpServletResponse response,
+                                                           HttpServletRequest httpRequest) {
         return ResponseEntity.ok(authenticationService.login(request, response, httpRequest));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response)
-    {
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         authenticationService.logout(request, response);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthenticationResponseDTO> refresh(HttpServletRequest request, HttpServletResponse response)
-    {
+    public ResponseEntity<AuthenticationResponseDTO> refresh(HttpServletRequest request, HttpServletResponse response) {
         AuthenticationResponseDTO authResponse = authenticationService.refresh(request, response);
         return ResponseEntity.ok(authResponse);
     }

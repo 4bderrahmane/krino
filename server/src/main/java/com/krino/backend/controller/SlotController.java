@@ -19,55 +19,50 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/slots")
 @RequiredArgsConstructor
-public class SlotController
-{
+public class SlotController {
 
     private final SlotService slotService;
 
     @PostMapping
     @PreAuthorize("hasAuthority('CAN_CREATE_SLOT')")
-    public ResponseEntity<SlotResponseDTO> createSlot(@Valid @RequestBody SlotRequestDTO slotRequestDTO)
-    {
+    public ResponseEntity<SlotResponseDTO> createSlot(@Valid @RequestBody SlotRequestDTO slotRequestDTO) {
         SlotResponseDTO createdSlot = slotService.createSlot(slotRequestDTO);
         return ResponseEntity.created(URI.create("/api/slots/" + createdSlot.getId())).body(createdSlot);
     }
 
     @GetMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_READ_SLOT')")
-    public ResponseEntity<SlotResponseDTO> getSlotByPublicId(@PathVariable("publicId") UUID publicId)
-    {
+    public ResponseEntity<SlotResponseDTO> getSlotByPublicId(@PathVariable("publicId") UUID publicId) {
         SlotResponseDTO slot = slotService.getSlotByPublicId(publicId);
         return ResponseEntity.ok(slot);
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('CAN_READ_SLOT')")
-    public ResponseEntity<PageResponse<SlotResponseDTO>> getAllSlots(@PageableDefault(size = 20, sort = "id") Pageable pageable)
-    {
+    public ResponseEntity<PageResponse<SlotResponseDTO>> getAllSlots(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
         PageResponse<SlotResponseDTO> slots = slotService.getAllSlots(pageable);
         return ResponseEntity.ok(slots);
     }
 
     @PutMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_UPDATE_SLOT')")
-    public ResponseEntity<SlotResponseDTO> updateSlot(@PathVariable("publicId") UUID publicId, @Valid @RequestBody SlotUpdateDTO slotUpdateDTO)
-    {
+    public ResponseEntity<SlotResponseDTO> updateSlot(@PathVariable("publicId") UUID publicId,
+                                                      @Valid @RequestBody SlotUpdateDTO slotUpdateDTO) {
         SlotResponseDTO updatedSlot = slotService.updateSlot(publicId, slotUpdateDTO);
         return ResponseEntity.ok(updatedSlot);
     }
 
     @PatchMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_UPDATE_SLOT')")
-    public ResponseEntity<SlotResponseDTO> patchSlot(@PathVariable("publicId") UUID publicId, @RequestBody SlotUpdateDTO slotUpdateDTO)
-    {
+    public ResponseEntity<SlotResponseDTO> patchSlot(@PathVariable("publicId") UUID publicId,
+                                                     @RequestBody SlotUpdateDTO slotUpdateDTO) {
         SlotResponseDTO patchedSlot = slotService.patchSlot(publicId, slotUpdateDTO);
         return ResponseEntity.ok(patchedSlot);
     }
 
     @DeleteMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_DELETE_SLOT')")
-    public ResponseEntity<Void> deleteSlot(@PathVariable("publicId") UUID publicId)
-    {
+    public ResponseEntity<Void> deleteSlot(@PathVariable("publicId") UUID publicId) {
         slotService.deleteSlot(publicId);
         return ResponseEntity.noContent().build();
     }

@@ -8,8 +8,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserUpdatePasswordDTO
-{
+public class UserUpdatePasswordDTO {
 
     @NotBlank(message = "Current password cannot be blank")
     private String currentPassword;

@@ -21,47 +21,43 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class JwtCookieAuthenticationFilter extends OncePerRequestFilter
-{
+public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException
-    {
-        try
-        {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        try {
             String requestPath = request.getRequestURI();
-            if (requestPath.startsWith("/api/auth/"))
-            {
+            if (requestPath.startsWith("/api/auth/")) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
             CookieUtilities.getAccessTokenFromCookie(request).ifPresent(accessToken ->
             {
-                try
-                {
-                    if (jwtService.validateToken(accessToken))
-                    {
-                        CustomUserDetails userDetails = customUserDetailsService.loadUserByPublicId(jwtService.getUserPublicIdFromToken(accessToken));
+                try {
+                    if (jwtService.validateToken(accessToken)) {
+                        CustomUserDetails userDetails =
+                                customUserDetailsService.loadUserByPublicId(jwtService.getUserPublicIdFromToken(accessToken));
 
-                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(userDetails, null,
+                                        userDetails.getAuthorities());
 
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authToken);
 
                         log.debug("User authenticated via cookie: {}", userDetails.getEmail());
                     }
-                } catch (Exception e)
-                {
+                } catch (Exception e) {
                     log.debug("Cookie authentication failed: {}", e.getMessage());
                     SecurityContextHolder.clearContext();
                 }
             });
 
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             log.error("Error in JWT cookie authentication filter: {}", e.getMessage());
             SecurityContextHolder.clearContext();
         }

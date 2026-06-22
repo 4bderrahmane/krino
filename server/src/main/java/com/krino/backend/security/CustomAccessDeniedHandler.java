@@ -26,7 +26,8 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     }
 
     @Override
-    public void handle(@NonNull HttpServletRequest request, HttpServletResponse response, @NonNull AccessDeniedException accessDeniedException) throws IOException {
+    public void handle(@NonNull HttpServletRequest request, HttpServletResponse response,
+                       @NonNull AccessDeniedException accessDeniedException) throws IOException {
 
         ProblemDetail problem = problemDetailFactory.buildProblemDetail(
                 ErrorCode.ACCESS_DENIED,

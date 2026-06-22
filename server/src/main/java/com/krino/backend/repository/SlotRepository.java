@@ -10,8 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface SlotRepository extends JpaRepository<Slot, Long>
-{
+public interface SlotRepository extends JpaRepository<Slot, Long> {
     Optional<Slot> findByPublicId(UUID publicId);
 
     List<Slot> findByInterview(Interview interview);

@@ -9,8 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface InterviewRepository extends JpaRepository<Interview, Long>
-{
+public interface InterviewRepository extends JpaRepository<Interview, Long> {
     List<Interview> findByJob(Job job);
 
     Optional<Interview> findByPublicId(UUID publicId);

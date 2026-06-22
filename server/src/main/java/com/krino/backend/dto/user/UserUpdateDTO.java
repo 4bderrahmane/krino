@@ -9,8 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class UserUpdateDTO
-{
+public class UserUpdateDTO {
 
     @Size(min = 2, max = 50)
     private String firstName;

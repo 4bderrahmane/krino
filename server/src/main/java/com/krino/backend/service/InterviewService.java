@@ -25,8 +25,7 @@ import java.util.UUID;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class InterviewService
-{
+public class InterviewService {
 
     private final InterviewRepository interviewRepository;
     private final UserRepository userRepository;
@@ -34,37 +33,36 @@ public class InterviewService
     private final JobRepository jobRepository;
     private final InterviewMapper interviewMapper;
 
-    public InterviewResponseDTO createInterview(InterviewRequestDTO interviewRequestDTO)
-    {
+    public InterviewResponseDTO createInterview(InterviewRequestDTO interviewRequestDTO) {
         User candidate = resolveUser(interviewRequestDTO.getCandidateId());
         Job job = resolveJob(interviewRequestDTO.getJobId());
         Slot slot = resolveSlot(interviewRequestDTO.getSlotId());
 
         validateBooking(slot, null);
 
-        Interview interview = interviewMapper.toEntity(interviewRequestDTO, slot.getInterviewer(), candidate, job, slot);
+        Interview interview = interviewMapper.toEntity(interviewRequestDTO, slot.getInterviewer(), candidate, job,
+                slot);
 
         Interview savedInterview = interviewRepository.save(interview);
         return interviewMapper.toResponse(savedInterview);
     }
 
-    public InterviewResponseDTO getInterviewByPublicId(UUID publicId)
-    {
+    public InterviewResponseDTO getInterviewByPublicId(UUID publicId) {
         Interview interview = interviewRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId",
+                        publicId));
         return interviewMapper.toResponse(interview);
     }
 
-    public PageResponse<InterviewResponseDTO> getAllInterviews(Pageable pageable)
-    {
+    public PageResponse<InterviewResponseDTO> getAllInterviews(Pageable pageable) {
         return PageResponse.from(interviewRepository.findAll(pageable),
                 interviewMapper::toResponse);
     }
 
-    public InterviewResponseDTO updateInterview(UUID publicId, InterviewRequestDTO interviewRequestDTO)
-    {
+    public InterviewResponseDTO updateInterview(UUID publicId, InterviewRequestDTO interviewRequestDTO) {
         Interview existingInterview = interviewRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId",
+                        publicId));
         User candidate = resolveUser(interviewRequestDTO.getCandidateId());
         Job job = resolveJob(interviewRequestDTO.getJobId());
         Slot slot = resolveSlot(interviewRequestDTO.getSlotId());
@@ -78,10 +76,10 @@ public class InterviewService
         return interviewMapper.toResponse(updatedInterview);
     }
 
-    public InterviewResponseDTO patchInterview(UUID publicId, InterviewRequestDTO interviewRequestDTO)
-    {
+    public InterviewResponseDTO patchInterview(UUID publicId, InterviewRequestDTO interviewRequestDTO) {
         Interview existingInterview = interviewRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId",
+                        publicId));
 
         Slot slot = interviewRequestDTO.getSlotId() != null
                 ? resolveSlot(interviewRequestDTO.getSlotId())
@@ -102,10 +100,10 @@ public class InterviewService
         return interviewMapper.toResponse(patchedInterview);
     }
 
-    public void deleteInterview(UUID publicId)
-    {
+    public void deleteInterview(UUID publicId) {
         Interview interview = interviewRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId",
+                        publicId));
         interview.setSlot(null); // free the slot
         interviewRepository.delete(interview);
     }
@@ -115,32 +113,27 @@ public class InterviewService
      * so no interviewer matching is needed. This is a friendly early check; the unique
      * constraint on {@code interviews.slot_id} is the real guard against concurrent bookings.
      */
-    private void validateBooking(Slot slot, Interview existingInterview)
-    {
+    private void validateBooking(Slot slot, Interview existingInterview) {
         Interview bookedInterview = slot.getInterview();
         if (bookedInterview != null
-                && (existingInterview == null || !bookedInterview.getId().equals(existingInterview.getId())))
-        {
+                && (existingInterview == null || !bookedInterview.getId().equals(existingInterview.getId()))) {
             throw new ResourceConflictException(
                     "Slot is already booked by another interview.",
                     ErrorCode.DATA_CONFLICT);
         }
     }
 
-    private User resolveUser(UUID publicId)
-    {
+    private User resolveUser(UUID publicId) {
         return userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
     }
 
-    private Job resolveJob(UUID publicId)
-    {
+    private Job resolveJob(UUID publicId) {
         return jobRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Job.class.getSimpleName(), "publicId", publicId));
     }
 
-    private Slot resolveSlot(UUID publicId)
-    {
+    private Slot resolveSlot(UUID publicId) {
         return slotRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", publicId));
     }

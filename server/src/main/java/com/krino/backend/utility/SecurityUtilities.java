@@ -14,55 +14,44 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @UtilityClass
-public class SecurityUtilities
-{
+public class SecurityUtilities {
 
-    public static Optional<String> getCurrentUsername()
-    {
+    public static Optional<String> getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() &&
-                !"anonymousUser".equals(authentication.getPrincipal()))
-        {
+                !"anonymousUser".equals(authentication.getPrincipal())) {
             return Optional.of(authentication.getName());
         }
         return Optional.empty();
     }
 
-    public static Optional<UserDetails> getCurrentUser()
-    {
+    public static Optional<UserDetails> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails)
-        {
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
             return Optional.of((UserDetails) authentication.getPrincipal());
         }
         return Optional.empty();
     }
 
-    public static Optional<CustomUserDetails> getCurrentCustomUser()
-    {
+    public static Optional<CustomUserDetails> getCurrentCustomUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails)
-        {
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
             return Optional.of((CustomUserDetails) authentication.getPrincipal());
         }
         return Optional.empty();
     }
 
-    public static Optional<Long> getCurrentUserId()
-    {
+    public static Optional<Long> getCurrentUserId() {
         return getCurrentCustomUser().map(CustomUserDetails::getId);
     }
 
-    public static Optional<String> getCurrentUserEmail()
-    {
+    public static Optional<String> getCurrentUserEmail() {
         return getCurrentCustomUser().map(CustomUserDetails::getEmail);
     }
 
-    public static boolean hasRole(String role)
-    {
+    public static boolean hasRole(String role) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated())
-        {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return false;
         }
 
@@ -71,11 +60,9 @@ public class SecurityUtilities
                 .anyMatch(auth -> auth.equals("ROLE_" + role) || auth.equals(role));
     }
 
-    public static boolean hasAnyRole(String... roles)
-    {
+    public static boolean hasAnyRole(String... roles) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated())
-        {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return false;
         }
 
@@ -87,8 +74,7 @@ public class SecurityUtilities
                 .anyMatch(role -> userRoles.contains("ROLE_" + role) || userRoles.contains(role));
     }
 
-    public static boolean isAuthenticated()
-    {
+    public static boolean isAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null &&
                 authentication.isAuthenticated() &&

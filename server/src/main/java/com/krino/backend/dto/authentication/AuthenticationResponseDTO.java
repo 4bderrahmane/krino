@@ -10,12 +10,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthenticationResponseDTO
-{
-    // SECURITY: the access/refresh tokens are intentionally NOT exposed in the
-    // response body. They are delivered exclusively as httpOnly cookies so that
-    // browser JavaScript (and therefore any XSS payload) cannot read them.
-    // Left commented out for local debugging only — do NOT re-enable in production.
+public class AuthenticationResponseDTO {
+
 //    private String accessToken;
 //    private String refreshToken;
     private String tokenType;

@@ -6,8 +6,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class JobResponseDTO
-{
+public class JobResponseDTO {
     private UUID id;
     private String title;
     private String description;

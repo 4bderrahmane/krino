@@ -12,8 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class SlotRequestDTO
-{
+public class SlotRequestDTO {
     // Optional: HR can create a slot on behalf of an interviewer.
     // When absent, the slot belongs to the authenticated user.
     private UUID interviewerId;

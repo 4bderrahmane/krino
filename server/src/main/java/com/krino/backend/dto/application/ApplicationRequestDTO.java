@@ -8,8 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class ApplicationRequestDTO
-{
+public class ApplicationRequestDTO {
 
     @NotNull(message = "Job ID cannot be null")
     private Long jobId;

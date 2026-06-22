@@ -18,55 +18,51 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/interviews")
 @RequiredArgsConstructor
-public class InterviewController
-{
+public class InterviewController {
 
     private final InterviewService interviewService;
 
     @PostMapping
     @PreAuthorize("hasAuthority('CAN_CREATE_INTERVIEW')")
-    public ResponseEntity<InterviewResponseDTO> createInterview(@Valid @RequestBody InterviewRequestDTO interviewRequestDTO)
-    {
+    public ResponseEntity<InterviewResponseDTO> createInterview(@Valid @RequestBody InterviewRequestDTO interviewRequestDTO) {
         InterviewResponseDTO createdInterview = interviewService.createInterview(interviewRequestDTO);
         return ResponseEntity.created(URI.create("/api/interviews/" + createdInterview.getId())).body(createdInterview);
     }
 
     @GetMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_READ_INTERVIEW')")
-    public ResponseEntity<InterviewResponseDTO> getInterviewByPublicId(@PathVariable UUID publicId)
-    {
+    public ResponseEntity<InterviewResponseDTO> getInterviewByPublicId(@PathVariable UUID publicId) {
         InterviewResponseDTO interview = interviewService.getInterviewByPublicId(publicId);
         return ResponseEntity.ok(interview);
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('CAN_READ_INTERVIEW')")
-    public ResponseEntity<PageResponse<InterviewResponseDTO>> getAllInterviews(@PageableDefault(size = 20, sort = "id") Pageable pageable)
-    {
+    public ResponseEntity<PageResponse<InterviewResponseDTO>> getAllInterviews(@PageableDefault(size = 20, sort = "id"
+    ) Pageable pageable) {
         PageResponse<InterviewResponseDTO> interviews = interviewService.getAllInterviews(pageable);
         return ResponseEntity.ok(interviews);
     }
 
     @PutMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_UPDATE_INTERVIEW')")
-    public ResponseEntity<InterviewResponseDTO> updateInterview(@PathVariable UUID publicId, @Valid @RequestBody InterviewRequestDTO interviewRequestDTO)
-    {
+    public ResponseEntity<InterviewResponseDTO> updateInterview(@PathVariable UUID publicId,
+                                                                @Valid @RequestBody InterviewRequestDTO interviewRequestDTO) {
         InterviewResponseDTO updatedInterview = interviewService.updateInterview(publicId, interviewRequestDTO);
         return ResponseEntity.ok(updatedInterview);
     }
 
     @PatchMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_UPDATE_INTERVIEW')")
-    public ResponseEntity<InterviewResponseDTO> patchInterview(@PathVariable UUID publicId, @RequestBody InterviewRequestDTO interviewRequestDTO)
-    {
+    public ResponseEntity<InterviewResponseDTO> patchInterview(@PathVariable UUID publicId,
+                                                               @RequestBody InterviewRequestDTO interviewRequestDTO) {
         InterviewResponseDTO patchedInterview = interviewService.patchInterview(publicId, interviewRequestDTO);
         return ResponseEntity.ok(patchedInterview);
     }
 
     @DeleteMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_DELETE_INTERVIEW')")
-    public ResponseEntity<Void> deleteInterview(@PathVariable UUID publicId)
-    {
+    public ResponseEntity<Void> deleteInterview(@PathVariable UUID publicId) {
         interviewService.deleteInterview(publicId);
         return ResponseEntity.noContent().build();
     }

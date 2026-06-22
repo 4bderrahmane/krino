@@ -9,8 +9,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DepartmentRequestDTO
-{
+public class DepartmentRequestDTO {
     @NotBlank(message = "Department name cannot be blank")
     @Size(max = 100, message = "Department name cannot exceed 100 characters")
     private String name;

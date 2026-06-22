@@ -8,8 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegistrationResponseDTO
-{
+public class RegistrationResponseDTO {
     private UserResponseDTO user;
     private String message;
 }

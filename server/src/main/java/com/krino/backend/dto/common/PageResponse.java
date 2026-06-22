@@ -8,18 +8,16 @@ import java.util.function.Function;
 public record PageResponse<T>(
         List<T> content,
         PageMetadata page
-)
-{
+) {
     public record PageMetadata(
             int number,
             int size,
             long totalElements,
             int totalPages
-    )
-    {}
+    ) {
+    }
 
-    public static <T> PageResponse<T> from(Page<T> page)
-    {
+    public static <T> PageResponse<T> from(Page<T> page) {
         return new PageResponse<>(
                 page.getContent(),
                 new PageMetadata(
@@ -31,8 +29,7 @@ public record PageResponse<T>(
         );
     }
 
-    public static <E, T> PageResponse<T> from(Page<E> page, Function<? super E, ? extends T> mapper)
-    {
+    public static <E, T> PageResponse<T> from(Page<E> page, Function<? super E, ? extends T> mapper) {
         return from(page.map(mapper));
     }
 }

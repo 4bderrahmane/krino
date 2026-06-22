@@ -8,8 +8,7 @@ import org.mapstruct.Mapping;
 import java.time.Instant;
 
 @Mapper(config = MapperConfiguration.class)
-public interface RefreshTokenMapper
-{
+public interface RefreshTokenMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", source = "user")
     @Mapping(target = "tokenHash", source = "tokenHash")

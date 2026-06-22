@@ -30,8 +30,7 @@ import java.util.UUID;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ApplicationService
-{
+public class ApplicationService {
 
     private static final String JOB_TITLE = "jobTitle";
     private static final String PUBLIC_ID = "publicId";
@@ -40,19 +39,16 @@ public class ApplicationService
     private final UserRepository userRepository;
     private final ApplicationMapper applicationMapper;
 
-    public ApplicationResponseDTO createApplication(ApplicationCreateDTO applicationCreateDTO)
-    {
+    public ApplicationResponseDTO createApplication(ApplicationCreateDTO applicationCreateDTO) {
         Job job = resolveJob(applicationCreateDTO.getJobId());
 
-        if (job.getStatus() != JobStatus.OPEN)
-        {
+        if (job.getStatus() != JobStatus.OPEN) {
             throw new ResourceConflictException(
                     String.format("Job '%s' is not open for applications.", job.getTitle()),
                     ErrorCode.OPERATION_NOT_ALLOWED,
                     Map.of(JOB_TITLE, job.getTitle()));
         }
-        if (job.getApplyingDeadline() != null && job.getApplyingDeadline().isBefore(LocalDate.now()))
-        {
+        if (job.getApplyingDeadline() != null && job.getApplyingDeadline().isBefore(LocalDate.now())) {
             throw new ResourceConflictException(
                     String.format("The applying deadline for job '%s' has passed.", job.getTitle()),
                     ErrorCode.OPERATION_NOT_ALLOWED,
@@ -61,8 +57,7 @@ public class ApplicationService
 
         User candidate = getCurrentUser();
 
-        if (applicationRepository.existsByJobAndCandidate(job, candidate))
-        {
+        if (applicationRepository.existsByJobAndCandidate(job, candidate)) {
             throw new ResourceConflictException(
                     String.format("You have already applied to job '%s'.", job.getTitle()),
                     ErrorCode.DATA_CONFLICT,
@@ -75,37 +70,34 @@ public class ApplicationService
         return applicationMapper.toResponse(savedApplication);
     }
 
-    private Job resolveJob(UUID jobPublicId)
-    {
+    private Job resolveJob(UUID jobPublicId) {
         return jobRepository.findByPublicId(jobPublicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Job.class.getSimpleName(), PUBLIC_ID, jobPublicId));
     }
 
-    private User getCurrentUser()
-    {
+    private User getCurrentUser() {
         return SecurityUtilities.getCurrentCustomUser()
                 .map(CustomUserDetails::getId)
                 .flatMap(userRepository::findById)
                 .orElseThrow(() -> new AccessDeniedException("No authenticated user to apply as"));
     }
 
-    public ApplicationResponseDTO getApplicationByPublicId(UUID publicId)
-    {
+    public ApplicationResponseDTO getApplicationByPublicId(UUID publicId) {
         Application application = applicationRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID,
+                        publicId));
         return applicationMapper.toResponse(application);
     }
 
-    public PageResponse<ApplicationResponseDTO> getAllApplications(Pageable pageable)
-    {
+    public PageResponse<ApplicationResponseDTO> getAllApplications(Pageable pageable) {
         return PageResponse.from(applicationRepository.findAll(pageable),
                 applicationMapper::toResponse);
     }
 
-    public ApplicationResponseDTO updateApplication(UUID publicId, ApplicationUpdateDTO applicationUpdateDTO)
-    {
+    public ApplicationResponseDTO updateApplication(UUID publicId, ApplicationUpdateDTO applicationUpdateDTO) {
         Application existingApplication = applicationRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID,
+                        publicId));
 
         Job job = applicationUpdateDTO.getJobId() != null
                 ? resolveJob(applicationUpdateDTO.getJobId())
@@ -115,10 +107,10 @@ public class ApplicationService
         return applicationMapper.toResponse(updatedApplication);
     }
 
-    public ApplicationResponseDTO patchApplication(UUID publicId, ApplicationUpdateDTO applicationUpdateDTO)
-    {
+    public ApplicationResponseDTO patchApplication(UUID publicId, ApplicationUpdateDTO applicationUpdateDTO) {
         Application existingApplication = applicationRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID,
+                        publicId));
 
         Job job = applicationUpdateDTO.getJobId() != null
                 ? resolveJob(applicationUpdateDTO.getJobId())
@@ -129,10 +121,10 @@ public class ApplicationService
         return applicationMapper.toResponse(patchedApplication);
     }
 
-    public void deleteApplication(UUID publicId)
-    {
+    public void deleteApplication(UUID publicId) {
         Application application = applicationRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID,
+                        publicId));
         applicationRepository.delete(application);
     }
 }

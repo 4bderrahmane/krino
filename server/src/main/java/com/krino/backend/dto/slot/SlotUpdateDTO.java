@@ -6,8 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Data
-public class SlotUpdateDTO
-{
+public class SlotUpdateDTO {
     private LocalDate interviewDate;
     private LocalTime startTime;
     private LocalTime endTime;

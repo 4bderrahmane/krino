@@ -32,8 +32,7 @@ import java.util.UUID;
 @Transactional
 @Service
 @RequiredArgsConstructor
-public class UserService
-{
+public class UserService {
     private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -43,18 +42,15 @@ public class UserService
     private final InterviewRepository interviewRepository;
     private final SlotRepository slotRepository;
 
-    public List<User> getAllInterviewers()
-    {
+    public List<User> getAllInterviewers() {
         return userRepository.findByRolesContaining(UserRole.INTERVIEWER);
     }
 
-    public Optional<User> findByEmail(String email)
-    {
+    public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
-    public User addRoleToUser(Long userId, UserRole role)
-    {
+    public User addRoleToUser(Long userId, UserRole role) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
 
@@ -62,40 +58,35 @@ public class UserService
         return userRepository.save(user);
     }
 
-    public User getUserByPublicId(UUID publicId)
-    {
+    public User getUserByPublicId(UUID publicId) {
         return userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
     }
 
-    public UserResponseDTO getUserResponseByPublicId(UUID publicId)
-    {
+    public UserResponseDTO getUserResponseByPublicId(UUID publicId) {
         return userMapper.toResponse(getUserByPublicId(publicId));
     }
 
-    public PageResponse<UserResponseDTO> getAllUsers(Pageable pageable)
-    {
+    public PageResponse<UserResponseDTO> getAllUsers(Pageable pageable) {
         return PageResponse.from(userRepository.findAll(pageable),
                 userMapper::toResponse);
     }
 
-    public UserResponseDTO updateUserPartially(UUID publicId, UserUpdateDTO userUpdateDTO)
-    {
+    public UserResponseDTO updateUserPartially(UUID publicId, UserUpdateDTO userUpdateDTO) {
         User currentUser = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
         String normalizedEmail = null;
-        if (userUpdateDTO.getEmail() != null)
-        {
+        if (userUpdateDTO.getEmail() != null) {
             normalizedEmail = normalizeEmail(userUpdateDTO.getEmail());
-            if (!normalizedEmail.equals(currentUser.getEmail()))
-            {
+            if (!normalizedEmail.equals(currentUser.getEmail())) {
                 String emailToValidate = normalizedEmail;
                 userRepository.findByEmail(emailToValidate)
                         .filter(user -> !user.getPublicId().equals(publicId))
                         .ifPresent(user ->
                         {
-                            throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, emailToValidate), ErrorCode.DATA_CONFLICT,
+                            throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE,
+                                    emailToValidate), ErrorCode.DATA_CONFLICT,
                                     Map.of("field", "email", "value", emailToValidate));
                         });
             }
@@ -107,27 +98,25 @@ public class UserService
         return userMapper.toResponse(updatedPartially);
     }
 
-    public UserResponseDTO updateUserFully(UUID publicId, UserUpdateDTO userUpdateDTO)
-    {
+    public UserResponseDTO updateUserFully(UUID publicId, UserUpdateDTO userUpdateDTO) {
         User existingUser = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
         if (userUpdateDTO.getEmail() == null
                 || userUpdateDTO.getFirstName() == null || userUpdateDTO.getLastName() == null
-                || userUpdateDTO.getPhoneNumber() == null)
-        {
+                || userUpdateDTO.getPhoneNumber() == null) {
             throw new IllegalArgumentException("All fields must be provided for a full update.");
         }
 
         String normalizedEmail = normalizeEmail(userUpdateDTO.getEmail());
 
-        if (!normalizedEmail.equals(existingUser.getEmail()))
-        {
+        if (!normalizedEmail.equals(existingUser.getEmail())) {
             userRepository.findByEmail(normalizedEmail)
                     .filter(user -> !user.getPublicId().equals(publicId))
                     .ifPresent(user ->
                     {
-                        throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, normalizedEmail), ErrorCode.DATA_CONFLICT,
+                        throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE,
+                                normalizedEmail), ErrorCode.DATA_CONFLICT,
                                 Map.of("field", "email", "value", normalizedEmail));
                     });
         }
@@ -138,18 +127,15 @@ public class UserService
         return userMapper.toResponse(updatedUser);
     }
 
-    public void changePassword(UUID publicId, UserUpdatePasswordDTO passwordChangeDTO)
-    {
+    public void changePassword(UUID publicId, UserUpdatePasswordDTO passwordChangeDTO) {
         User existingUser = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
-        if (!passwordEncoder.matches(passwordChangeDTO.getCurrentPassword(), existingUser.getPassword()))
-        {
+        if (!passwordEncoder.matches(passwordChangeDTO.getCurrentPassword(), existingUser.getPassword())) {
             throw new IncorrectPasswordException("Current password is not correct.");
         }
 
-        if (!passwordChangeDTO.getNewPassword().equals(passwordChangeDTO.getConfirmNewPassword()))
-        {
+        if (!passwordChangeDTO.getNewPassword().equals(passwordChangeDTO.getConfirmNewPassword())) {
             throw new InvalidCredentialsException("New password and confirmation do not match.");
         }
 
@@ -158,8 +144,7 @@ public class UserService
         userRepository.save(existingUser);
     }
 
-    public void deleteUserByPublicId(UUID publicId)
-    {
+    public void deleteUserByPublicId(UUID publicId) {
         User userToDelete = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
@@ -168,8 +153,7 @@ public class UserService
         if (applicationRepository.existsByCandidate(userToDelete)
                 || interviewRepository.existsByCandidate(userToDelete)
                 || interviewRepository.existsByInterviewer(userToDelete)
-                || slotRepository.existsByInterviewer(userToDelete))
-        {
+                || slotRepository.existsByInterviewer(userToDelete)) {
             throw new ResourceConflictException(
                     "User has applications, interviews or slots and cannot be deleted.",
                     ErrorCode.OPERATION_NOT_ALLOWED,
@@ -180,29 +164,25 @@ public class UserService
         userRepository.delete(userToDelete);
     }
 
-    public void approveUser(UUID publicId)
-    {
+    public void approveUser(UUID publicId) {
         User user = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
         user.setApproved(true);
     }
 
-    public PageResponse<UserResponseDTO> getNonApprovedUsers(Pageable pageable)
-    {
+    public PageResponse<UserResponseDTO> getNonApprovedUsers(Pageable pageable) {
         return PageResponse.from(userRepository.findByIsApprovedFalse(pageable),
                 userMapper::toResponse);
     }
 
-    public CustomUserDetails loadUserById(Long userId)
-    {
+    public CustomUserDetails loadUserById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
         return new CustomUserDetails(user);
     }
 
-    private static String normalizeEmail(String email)
-    {
+    private static String normalizeEmail(String email) {
         return email.trim().toLowerCase();
     }
 }

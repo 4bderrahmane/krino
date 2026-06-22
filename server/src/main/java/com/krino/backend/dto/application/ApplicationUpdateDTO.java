@@ -6,8 +6,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class ApplicationUpdateDTO
-{
+public class ApplicationUpdateDTO {
     private UUID jobId;
     private String resumeUrl;
     private ApplicationStatus status;

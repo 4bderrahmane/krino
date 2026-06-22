@@ -10,8 +10,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApplicationCreateDTO
-{
+public class ApplicationCreateDTO {
     @NotNull(message = "Job ID cannot be null")
     private UUID jobId;
     private String resumeUrl;

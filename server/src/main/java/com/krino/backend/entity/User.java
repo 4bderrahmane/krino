@@ -26,8 +26,7 @@ import java.util.UUID;
 @Table(name = "users", indexes = {
         @Index(name = "idx_users_public_id", columnList = "public_id")
 })
-public class User
-{
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,8 +53,7 @@ public class User
 
     private boolean isApproved = false;
 
-    public User(String email, String password, String firstName, String lastName, String phoneNumber)
-    {
+    public User(String email, String password, String firstName, String lastName, String phoneNumber) {
         this.email = email;
         this.password = password;
         this.firstName = firstName;
@@ -79,52 +77,41 @@ public class User
     @JsonIgnore
     private Collection<RefreshToken> refreshTokens = new HashSet<>();
 
-    public boolean hasPermission(Permission permission)
-    {
+    public boolean hasPermission(Permission permission) {
         return roles.stream().anyMatch(role -> role.getPermissions().contains(permission));
     }
 
-    public boolean hasRole(UserRole role)
-    {
+    public boolean hasRole(UserRole role) {
         return this.roles.contains(role);
     }
 
-    public void addRole(UserRole role)
-    {
+    public void addRole(UserRole role) {
         this.roles.add(role);
     }
 
-    public void removeRole(UserRole role)
-    {
+    public void removeRole(UserRole role) {
         this.roles.remove(role);
     }
 
-    public void clearRoles()
-    {
+    public void clearRoles() {
         this.roles.clear();
     }
 
 
-    public UserRole getPrimaryRole()
-    {
-        if (this.roles.contains(UserRole.ADMIN))
-        {
+    public UserRole getPrimaryRole() {
+        if (this.roles.contains(UserRole.ADMIN)) {
             return UserRole.ADMIN;
-        } else if (this.roles.contains(UserRole.HR_MANAGER))
-        {
+        } else if (this.roles.contains(UserRole.HR_MANAGER)) {
             return UserRole.HR_MANAGER;
-        } else if (this.roles.contains(UserRole.INTERVIEWER))
-        {
+        } else if (this.roles.contains(UserRole.INTERVIEWER)) {
             return UserRole.INTERVIEWER;
-        } else if (this.roles.contains(UserRole.CANDIDATE))
-        {
+        } else if (this.roles.contains(UserRole.CANDIDATE)) {
             return UserRole.CANDIDATE;
         }
         return null;
     }
 
-    public String getRolesAsString()
-    {
+    public String getRolesAsString() {
         return String.join(", ", this.roles.stream().map(Enum::name).toList());
     }
 }

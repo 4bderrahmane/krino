@@ -11,8 +11,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SlotResponseDTO
-{
+public class SlotResponseDTO {
 
     private UUID id;
     private UserResponseDTO interviewer;

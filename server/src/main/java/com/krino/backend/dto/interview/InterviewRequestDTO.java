@@ -10,9 +10,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class InterviewRequestDTO
-{
-    // The interviewer is derived from the chosen slot, not supplied by the caller.
+public class InterviewRequestDTO {
 
     @NotNull(message = "Candidate ID cannot be null")
     private UUID candidateId;
