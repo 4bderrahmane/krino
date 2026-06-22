@@ -8,13 +8,8 @@ import com.krino.backend.entity.enums.ContractType;
 import com.krino.backend.entity.enums.EmploymentType;
 import com.krino.backend.entity.enums.JobStatus;
 import com.krino.backend.entity.enums.UserRole;
-import com.krino.backend.repository.ApplicationRepository;
-import com.krino.backend.repository.DepartmentRepository;
-import com.krino.backend.repository.JobRepository;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -28,22 +23,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class ApplicationControllerIntegrationTest extends AbstractControllerIntegrationTest
 {
-    @Autowired
-    private ApplicationRepository applicationRepository;
-    @Autowired
-    private JobRepository jobRepository;
-    @Autowired
-    private DepartmentRepository departmentRepository;
-
-    @BeforeEach
-    void cleanDatabase()
-    {
-        applicationRepository.deleteAll();
-        jobRepository.deleteAll();
-        departmentRepository.deleteAll();
-        userRepository.deleteAll();
-    }
-
     @Test
     void candidateAppliesToOpenJobReturnsCreatedAndPersists() throws Exception
     {

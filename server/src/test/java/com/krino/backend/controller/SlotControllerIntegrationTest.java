@@ -3,11 +3,8 @@ package com.krino.backend.controller;
 import com.krino.backend.entity.Slot;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
-import com.krino.backend.repository.SlotRepository;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -23,16 +20,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
 {
-    @Autowired
-    private SlotRepository slotRepository;
-
-    @BeforeEach
-    void cleanDatabase()
-    {
-        slotRepository.deleteAll();
-        userRepository.deleteAll();
-    }
-
     @Test
     void adminCreatesSlotForInterviewerReturnsCreatedAndPersists() throws Exception
     {

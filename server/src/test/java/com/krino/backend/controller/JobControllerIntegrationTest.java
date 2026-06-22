@@ -2,12 +2,8 @@ package com.krino.backend.controller;
 
 import com.krino.backend.entity.Department;
 import com.krino.backend.entity.enums.UserRole;
-import com.krino.backend.repository.DepartmentRepository;
-import com.krino.backend.repository.JobRepository;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -20,19 +16,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class JobControllerIntegrationTest extends AbstractControllerIntegrationTest
 {
-    @Autowired
-    private JobRepository jobRepository;
-    @Autowired
-    private DepartmentRepository departmentRepository;
-
-    @BeforeEach
-    void cleanDatabase()
-    {
-        jobRepository.deleteAll();
-        departmentRepository.deleteAll();
-        userRepository.deleteAll();
-    }
-
     @Test
     void adminCreatesJobReturnsCreatedAndPersists() throws Exception
     {

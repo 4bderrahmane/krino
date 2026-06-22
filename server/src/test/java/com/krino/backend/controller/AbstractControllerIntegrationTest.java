@@ -3,7 +3,12 @@ package com.krino.backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
+import com.krino.backend.repository.ApplicationRepository;
+import com.krino.backend.repository.DepartmentRepository;
+import com.krino.backend.repository.InterviewRepository;
+import com.krino.backend.repository.JobRepository;
 import com.krino.backend.repository.RefreshTokenRepository;
+import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,8 +32,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Base for full-stack controller tests: boots the application, wires a security-aware
- * {@link MockMvc}, and provides user-creation, login and CSRF helpers. Subclasses clean
- * their own entity tables; refresh tokens (which reference users) are cleared here first.
+ * {@link MockMvc}, and provides user-creation, login and CSRF helpers. A clean database is
+ * guaranteed before every test by wiping all tables in foreign-key-safe order.
  */
 @SpringBootTest
 abstract class AbstractControllerIntegrationTest
@@ -43,6 +48,16 @@ abstract class AbstractControllerIntegrationTest
     @Autowired
     protected RefreshTokenRepository refreshTokenRepository;
     @Autowired
+    protected DepartmentRepository departmentRepository;
+    @Autowired
+    protected JobRepository jobRepository;
+    @Autowired
+    protected SlotRepository slotRepository;
+    @Autowired
+    protected ApplicationRepository applicationRepository;
+    @Autowired
+    protected InterviewRepository interviewRepository;
+    @Autowired
     protected PasswordEncoder passwordEncoder;
     @Autowired
     protected WebApplicationContext webApplicationContext;
@@ -51,12 +66,20 @@ abstract class AbstractControllerIntegrationTest
     protected MockMvc mockMvc;
 
     @BeforeEach
-    void initMockMvcAndRefreshTokens()
+    void initMockMvcAndResetDatabase()
     {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();
+
+        // Delete dependents before the tables they reference (FK-safe order).
         refreshTokenRepository.deleteAll();
+        interviewRepository.deleteAll();
+        applicationRepository.deleteAll();
+        slotRepository.deleteAll();
+        jobRepository.deleteAll();
+        departmentRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     protected User createUser(String email, boolean approved, UserRole... roles)
