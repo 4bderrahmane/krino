@@ -1,5 +1,6 @@
 package com.krino.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.krino.backend.entity.Department;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -43,6 +45,7 @@ class DepartmentControllerIntegrationTest
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final WebApplicationContext webApplicationContext;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -62,7 +65,7 @@ class DepartmentControllerIntegrationTest
         createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
         Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
 
-        MvcResult result = mockMvc.perform(post("/api/departments")
+        MvcResult result = mockMvc.perform(withCsrf(post("/api/departments"))
                         .cookie(accessCookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -103,7 +106,7 @@ class DepartmentControllerIntegrationTest
         Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
         departmentRepository.save(department("Engineering", "Existing"));
 
-        mockMvc.perform(post("/api/departments")
+        mockMvc.perform(withCsrf(post("/api/departments"))
                         .cookie(accessCookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -122,7 +125,7 @@ class DepartmentControllerIntegrationTest
         Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
         Department saved = departmentRepository.save(department("Marketing", "Promotes"));
 
-        mockMvc.perform(delete("/api/departments/" + saved.getPublicId())
+        mockMvc.perform(withCsrf(delete("/api/departments/" + saved.getPublicId()))
                         .cookie(accessCookie))
                 .andExpect(status().isNoContent());
 
@@ -153,7 +156,7 @@ class DepartmentControllerIntegrationTest
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
 
-        mockMvc.perform(post("/api/departments")
+        mockMvc.perform(withCsrf(post("/api/departments"))
                         .cookie(accessCookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -197,7 +200,7 @@ class DepartmentControllerIntegrationTest
                 }
                 """.formatted(email, RAW_PASSWORD);
 
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+        MvcResult loginResult = mockMvc.perform(withCsrf(post("/api/auth/login"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -206,5 +209,30 @@ class DepartmentControllerIntegrationTest
         Cookie cookie = loginResult.getResponse().getCookie("access_token");
         assertThat(cookie).as("access_token cookie").isNotNull();
         return cookie;
+    }
+
+    private MockHttpServletRequestBuilder withCsrf(MockHttpServletRequestBuilder request) throws Exception
+    {
+        CsrfExchange csrf = fetchCsrfToken();
+        return request.cookie(csrf.cookie())
+                .header(csrf.headerName(), csrf.token());
+    }
+
+    private CsrfExchange fetchCsrfToken() throws Exception
+    {
+        MvcResult csrfResult = mockMvc.perform(get("/api/auth/csrf"))
+                .andExpect(status().isOk())
+                .andReturn();
+        CsrfTokenResponse csrfToken = objectMapper.readValue(csrfResult.getResponse().getContentAsString(),
+                CsrfTokenResponse.class);
+        Cookie xsrfCookie = csrfResult.getResponse().getCookie(csrfToken.cookieName());
+        assertThat(xsrfCookie).as("XSRF-TOKEN cookie").isNotNull();
+        return new CsrfExchange(csrfToken.headerName(), xsrfCookie.getValue(), xsrfCookie);
+    }
+
+    private record CsrfTokenResponse(String cookieName, String headerName) {
+    }
+
+    private record CsrfExchange(String headerName, String token, Cookie cookie) {
     }
 }
