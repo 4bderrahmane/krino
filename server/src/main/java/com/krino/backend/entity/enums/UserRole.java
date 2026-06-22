@@ -1,8 +1,9 @@
-package com.krino.backend.entity;
+package com.krino.backend.entity.enums;
 
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

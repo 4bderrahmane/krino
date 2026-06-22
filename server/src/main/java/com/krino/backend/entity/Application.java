@@ -1,5 +1,6 @@
 package com.krino.backend.entity;
 
+import com.krino.backend.entity.enums.ApplicationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

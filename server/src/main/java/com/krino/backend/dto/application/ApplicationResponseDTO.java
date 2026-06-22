@@ -1,7 +1,7 @@
 package com.krino.backend.dto.application;
 
 import com.krino.backend.dto.user.UserResponseDTO;
-import com.krino.backend.entity.ApplicationStatus;
+import com.krino.backend.entity.enums.ApplicationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

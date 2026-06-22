@@ -1,7 +1,7 @@
 package com.krino.backend.service;
 
 import com.krino.backend.entity.User;
-import com.krino.backend.entity.UserRole;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.UserDetails;

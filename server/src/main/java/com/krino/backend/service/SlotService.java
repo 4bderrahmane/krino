@@ -9,13 +9,13 @@ import com.krino.backend.entity.Slot;
 import com.krino.backend.entity.User;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
+import com.krino.backend.mapper.SlotMapper;
 import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.SecurityUtilities;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -26,35 +26,29 @@ import java.util.UUID;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class SlotService
-{
+public class SlotService {
 
+    private static final String PUBLIC_ID = "publicId";
     private final SlotRepository slotRepository;
     private final UserRepository userRepository;
-    private final ModelMapper modelMapper;
+    private final SlotMapper slotMapper;
 
-    public SlotResponseDTO createSlot(SlotRequestDTO slotRequestDTO)
-    {
-        Slot slot = new Slot();
-        slot.setInterviewer(resolveInterviewer(slotRequestDTO.getInterviewerId()));
-        slot.setInterviewDate(slotRequestDTO.getInterviewDate());
-        slot.setStartTime(slotRequestDTO.getStartTime());
-        slot.setEndTime(slotRequestDTO.getEndTime());
+    public SlotResponseDTO createSlot(SlotRequestDTO slotRequestDTO) {
+        Slot slot = slotMapper.toEntity(slotRequestDTO, resolveInterviewer(slotRequestDTO.getInterviewerId()));
 
         Slot savedSlot = slotRepository.save(slot);
-        return modelMapper.map(savedSlot, SlotResponseDTO.class);
+        return slotMapper.toResponse(savedSlot);
     }
 
     /**
      * The slot belongs to the user given in the request (HR booking on behalf of an
      * interviewer), or to the authenticated user when no interviewer is specified.
      */
-    private User resolveInterviewer(UUID interviewerPublicId)
-    {
-        if (interviewerPublicId != null)
-        {
+    private User resolveInterviewer(UUID interviewerPublicId) {
+        if (interviewerPublicId != null) {
             return userRepository.findByPublicId(interviewerPublicId)
-                    .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", interviewerPublicId));
+                    .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID,
+                            interviewerPublicId));
         }
 
         return SecurityUtilities.getCurrentCustomUser()
@@ -63,58 +57,41 @@ public class SlotService
                 .orElseThrow(() -> new AccessDeniedException("No authenticated user to own the slot"));
     }
 
-    public SlotResponseDTO getSlotByPublicId(UUID publicId)
-    {
+    public SlotResponseDTO getSlotByPublicId(UUID publicId) {
         Slot slot = slotRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", publicId));
-        return modelMapper.map(slot, SlotResponseDTO.class);
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), PUBLIC_ID, publicId));
+        return slotMapper.toResponse(slot);
     }
 
-    public PageResponse<SlotResponseDTO> getAllSlots(Pageable pageable)
-    {
+    public PageResponse<SlotResponseDTO> getAllSlots(Pageable pageable) {
         return PageResponse.from(slotRepository.findAll(pageable),
-                slot -> modelMapper.map(slot, SlotResponseDTO.class));
+                slotMapper::toResponse);
     }
 
-    public SlotResponseDTO updateSlot(UUID publicId, SlotUpdateDTO slotUpdateDTO)
-    {
+    public SlotResponseDTO updateSlot(UUID publicId, SlotUpdateDTO slotUpdateDTO) {
         Slot existingSlot = slotRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), PUBLIC_ID, publicId));
 
-        modelMapper.map(slotUpdateDTO, existingSlot);
+        slotMapper.updateEntity(slotUpdateDTO, existingSlot);
         Slot updatedSlot = slotRepository.save(existingSlot);
-        return modelMapper.map(updatedSlot, SlotResponseDTO.class);
+        return slotMapper.toResponse(updatedSlot);
     }
 
-    public SlotResponseDTO patchSlot(UUID publicId, SlotUpdateDTO slotUpdateDTO)
-    {
+    public SlotResponseDTO patchSlot(UUID publicId, SlotUpdateDTO slotUpdateDTO) {
         Slot existingSlot = slotRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), PUBLIC_ID, publicId));
 
-        if (slotUpdateDTO.getInterviewDate() != null)
-        {
-            existingSlot.setInterviewDate(slotUpdateDTO.getInterviewDate());
-        }
-        if (slotUpdateDTO.getStartTime() != null)
-        {
-            existingSlot.setStartTime(slotUpdateDTO.getStartTime());
-        }
-        if (slotUpdateDTO.getEndTime() != null)
-        {
-            existingSlot.setEndTime(slotUpdateDTO.getEndTime());
-        }
+        slotMapper.patchEntity(slotUpdateDTO, existingSlot);
 
         Slot patchedSlot = slotRepository.save(existingSlot);
-        return modelMapper.map(patchedSlot, SlotResponseDTO.class);
+        return slotMapper.toResponse(patchedSlot);
     }
 
-    public void deleteSlot(UUID publicId)
-    {
+    public void deleteSlot(UUID publicId) {
         Slot slot = slotRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), PUBLIC_ID, publicId));
 
-        if (slot.getInterview() != null)
-        {
+        if (slot.getInterview() != null) {
             throw new ResourceConflictException(
                     "Slot has an interview booked into it; cancel the interview first.",
                     ErrorCode.OPERATION_NOT_ALLOWED,

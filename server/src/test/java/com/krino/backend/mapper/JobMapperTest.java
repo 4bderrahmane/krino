@@ -1,36 +1,37 @@
-package com.krino.backend.configuration;
+package com.krino.backend.mapper;
 
 import com.krino.backend.dto.job.JobCreateDTO;
+import com.krino.backend.entity.Department;
 import com.krino.backend.entity.Job;
+import com.krino.backend.entity.enums.ContractType;
+import com.krino.backend.entity.enums.EmploymentType;
+import com.krino.backend.entity.enums.JobStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.modelmapper.ModelMapper;
+import org.mapstruct.factory.Mappers;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-class ModelMapperConfigurationTest
-{
-    private ModelMapper modelMapper;
+class JobMapperTest {
+    private JobMapper jobMapper;
 
     @BeforeEach
-    void setUp()
-    {
-        modelMapper = new ModelMapperConfiguration().modelMapper();
+    void setUp() {
+        jobMapper = Mappers.getMapper(JobMapper.class);
     }
 
     @Test
-    void jobCreateDto_mapsScalarFieldsOntoJob()
-    {
+    void jobCreateDto_mapsScalarFieldsOntoJob() {
         JobCreateDTO dto = new JobCreateDTO();
         dto.setTitle("Backend Engineer");
         dto.setDescription("Build APIs");
         dto.setApplyingDeadline(LocalDate.of(2026, 12, 31));
 
-        Job job = new Job();
-        modelMapper.map(dto, job);
+        Job job = jobMapper.toEntity(dto, new Department(), EmploymentType.FULL_TIME, ContractType.PERMANENT,
+                JobStatus.OPEN);
 
         assertEquals("Backend Engineer", job.getTitle());
         assertEquals("Build APIs", job.getDescription());
@@ -38,23 +39,18 @@ class ModelMapperConfigurationTest
     }
 
     @Test
-    void jobCreateDto_doesNotTouchServiceOwnedFields()
-    {
-        // department, the enums and status are skipped in the type map; the service sets them.
-        // In particular `departmentName` must NOT be deep-mapped onto department.name.
+    void jobCreateDto_doesNotTouchServiceOwnedFields() {
         JobCreateDTO dto = new JobCreateDTO();
         dto.setTitle("Backend Engineer");
         dto.setDepartmentName("Engineering");
         dto.setEmploymentType("FULL_TIME");
         dto.setContractType("PERMANENT");
 
-        Job job = new Job();
-        job.setStatus(null);
-        modelMapper.map(dto, job);
+        Job job = jobMapper.toEntity(dto, null, null, null, JobStatus.OPEN);
 
         assertNull(job.getDepartment());
         assertNull(job.getEmploymentType());
         assertNull(job.getContractType());
-        assertNull(job.getStatus());
+        assertEquals(JobStatus.OPEN, job.getStatus());
     }
 }

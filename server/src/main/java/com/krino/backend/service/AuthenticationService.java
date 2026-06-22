@@ -7,11 +7,12 @@ import com.krino.backend.dto.user.UserRegistrationDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.CustomUserDetails;
-import com.krino.backend.entity.UserRole;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.entity.RefreshToken;
 import com.krino.backend.exception.InvalidCredentialsException;
 import com.krino.backend.exception.InvalidRefreshTokenException;
 import com.krino.backend.exception.ResourceConflictException;
+import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.utility.CookieUtilities;
 import com.krino.backend.utility.ErrorCode;
@@ -21,7 +22,6 @@ import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -43,7 +43,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final AuthenticationManager authenticationManager;
-    private final ModelMapper modelMapper;
+    private final UserMapper userMapper;
     private final CookieUtilities cookieUtilities;
 
     @Transactional
@@ -62,19 +62,12 @@ public class AuthenticationService {
                     Map.of("field", "email", "value", normalizedEmail));
         }
 
-        User user = new User(
-                normalizedEmail,
-                passwordEncoder.encode(request.getPassword()),
-                request.getFirstName() != null ? request.getFirstName().trim() : "",
-                request.getLastName() != null ? request.getLastName().trim() : "",
-                request.getPhoneNumber() != null ? request.getPhoneNumber().trim() : null
-        );
-
+        User user = userMapper.toEntity(request, normalizedEmail, passwordEncoder.encode(request.getPassword()));
         user.addRole(UserRole.CANDIDATE);
 
         User savedUser = userRepository.save(user);
 
-        UserResponseDTO userResponse = modelMapper.map(savedUser, UserResponseDTO.class);
+        UserResponseDTO userResponse = userMapper.toResponse(savedUser);
 
         log.info("User registered successfully with email: {}", normalizedEmail);
         return new RegistrationResponseDTO(userResponse, "User registered successfully.");
@@ -92,7 +85,7 @@ public class AuthenticationService {
                         normalizedEmail)));
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
-        UserResponseDTO userResponse = modelMapper.map(user, UserResponseDTO.class);
+        UserResponseDTO userResponse = userMapper.toResponse(user);
 
         String accessToken = jwtService.generateAccessToken(userDetails);
         String refreshToken = refreshTokenService.generateAndSaveRefreshToken(user, extractDeviceInfo(httpRequest),
@@ -149,7 +142,7 @@ public class AuthenticationService {
         CookieUtilities.setAccessTokenCookie(response, newAccessToken, "/");
         CookieUtilities.setRefreshTokenCookie(response, newRefreshToken, "/api/auth/");
 
-        UserResponseDTO userResponse = modelMapper.map(user, UserResponseDTO.class);
+        UserResponseDTO userResponse = userMapper.toResponse(user);
 
         log.info("Access and refresh tokens rotated successfully for user: {}", user.getEmail());
 

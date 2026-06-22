@@ -2,9 +2,11 @@ package com.krino.backend.service;
 
 import com.krino.backend.entity.RefreshToken;
 import com.krino.backend.entity.User;
+import com.krino.backend.mapper.RefreshTokenMapper;
 import com.krino.backend.repository.RefreshTokenRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -26,7 +28,8 @@ class RefreshTokenServiceTest
     void setUp()
     {
         refreshTokenRepository = mock(RefreshTokenRepository.class);
-        refreshTokenService = new RefreshTokenService(refreshTokenRepository);
+        refreshTokenService = new RefreshTokenService(refreshTokenRepository,
+                Mappers.getMapper(RefreshTokenMapper.class));
         ReflectionTestUtils.setField(refreshTokenService, "hmacSecret", "0123456789abcdef0123456789abcdef");
         refreshTokenService.init();
     }

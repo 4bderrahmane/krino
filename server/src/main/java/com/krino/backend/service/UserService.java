@@ -6,22 +6,26 @@ import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.dto.user.UserUpdatePasswordDTO;
 import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.entity.User;
-import com.krino.backend.entity.UserRole;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.exception.InvalidCredentialsException;
 import com.krino.backend.exception.IncorrectPasswordException;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
+import com.krino.backend.mapper.UserMapper;
+import com.krino.backend.repository.ApplicationRepository;
+import com.krino.backend.repository.InterviewRepository;
 import com.krino.backend.repository.RefreshTokenRepository;
+import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.utility.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,12 +34,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserService
 {
-    private static final String USER_NOT_FOUND_MESSAGE = "User with public ID '%s' not found";
     private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ModelMapper modelMapper;
+    private final UserMapper userMapper;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ApplicationRepository applicationRepository;
+    private final InterviewRepository interviewRepository;
+    private final SlotRepository slotRepository;
 
     public List<User> getAllInterviewers()
     {
@@ -62,10 +68,15 @@ public class UserService
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
     }
 
+    public UserResponseDTO getUserResponseByPublicId(UUID publicId)
+    {
+        return userMapper.toResponse(getUserByPublicId(publicId));
+    }
+
     public PageResponse<UserResponseDTO> getAllUsers(Pageable pageable)
     {
         return PageResponse.from(userRepository.findAll(pageable),
-                user -> modelMapper.map(user, UserResponseDTO.class));
+                userMapper::toResponse);
     }
 
     public UserResponseDTO updateUserPartially(UUID publicId, UserUpdateDTO userUpdateDTO)
@@ -73,32 +84,27 @@ public class UserService
         User currentUser = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
-        if (userUpdateDTO.getEmail() != null && !userUpdateDTO.getEmail().equals(currentUser.getEmail()))
+        String normalizedEmail = null;
+        if (userUpdateDTO.getEmail() != null)
         {
-            userRepository.findByEmail(userUpdateDTO.getEmail())
-                    .filter(user -> !user.getPublicId().equals(publicId))
-                    .ifPresent(user ->
-                    {
-                        throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getEmail()), ErrorCode.EMAIL_ALREADY_EXISTS);
-                    });
-            currentUser.setEmail(userUpdateDTO.getEmail());
+            normalizedEmail = normalizeEmail(userUpdateDTO.getEmail());
+            if (!normalizedEmail.equals(currentUser.getEmail()))
+            {
+                String emailToValidate = normalizedEmail;
+                userRepository.findByEmail(emailToValidate)
+                        .filter(user -> !user.getPublicId().equals(publicId))
+                        .ifPresent(user ->
+                        {
+                            throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, emailToValidate), ErrorCode.DATA_CONFLICT,
+                                    Map.of("field", "email", "value", emailToValidate));
+                        });
+            }
         }
 
-        if (userUpdateDTO.getFirstName() != null)
-        {
-            currentUser.setFirstName(userUpdateDTO.getFirstName());
-        }
-        if (userUpdateDTO.getLastName() != null)
-        {
-            currentUser.setLastName(userUpdateDTO.getLastName());
-        }
-        if (userUpdateDTO.getPhoneNumber() != null)
-        {
-            currentUser.setPhoneNumber(userUpdateDTO.getPhoneNumber());
-        }
+        userMapper.patchEntity(userUpdateDTO, normalizedEmail, currentUser);
 
         User updatedPartially = userRepository.save(currentUser);
-        return modelMapper.map(updatedPartially, UserResponseDTO.class);
+        return userMapper.toResponse(updatedPartially);
     }
 
     public UserResponseDTO updateUserFully(UUID publicId, UserUpdateDTO userUpdateDTO)
@@ -113,23 +119,23 @@ public class UserService
             throw new IllegalArgumentException("All fields must be provided for a full update.");
         }
 
-        if (!userUpdateDTO.getEmail().equals(existingUser.getEmail()))
+        String normalizedEmail = normalizeEmail(userUpdateDTO.getEmail());
+
+        if (!normalizedEmail.equals(existingUser.getEmail()))
         {
-            userRepository.findByEmail(userUpdateDTO.getEmail())
+            userRepository.findByEmail(normalizedEmail)
                     .filter(user -> !user.getPublicId().equals(publicId))
                     .ifPresent(user ->
                     {
-                        throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, userUpdateDTO.getEmail()), ErrorCode.EMAIL_ALREADY_EXISTS);
+                        throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, normalizedEmail), ErrorCode.DATA_CONFLICT,
+                                Map.of("field", "email", "value", normalizedEmail));
                     });
         }
 
-        existingUser.setEmail(userUpdateDTO.getEmail());
-        existingUser.setFirstName(userUpdateDTO.getFirstName());
-        existingUser.setLastName(userUpdateDTO.getLastName());
-        existingUser.setPhoneNumber(userUpdateDTO.getPhoneNumber());
+        userMapper.updateEntity(userUpdateDTO, normalizedEmail, existingUser);
 
         User updatedUser = userRepository.save(existingUser);
-        return modelMapper.map(updatedUser, UserResponseDTO.class);
+        return userMapper.toResponse(updatedUser);
     }
 
     public void changePassword(UUID publicId, UserUpdatePasswordDTO passwordChangeDTO)
@@ -157,6 +163,19 @@ public class UserService
         User userToDelete = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
 
+        // Applications, interviews and slots keep the recruitment history; deleting a
+        // user that owns any of them would orphan those records (FK violation).
+        if (applicationRepository.existsByCandidate(userToDelete)
+                || interviewRepository.existsByCandidate(userToDelete)
+                || interviewRepository.existsByInterviewer(userToDelete)
+                || slotRepository.existsByInterviewer(userToDelete))
+        {
+            throw new ResourceConflictException(
+                    "User has applications, interviews or slots and cannot be deleted.",
+                    ErrorCode.OPERATION_NOT_ALLOWED,
+                    Map.of("resource", "User"));
+        }
+
         refreshTokenRepository.deleteAllByUserId(userToDelete.getId());
         userRepository.delete(userToDelete);
     }
@@ -172,7 +191,7 @@ public class UserService
     public PageResponse<UserResponseDTO> getNonApprovedUsers(Pageable pageable)
     {
         return PageResponse.from(userRepository.findByIsApprovedFalse(pageable),
-                user -> modelMapper.map(user, UserResponseDTO.class));
+                userMapper::toResponse);
     }
 
     public CustomUserDetails loadUserById(Long userId)
@@ -180,5 +199,10 @@ public class UserService
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
         return new CustomUserDetails(user);
+    }
+
+    private static String normalizeEmail(String email)
+    {
+        return email.trim().toLowerCase();
     }
 }

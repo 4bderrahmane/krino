@@ -9,6 +9,7 @@ import com.krino.backend.entity.Slot;
 import com.krino.backend.entity.User;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
+import com.krino.backend.mapper.InterviewMapper;
 import com.krino.backend.repository.InterviewRepository;
 import com.krino.backend.repository.JobRepository;
 import com.krino.backend.repository.SlotRepository;
@@ -16,7 +17,6 @@ import com.krino.backend.repository.UserRepository;
 import com.krino.backend.utility.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -32,72 +32,50 @@ public class InterviewService
     private final UserRepository userRepository;
     private final SlotRepository slotRepository;
     private final JobRepository jobRepository;
-    private final ModelMapper modelMapper;
+    private final InterviewMapper interviewMapper;
 
     public InterviewResponseDTO createInterview(InterviewRequestDTO interviewRequestDTO)
     {
-        User interviewer = resolveUser(interviewRequestDTO.getInterviewerId());
         User candidate = resolveUser(interviewRequestDTO.getCandidateId());
         Job job = resolveJob(interviewRequestDTO.getJobId());
         Slot slot = resolveSlot(interviewRequestDTO.getSlotId());
 
-        validateBooking(slot, interviewer, null);
+        validateBooking(slot, null);
 
-        Interview interview = new Interview();
-        interview.setInterviewer(interviewer);
-        interview.setCandidate(candidate);
-        interview.setJob(job);
-        interview.setSlot(slot);
-        if (interviewRequestDTO.getStatus() != null)
-        {
-            interview.setStatus(interviewRequestDTO.getStatus());
-        }
-        interview.setNotes(interviewRequestDTO.getNotes());
-        interview.setIsOnline(interviewRequestDTO.getIsOnline());
-        interview.setMeetingUrl(interviewRequestDTO.getMeetingUrl());
+        Interview interview = interviewMapper.toEntity(interviewRequestDTO, slot.getInterviewer(), candidate, job, slot);
 
         Interview savedInterview = interviewRepository.save(interview);
-        return modelMapper.map(savedInterview, InterviewResponseDTO.class);
+        return interviewMapper.toResponse(savedInterview);
     }
 
     public InterviewResponseDTO getInterviewByPublicId(UUID publicId)
     {
         Interview interview = interviewRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId", publicId));
-        return modelMapper.map(interview, InterviewResponseDTO.class);
+        return interviewMapper.toResponse(interview);
     }
 
     public PageResponse<InterviewResponseDTO> getAllInterviews(Pageable pageable)
     {
         return PageResponse.from(interviewRepository.findAll(pageable),
-                interview -> modelMapper.map(interview, InterviewResponseDTO.class));
+                interviewMapper::toResponse);
     }
 
     public InterviewResponseDTO updateInterview(UUID publicId, InterviewRequestDTO interviewRequestDTO)
     {
         Interview existingInterview = interviewRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId", publicId));
-        User interviewer = resolveUser(interviewRequestDTO.getInterviewerId());
         User candidate = resolveUser(interviewRequestDTO.getCandidateId());
         Job job = resolveJob(interviewRequestDTO.getJobId());
         Slot slot = resolveSlot(interviewRequestDTO.getSlotId());
 
-        validateBooking(slot, interviewer, existingInterview);
+        validateBooking(slot, existingInterview);
 
-        existingInterview.setInterviewer(interviewer);
-        existingInterview.setCandidate(candidate);
-        existingInterview.setJob(job);
-        existingInterview.setSlot(slot);
-        if (interviewRequestDTO.getStatus() != null)
-        {
-            existingInterview.setStatus(interviewRequestDTO.getStatus());
-        }
-        existingInterview.setNotes(interviewRequestDTO.getNotes());
-        existingInterview.setIsOnline(interviewRequestDTO.getIsOnline());
-        existingInterview.setMeetingUrl(interviewRequestDTO.getMeetingUrl());
+        interviewMapper.updateEntity(interviewRequestDTO, slot.getInterviewer(), candidate, job, slot,
+                existingInterview);
 
         Interview updatedInterview = interviewRepository.save(existingInterview);
-        return modelMapper.map(updatedInterview, InterviewResponseDTO.class);
+        return interviewMapper.toResponse(updatedInterview);
     }
 
     public InterviewResponseDTO patchInterview(UUID publicId, InterviewRequestDTO interviewRequestDTO)
@@ -105,47 +83,23 @@ public class InterviewService
         Interview existingInterview = interviewRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Interview.class.getSimpleName(), "publicId", publicId));
 
-        User interviewer = interviewRequestDTO.getInterviewerId() != null
-                ? resolveUser(interviewRequestDTO.getInterviewerId())
-                : existingInterview.getInterviewer();
         Slot slot = interviewRequestDTO.getSlotId() != null
                 ? resolveSlot(interviewRequestDTO.getSlotId())
                 : existingInterview.getSlot();
 
-        validateBooking(slot, interviewer, existingInterview);
+        validateBooking(slot, existingInterview);
 
-        existingInterview.setInterviewer(interviewer);
-        if (interviewRequestDTO.getCandidateId() != null)
-        {
-            existingInterview.setCandidate(resolveUser(interviewRequestDTO.getCandidateId()));
-        }
-        if (interviewRequestDTO.getJobId() != null)
-        {
-            existingInterview.setJob(resolveJob(interviewRequestDTO.getJobId()));
-        }
-        if (interviewRequestDTO.getSlotId() != null)
-        {
-            existingInterview.setSlot(slot);
-        }
-        if (interviewRequestDTO.getStatus() != null)
-        {
-            existingInterview.setStatus(interviewRequestDTO.getStatus());
-        }
-        if (interviewRequestDTO.getNotes() != null)
-        {
-            existingInterview.setNotes(interviewRequestDTO.getNotes());
-        }
-        if (interviewRequestDTO.getIsOnline() != null)
-        {
-            existingInterview.setIsOnline(interviewRequestDTO.getIsOnline());
-        }
-        if (interviewRequestDTO.getMeetingUrl() != null)
-        {
-            existingInterview.setMeetingUrl(interviewRequestDTO.getMeetingUrl());
-        }
+        User candidate = interviewRequestDTO.getCandidateId() != null
+                ? resolveUser(interviewRequestDTO.getCandidateId())
+                : existingInterview.getCandidate();
+        Job job = interviewRequestDTO.getJobId() != null
+                ? resolveJob(interviewRequestDTO.getJobId())
+                : existingInterview.getJob();
+        interviewMapper.patchEntity(interviewRequestDTO, slot.getInterviewer(), candidate, job, slot,
+                existingInterview);
 
         Interview patchedInterview = interviewRepository.save(existingInterview);
-        return modelMapper.map(patchedInterview, InterviewResponseDTO.class);
+        return interviewMapper.toResponse(patchedInterview);
     }
 
     public void deleteInterview(UUID publicId)
@@ -157,10 +111,11 @@ public class InterviewService
     }
 
     /**
-     * A slot can only host one interview, and only for the interviewer whose
-     * availability it represents.
+     * A slot can host at most one interview. The interviewer is always the slot's owner,
+     * so no interviewer matching is needed. This is a friendly early check; the unique
+     * constraint on {@code interviews.slot_id} is the real guard against concurrent bookings.
      */
-    private void validateBooking(Slot slot, User interviewer, Interview existingInterview)
+    private void validateBooking(Slot slot, Interview existingInterview)
     {
         Interview bookedInterview = slot.getInterview();
         if (bookedInterview != null
@@ -169,13 +124,6 @@ public class InterviewService
             throw new ResourceConflictException(
                     "Slot is already booked by another interview.",
                     ErrorCode.DATA_CONFLICT);
-        }
-
-        if (!slot.getInterviewer().getId().equals(interviewer.getId()))
-        {
-            throw new ResourceConflictException(
-                    "Slot does not belong to the specified interviewer.",
-                    ErrorCode.OPERATION_NOT_ALLOWED);
         }
     }
 

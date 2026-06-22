@@ -1,7 +1,7 @@
 package com.krino.backend.controller;
 
 import com.krino.backend.entity.User;
-import com.krino.backend.entity.UserRole;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.repository.UserRepository;
 import jakarta.servlet.http.Cookie;

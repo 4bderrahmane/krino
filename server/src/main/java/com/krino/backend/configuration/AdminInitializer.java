@@ -1,6 +1,6 @@
 package com.krino.backend.configuration;
 
-import com.krino.backend.entity.UserRole;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.entity.User;
 import com.krino.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

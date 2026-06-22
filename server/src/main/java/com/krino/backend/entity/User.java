@@ -1,6 +1,8 @@
 package com.krino.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.krino.backend.entity.enums.Permission;
+import com.krino.backend.entity.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

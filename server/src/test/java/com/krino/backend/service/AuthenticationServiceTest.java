@@ -5,14 +5,14 @@ import com.krino.backend.dto.user.UserLoginDTO;
 import com.krino.backend.dto.user.UserRegistrationDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.entity.User;
-import com.krino.backend.entity.UserRole;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.exception.InvalidRefreshTokenException;
+import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.utility.CookieUtilities;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.modelmapper.ModelMapper;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,7 +28,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,7 +39,7 @@ class AuthenticationServiceTest
     private JwtService jwtService;
     private RefreshTokenService refreshTokenService;
     private AuthenticationManager authenticationManager;
-    private ModelMapper modelMapper;
+    private UserMapper userMapper;
     private CookieUtilities cookieUtilities;
     private AuthenticationService authenticationService;
 
@@ -52,7 +51,7 @@ class AuthenticationServiceTest
         jwtService = mock(JwtService.class);
         refreshTokenService = mock(RefreshTokenService.class);
         authenticationManager = mock(AuthenticationManager.class);
-        modelMapper = mock(ModelMapper.class);
+        userMapper = mock(UserMapper.class);
         cookieUtilities = mock(CookieUtilities.class);
 
         authenticationService = new AuthenticationService(
@@ -61,7 +60,7 @@ class AuthenticationServiceTest
                 jwtService,
                 refreshTokenService,
                 authenticationManager,
-                modelMapper,
+                userMapper,
                 cookieUtilities
         );
     }
@@ -81,8 +80,15 @@ class AuthenticationServiceTest
 
         when(userRepository.findByEmail("candidate@test.local")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("Password123!")).thenReturn("encoded");
+        when(userMapper.toEntity(request, "candidate@test.local", "encoded")).thenReturn(new User(
+                "candidate@test.local",
+                "encoded",
+                "Test",
+                "User",
+                "123456789"
+        ));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(modelMapper.map(any(User.class), eq(UserResponseDTO.class))).thenReturn(response);
+        when(userMapper.toResponse(any(User.class))).thenReturn(response);
 
         RegistrationResponseDTO registration = authenticationService.register(request);
 
@@ -116,7 +122,7 @@ class AuthenticationServiceTest
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authenticated);
         when(userRepository.findByEmail("candidate@test.local")).thenReturn(Optional.of(user));
-        when(modelMapper.map(user, UserResponseDTO.class)).thenReturn(response);
+        when(userMapper.toResponse(user)).thenReturn(response);
         when(jwtService.generateAccessToken(any())).thenReturn("access-token");
         when(refreshTokenService.generateAndSaveRefreshToken(user, "JUnit", "203.0.113.10"))
                 .thenReturn("refresh-token");

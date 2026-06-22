@@ -4,12 +4,10 @@ import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.dto.user.UserUpdatePasswordDTO;
-import com.krino.backend.entity.User;
 import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +24,6 @@ public class UserController
 {
 
     private final UserService userService;
-    private final ModelMapper modelMapper;
 
     @GetMapping
     @PreAuthorize("hasAuthority('CAN_READ_USER')")
@@ -49,8 +46,7 @@ public class UserController
     public ResponseEntity<UserResponseDTO> getMyData(Authentication authentication)
     {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        User user = userService.getUserByPublicId(customUserDetails.getPublicId());
-        UserResponseDTO userResponseDTO = modelMapper.map(user, UserResponseDTO.class);
+        UserResponseDTO userResponseDTO = userService.getUserResponseByPublicId(customUserDetails.getPublicId());
         return ResponseEntity.ok(userResponseDTO);
     }
 
@@ -58,8 +54,7 @@ public class UserController
     @PreAuthorize("hasAuthority('CAN_READ_USER') or #publicId == authentication.principal.publicId")
     public ResponseEntity<UserResponseDTO> getUserByPublicId(@PathVariable UUID publicId)
     {
-        User user = userService.getUserByPublicId(publicId);
-        UserResponseDTO userResponseDTO = modelMapper.map(user, UserResponseDTO.class);
+        UserResponseDTO userResponseDTO = userService.getUserResponseByPublicId(publicId);
         return ResponseEntity.ok(userResponseDTO);
     }
 

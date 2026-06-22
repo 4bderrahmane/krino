@@ -3,6 +3,7 @@ package com.krino.backend.service;
 import com.krino.backend.entity.RefreshToken;
 import com.krino.backend.entity.User;
 import com.krino.backend.exception.TokenException;
+import com.krino.backend.mapper.RefreshTokenMapper;
 import com.krino.backend.repository.RefreshTokenRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import java.util.Optional;
 public class RefreshTokenService
 {
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenMapper refreshTokenMapper;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${app.refresh-token.hmac-secret:${jwt.secret}}")
@@ -78,15 +80,8 @@ public class RefreshTokenService
         Instant expiresAt = Instant.now().plus(EXPIRY_DAYS, ChronoUnit.DAYS);
         Instant now = Instant.now();
 
-        RefreshToken refreshToken = new RefreshToken();
-
-        refreshToken.setUser(user);
-        refreshToken.setTokenHash(tokenHash);
-        refreshToken.setExpiresAt(expiresAt);
-        refreshToken.setCreatedAt(now);
-        refreshToken.setDeviceInfo(deviceInfo);
-        refreshToken.setIpAddress(ipAddress);
-        refreshToken.setRevoked(false);
+        RefreshToken refreshToken = refreshTokenMapper.toEntity(user, tokenHash, expiresAt, now, deviceInfo,
+                ipAddress);
 
         refreshTokenRepository.save(refreshToken);
 

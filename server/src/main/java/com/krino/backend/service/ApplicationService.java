@@ -11,6 +11,7 @@ import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.JobStatus;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
+import com.krino.backend.mapper.ApplicationMapper;
 import com.krino.backend.repository.ApplicationRepository;
 import com.krino.backend.repository.JobRepository;
 import com.krino.backend.repository.UserRepository;
@@ -18,7 +19,6 @@ import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.SecurityUtilities;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -38,7 +38,7 @@ public class ApplicationService
     private final ApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
-    private final ModelMapper modelMapper;
+    private final ApplicationMapper applicationMapper;
 
     public ApplicationResponseDTO createApplication(ApplicationCreateDTO applicationCreateDTO)
     {
@@ -69,13 +69,10 @@ public class ApplicationService
                     Map.of(JOB_TITLE, job.getTitle()));
         }
 
-        Application application = new Application();
-        application.setJob(job);
-        application.setCandidate(candidate);
-        application.setResumeUrl(applicationCreateDTO.getResumeUrl());
+        Application application = applicationMapper.toEntity(applicationCreateDTO, job, candidate);
 
         Application savedApplication = applicationRepository.save(application);
-        return modelMapper.map(savedApplication, ApplicationResponseDTO.class);
+        return applicationMapper.toResponse(savedApplication);
     }
 
     private Job resolveJob(UUID jobPublicId)
@@ -96,13 +93,13 @@ public class ApplicationService
     {
         Application application = applicationRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
-        return modelMapper.map(application, ApplicationResponseDTO.class);
+        return applicationMapper.toResponse(application);
     }
 
     public PageResponse<ApplicationResponseDTO> getAllApplications(Pageable pageable)
     {
         return PageResponse.from(applicationRepository.findAll(pageable),
-                application -> modelMapper.map(application, ApplicationResponseDTO.class));
+                applicationMapper::toResponse);
     }
 
     public ApplicationResponseDTO updateApplication(UUID publicId, ApplicationUpdateDTO applicationUpdateDTO)
@@ -110,17 +107,12 @@ public class ApplicationService
         Application existingApplication = applicationRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
 
-        if (applicationUpdateDTO.getStatus() != null)
-        {
-            existingApplication.setStatus(applicationUpdateDTO.getStatus());
-        }
-        existingApplication.setResumeUrl(applicationUpdateDTO.getResumeUrl());
-        if (applicationUpdateDTO.getJobId() != null)
-        {
-            existingApplication.setJob(resolveJob(applicationUpdateDTO.getJobId()));
-        }
+        Job job = applicationUpdateDTO.getJobId() != null
+                ? resolveJob(applicationUpdateDTO.getJobId())
+                : null;
+        applicationMapper.updateEntity(applicationUpdateDTO, job, existingApplication);
         Application updatedApplication = applicationRepository.save(existingApplication);
-        return modelMapper.map(updatedApplication, ApplicationResponseDTO.class);
+        return applicationMapper.toResponse(updatedApplication);
     }
 
     public ApplicationResponseDTO patchApplication(UUID publicId, ApplicationUpdateDTO applicationUpdateDTO)
@@ -128,15 +120,13 @@ public class ApplicationService
         Application existingApplication = applicationRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
 
-        if (applicationUpdateDTO.getStatus() != null)
-            existingApplication.setStatus(applicationUpdateDTO.getStatus());
-        if (applicationUpdateDTO.getResumeUrl() != null)
-            existingApplication.setResumeUrl(applicationUpdateDTO.getResumeUrl());
-        if (applicationUpdateDTO.getJobId() != null)
-            existingApplication.setJob(resolveJob(applicationUpdateDTO.getJobId()));
+        Job job = applicationUpdateDTO.getJobId() != null
+                ? resolveJob(applicationUpdateDTO.getJobId())
+                : null;
+        applicationMapper.patchEntity(applicationUpdateDTO, job, existingApplication);
 
         Application patchedApplication = applicationRepository.save(existingApplication);
-        return modelMapper.map(patchedApplication, ApplicationResponseDTO.class);
+        return applicationMapper.toResponse(patchedApplication);
     }
 
     public void deleteApplication(UUID publicId)

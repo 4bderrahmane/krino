@@ -1,6 +1,6 @@
 package com.krino.backend.dto.application;
 
-import com.krino.backend.entity.ApplicationStatus;
+import com.krino.backend.entity.enums.ApplicationStatus;
 import lombok.Data;
 
 import java.util.UUID;

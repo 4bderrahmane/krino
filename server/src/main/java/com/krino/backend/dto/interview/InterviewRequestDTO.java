@@ -12,8 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class InterviewRequestDTO
 {
-    @NotNull(message = "Interviewer ID cannot be null")
-    private UUID interviewerId;
+    // The interviewer is derived from the chosen slot, not supplied by the caller.
 
     @NotNull(message = "Candidate ID cannot be null")
     private UUID candidateId;

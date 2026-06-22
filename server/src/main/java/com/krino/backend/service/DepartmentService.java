@@ -7,11 +7,11 @@ import com.krino.backend.dto.department.DepartmentUpdateDTO;
 import com.krino.backend.entity.Department;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
+import com.krino.backend.mapper.DepartmentMapper;
 import com.krino.backend.repository.DepartmentRepository;
 import com.krino.backend.utility.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +25,7 @@ public class DepartmentService
 {
     private static final String DEPARTMENT_ALREADY_EXISTS = "Department '%s' already exists";
     private final DepartmentRepository departmentRepository;
-    private final ModelMapper modelMapper;
+    private final DepartmentMapper departmentMapper;
 
     public void deleteDepartmentByPublicId(UUID publicId)
     {
@@ -51,14 +51,11 @@ public class DepartmentService
             throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, department.getName()), ErrorCode.DATA_CONFLICT,
                     Map.of("field", "name", "value", department.getName()));
         }
-        Department newDepartment = new Department();
-
-        newDepartment.setName(department.getName());
-        newDepartment.setDescription(department.getDescription());
+        Department newDepartment = departmentMapper.toEntity(department);
 
         Department savedDepartment = departmentRepository.save(newDepartment);
 
-        return modelMapper.map(savedDepartment, DepartmentResponseDTO.class);
+        return departmentMapper.toResponse(savedDepartment);
     }
 
     public DepartmentResponseDTO updateDepartment(UUID publicId, DepartmentUpdateDTO departmentUpdateDTO)
@@ -72,11 +69,10 @@ public class DepartmentService
                     Map.of("field", "name", "value", departmentUpdateDTO.getName()));
         }
 
-        existingDepartment.setName(departmentUpdateDTO.getName());
-        existingDepartment.setDescription(departmentUpdateDTO.getDescription());
+        departmentMapper.updateEntity(departmentUpdateDTO, existingDepartment);
 
         Department updatedDepartment = departmentRepository.save(existingDepartment);
-        return modelMapper.map(updatedDepartment, DepartmentResponseDTO.class);
+        return departmentMapper.toResponse(updatedDepartment);
     }
 
     public DepartmentResponseDTO patchDepartment(UUID publicId, DepartmentUpdateDTO departmentUpdateDTO)
@@ -91,28 +87,24 @@ public class DepartmentService
                 throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, departmentUpdateDTO.getName()), ErrorCode.DATA_CONFLICT,
                         Map.of("field", "name", "value", departmentUpdateDTO.getName()));
             }
-            existingDepartment.setName(departmentUpdateDTO.getName());
         }
 
-        if (departmentUpdateDTO.getDescription() != null)
-        {
-            existingDepartment.setDescription(departmentUpdateDTO.getDescription());
-        }
+        departmentMapper.patchEntity(departmentUpdateDTO, existingDepartment);
 
         Department updatedDepartment = departmentRepository.save(existingDepartment);
-        return modelMapper.map(updatedDepartment, DepartmentResponseDTO.class);
+        return departmentMapper.toResponse(updatedDepartment);
     }
 
     public DepartmentResponseDTO getDepartmentByPublicId(UUID publicId)
     {
         Department department = departmentRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId", publicId));
-        return modelMapper.map(department, DepartmentResponseDTO.class);
+        return departmentMapper.toResponse(department);
     }
 
     public PageResponse<DepartmentResponseDTO> getAllDepartments(Pageable pageable)
     {
         return PageResponse.from(departmentRepository.findAll(pageable),
-                department -> modelMapper.map(department, DepartmentResponseDTO.class));
+                departmentMapper::toResponse);
     }
 }

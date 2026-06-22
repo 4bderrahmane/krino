@@ -1,7 +1,7 @@
 package com.krino.backend.repository;
 
 import com.krino.backend.entity.Application;
-import com.krino.backend.entity.ApplicationStatus;
+import com.krino.backend.entity.enums.ApplicationStatus;
 import com.krino.backend.entity.Job;
 import com.krino.backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

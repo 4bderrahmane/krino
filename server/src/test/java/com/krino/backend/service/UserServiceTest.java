@@ -6,10 +6,10 @@ import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.entity.User;
 import com.krino.backend.exception.IncorrectPasswordException;
 import com.krino.backend.exception.InvalidCredentialsException;
+import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -25,7 +25,7 @@ class UserServiceTest
 {
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
-    private ModelMapper modelMapper;
+    private UserMapper userMapper;
     private UserService userService;
 
     @BeforeEach
@@ -33,8 +33,8 @@ class UserServiceTest
     {
         userRepository = mock(UserRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
-        modelMapper = mock(ModelMapper.class);
-        userService = new UserService(userRepository, passwordEncoder, modelMapper, null, null, null, null);
+        userMapper = mock(UserMapper.class);
+        userService = new UserService(userRepository, passwordEncoder, userMapper, null, null, null, null);
     }
 
     @Test
@@ -114,7 +114,13 @@ class UserServiceTest
         when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail("new@test.local")).thenReturn(Optional.empty());
         when(userRepository.save(user)).thenReturn(user);
-        when(modelMapper.map(user, UserResponseDTO.class)).thenReturn(new UserResponseDTO());
+        when(userMapper.toResponse(user)).thenReturn(new UserResponseDTO());
+        doAnswer(invocation ->
+        {
+            User target = invocation.getArgument(2);
+            target.setEmail(invocation.getArgument(1));
+            return null;
+        }).when(userMapper).patchEntity(eq(dto), eq("new@test.local"), eq(user));
 
         userService.updateUserPartially(publicId, dto);
 
@@ -135,7 +141,13 @@ class UserServiceTest
         when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail("new@test.local")).thenReturn(Optional.empty());
         when(userRepository.save(user)).thenReturn(user);
-        when(modelMapper.map(user, UserResponseDTO.class)).thenReturn(new UserResponseDTO());
+        when(userMapper.toResponse(user)).thenReturn(new UserResponseDTO());
+        doAnswer(invocation ->
+        {
+            User target = invocation.getArgument(2);
+            target.setEmail(invocation.getArgument(1));
+            return null;
+        }).when(userMapper).updateEntity(eq(dto), eq("new@test.local"), eq(user));
 
         userService.updateUserFully(publicId, dto);
 

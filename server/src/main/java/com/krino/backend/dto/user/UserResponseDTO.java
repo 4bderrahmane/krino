@@ -1,6 +1,6 @@
 package com.krino.backend.dto.user;
 
-import com.krino.backend.entity.UserRole;
+import com.krino.backend.entity.enums.UserRole;
 import lombok.*;
 
 import java.util.Set;
