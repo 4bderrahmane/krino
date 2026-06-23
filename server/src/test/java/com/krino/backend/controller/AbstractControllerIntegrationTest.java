@@ -72,14 +72,16 @@ abstract class AbstractControllerIntegrationTest
                 .apply(springSecurity())
                 .build();
 
-        // Delete dependents before the tables they reference (FK-safe order).
-        refreshTokenRepository.deleteAll();
-        interviewRepository.deleteAll();
-        applicationRepository.deleteAll();
-        slotRepository.deleteAll();
-        jobRepository.deleteAll();
-        departmentRepository.deleteAll();
-        userRepository.deleteAll();
+        // Delete dependents before the tables they reference (FK-safe order). deleteAllInBatch
+        // issues direct DELETE statements without loading entities, which sidesteps the
+        // bidirectional Slot<->Interview relationship tripping Hibernate's flush ordering.
+        refreshTokenRepository.deleteAllInBatch();
+        interviewRepository.deleteAllInBatch();
+        applicationRepository.deleteAllInBatch();
+        slotRepository.deleteAllInBatch();
+        jobRepository.deleteAllInBatch();
+        departmentRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
     }
 
     protected User createUser(String email, boolean approved, UserRole... roles)
