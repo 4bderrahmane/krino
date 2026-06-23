@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 
-import java.time.LocalDateTime;
 import java.util.Set;
 
 
@@ -48,7 +47,6 @@ public class AdminInitializer implements CommandLineRunner {
                 .isApproved(true)
                 .password(passwordEncoder.encode(adminPassword))
                 .roles(Set.of(UserRole.ADMIN))
-                .createdAt(LocalDateTime.now())
                 .build();
 
         userRepository.save(admin);
