@@ -1,5 +1,6 @@
 package com.krino.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.repository.RefreshTokenRepository;
@@ -16,6 +17,7 @@ import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -40,6 +42,7 @@ class AuthenticationControllerIntegrationTest {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final WebApplicationContext webApplicationContext;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -74,6 +77,59 @@ class AuthenticationControllerIntegrationTest {
     }
 
     @Test
+    void csrfEndpointReturnsReadableTokenCookie() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/auth/csrf"))
+                .andExpect(status().isOk())
+                .andReturn();
+        CsrfTokenResponse csrfToken = objectMapper.readValue(result.getResponse().getContentAsString(),
+                CsrfTokenResponse.class);
+
+        assertThat(csrfToken.cookieName()).isEqualTo("XSRF-TOKEN");
+        assertThat(csrfToken.headerName()).isEqualTo("X-XSRF-TOKEN");
+        assertThat(setCookieHeaders(result)).anySatisfy(cookie -> assertThat(cookie)
+                .startsWith("XSRF-TOKEN=")
+                .contains("Path=/")
+                .doesNotContain("HttpOnly"));
+    }
+
+    @Test
+    void loginWithCsrfCookieAndHeaderSucceeds() throws Exception {
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        CsrfExchange csrf = fetchCsrfToken();
+
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
+                        .cookie(csrf.cookie())
+                        .header(csrf.headerName(), csrf.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "%s",
+                                  "password": "%s"
+                                }
+                                """.formatted(CANDIDATE_EMAIL, RAW_PASSWORD)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertThat(result.getResponse().getCookie("access_token")).isNotNull();
+        assertThat(result.getResponse().getCookie("refresh_token")).isNotNull();
+    }
+
+    @Test
+    void mutatingAuthRequestWithoutCsrfTokenReturnsForbidden() throws Exception {
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "%s",
+                                  "password": "%s"
+                                }
+                                """.formatted(CANDIDATE_EMAIL, RAW_PASSWORD)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void loginWithUppercaseEmailAuthenticatesNormalizedAccount() throws Exception {
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
 
@@ -100,7 +156,7 @@ class AuthenticationControllerIntegrationTest {
 
     @Test
     void registerNormalizesEmailAndCreatesCandidate() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/auth/register")
+        MvcResult result = mockMvc.perform(withCsrf(post("/api/auth/register"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -185,7 +241,8 @@ class AuthenticationControllerIntegrationTest {
                 .andReturn();
         Cookie originalRefreshCookie = cookie(loginResult, "refresh_token");
 
-        MvcResult refreshResult = mockMvc.perform(post("/api/auth/refresh").cookie(originalRefreshCookie))
+        MvcResult refreshResult = mockMvc.perform(withCsrf(post("/api/auth/refresh"))
+                        .cookie(originalRefreshCookie))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -195,13 +252,14 @@ class AuthenticationControllerIntegrationTest {
         assertThat(setCookieHeaders(refreshResult)).anySatisfy(cookie -> assertThat(cookie).startsWith("refresh_token" +
                 "="));
 
-        mockMvc.perform(post("/api/auth/refresh").cookie(originalRefreshCookie))
+        mockMvc.perform(withCsrf(post("/api/auth/refresh"))
+                        .cookie(originalRefreshCookie))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void refreshWithoutCookieReturnsProblemDetail() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/auth/refresh"))
+        MvcResult result = mockMvc.perform(withCsrf(post("/api/auth/refresh")))
                 .andExpect(status().isUnauthorized())
                 .andReturn();
 
@@ -222,7 +280,8 @@ class AuthenticationControllerIntegrationTest {
         Cookie refreshCookie = cookie(loginResult, "refresh_token");
         assertThat(refreshTokenRepository.count()).isEqualTo(1);
 
-        MvcResult logoutResult = mockMvc.perform(post("/api/auth/logout").cookie(refreshCookie))
+        MvcResult logoutResult = mockMvc.perform(withCsrf(post("/api/auth/logout"))
+                        .cookie(refreshCookie))
                 .andExpect(status().isNoContent())
                 .andReturn();
 
@@ -257,7 +316,7 @@ class AuthenticationControllerIntegrationTest {
                 }
                 """.formatted(email, password);
 
-        return mockMvc.perform(post("/api/auth/login")
+        return mockMvc.perform(withCsrf(post("/api/auth/login"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body));
     }
@@ -278,5 +337,27 @@ class AuthenticationControllerIntegrationTest {
         Cookie cookie = result.getResponse().getCookie(cookieName);
         assertThat(cookie).as("cookie %s", cookieName).isNotNull();
         return cookie;
+    }
+
+    private MockHttpServletRequestBuilder withCsrf(MockHttpServletRequestBuilder request) throws Exception {
+        CsrfExchange csrf = fetchCsrfToken();
+        return request.cookie(csrf.cookie())
+                .header(csrf.headerName(), csrf.token());
+    }
+
+    private CsrfExchange fetchCsrfToken() throws Exception {
+        MvcResult csrfResult = mockMvc.perform(get("/api/auth/csrf"))
+                .andExpect(status().isOk())
+                .andReturn();
+        CsrfTokenResponse csrfToken = objectMapper.readValue(csrfResult.getResponse().getContentAsString(),
+                CsrfTokenResponse.class);
+        Cookie xsrfCookie = cookie(csrfResult, csrfToken.cookieName());
+        return new CsrfExchange(csrfToken.headerName(), xsrfCookie.getValue(), xsrfCookie);
+    }
+
+    private record CsrfTokenResponse(String cookieName, String headerName) {
+    }
+
+    private record CsrfExchange(String headerName, String token, Cookie cookie) {
     }
 }

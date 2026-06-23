@@ -32,6 +32,7 @@ class SecurityConfigurationTest
         assertEquals("http://localhost:5000", corsConfiguration.checkOrigin("http://localhost:5000"));
         assertTrue(corsConfiguration.checkHttpMethod(HttpMethod.POST).contains(HttpMethod.POST));
         assertTrue(corsConfiguration.checkHttpMethod(HttpMethod.OPTIONS).contains(HttpMethod.OPTIONS));
+        assertTrue(corsConfiguration.checkHeaders(List.of("Content-Type", "X-XSRF-TOKEN")).contains("X-XSRF-TOKEN"));
         assertNull(corsConfiguration.checkOrigin("http://localhost:3000"));
     }
 }

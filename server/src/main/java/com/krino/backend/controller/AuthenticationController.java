@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +30,14 @@ public class AuthenticationController {
         RegistrationResponseDTO registration = authenticationService.register(request);
         return ResponseEntity.created(URI.create("/api/users/" + registration.getUser().getId())).body(registration);
     }
+
+    @GetMapping("/csrf")
+    public ResponseEntity<CsrfResponse> csrf(CsrfToken csrfToken) {
+        csrfToken.getToken();
+        return ResponseEntity.ok(new CsrfResponse("XSRF-TOKEN", csrfToken.getHeaderName()));
+    }
+
+    public record CsrfResponse(String cookieName, String headerName) {}
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponseDTO> login(@Valid @RequestBody UserLoginDTO request,
