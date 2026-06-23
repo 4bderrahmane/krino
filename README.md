@@ -1,6 +1,6 @@
-# Interview Slot Manager
+# Krino
 
-A monorepo containing the full Interview Slot Manager application, split into two
+A monorepo containing the full Krino application, split into two
 independently deployable services:
 
 | Path        | Service | Stack |

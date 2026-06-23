@@ -1,4 +1,4 @@
-# Docker Compose for local/dev orchestration of the Interview Slot Manager monorepo.
+# Docker Compose for local/dev orchestration of the Krino monorepo.
 #
 # The client is a static SPA whose browser code calls the API at
 # http://localhost:8080/api (see client/src/shared/services/api.ts), so the
