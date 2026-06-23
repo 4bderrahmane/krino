@@ -7,7 +7,7 @@ import {ToastProvider} from "./shared/contexts/ToastContext.tsx";
 
 const queryClient = new QueryClient();
 
-function ErrorBoundary(props: { children: ReactNode }) {
+function ErrorBoundary(props: Readonly<{ children: ReactNode }>) {
     return <>{props.children}</>;
 }
 

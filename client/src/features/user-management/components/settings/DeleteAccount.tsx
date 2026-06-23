@@ -26,7 +26,7 @@ const DeleteAccount = () => {
             showSuccessToast(t('settings.accountDeletedSuccess'), 3000);
             logout();
             navigate('/login');
-        } catch (err: any) {
+        } catch {
             setError(t('settings.deleteFailed'));
         } finally {
             setLoading(false);

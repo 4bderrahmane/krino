@@ -1,11 +1,14 @@
 import React, {useState, type FormEvent, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigate, Link} from 'react-router-dom';
-import type {UserRegistrationDTO, AuthErrorCode} from '../types/api.types';
+import type {UserRegistrationDTO, AuthErrorCode, EnhancedError} from '../types/api.types';
 import '../styles/RegistrationForm.css';
 import {register} from "../services/AuthenticationService.ts";
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher.tsx";
 import {useSuccessToast} from "../../../shared/hooks/useSuccessToast.ts";
+
+const hasAuthErrorCode = (error: unknown): error is EnhancedError =>
+    error instanceof Error && 'errorCode' in error;
 
 const RegistrationForm: React.FC = () => {
     const {t, i18n} = useTranslation();
@@ -52,11 +55,11 @@ const RegistrationForm: React.FC = () => {
             await new Promise((resolve) => setTimeout(resolve, 2000));
 
             navigate('/login');
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('registration failed:', err);
 
-            if (err.errorCode) {
-                setErrorCode(err.errorCode as AuthErrorCode);
+            if (hasAuthErrorCode(err) && err.errorCode) {
+                setErrorCode(err.errorCode);
             } else {
                 setErrorCode('UNEXPECTED_ERROR');
             }

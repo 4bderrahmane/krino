@@ -39,7 +39,7 @@ const PasswordSettings = () => {
             });
             setSuccess(t('settings.passwordChangedSuccess'));
             setPasswordForm({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
-        } catch (err: any) {
+        } catch {
             setError(t('settings.passwordChangeFailed'));
         } finally {
             setLoading(false);
