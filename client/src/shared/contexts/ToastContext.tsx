@@ -1,16 +1,11 @@
-import React, {useState, createContext, useCallback} from 'react';
+import React, {useState, useCallback} from 'react';
 import SuccessToast from '../components/SuccessToast';
 import type {ReactNode} from 'react';
-
-interface ToastContextType {
-    showToast: (message: string, duration?: number) => void;
-}
+import {ToastContext} from './toastContext';
 
 interface ToastProviderProps {
     children: ReactNode;
 }
-
-export const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({children}) => {
     const [toastMessage, setToastMessage] = useState<string | null>(null);
