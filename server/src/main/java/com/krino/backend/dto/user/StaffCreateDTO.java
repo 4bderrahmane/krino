@@ -1,13 +1,17 @@
 package com.krino.backend.dto.user;
 
-import jakarta.validation.constraints.*;
+import com.krino.backend.entity.enums.UserRole;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRegistrationDTO {
+public class StaffCreateDTO {
 
     @NotBlank(message = "First name cannot be blank")
     @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
@@ -21,10 +25,9 @@ public class UserRegistrationDTO {
     @Email(message = "Email should be a valid email format")
     private String email;
 
-    @NotBlank(message = "Password cannot be blank")
-    @Size(min = 8, max = 255, message = "Password must be at least 8 characters long")
-    private String password;
-
     @Size(min = 9, max = 9, message = "Phone number must be 9 digits")
     private String phoneNumber;
+
+    @NotNull(message = "Role cannot be null")
+    private UserRole role;
 }

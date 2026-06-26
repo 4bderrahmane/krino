@@ -3,6 +3,7 @@ package com.krino.backend.dto.user;
 import com.krino.backend.entity.enums.UserRole;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -10,7 +11,6 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class UserResponseDTO {
 
     private UUID id;
@@ -19,5 +19,6 @@ public class UserResponseDTO {
     private String email;
     private String phoneNumber;
     private Set<UserRole> roles;
-//    private Boolean isActive;
+    private String resumeFilename;
+    private LocalDateTime resumeUploadedAt;
 }

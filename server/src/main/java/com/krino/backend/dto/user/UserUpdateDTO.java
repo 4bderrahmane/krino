@@ -8,7 +8,6 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class UserUpdateDTO {
 
     @Size(min = 2, max = 50)
