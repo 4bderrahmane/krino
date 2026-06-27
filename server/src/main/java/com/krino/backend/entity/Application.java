@@ -7,10 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,35 +17,45 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "applications", indexes = {
-        @Index(name = "idx_applications_public_id", columnList = "public_id")
-}, uniqueConstraints = {
-        @UniqueConstraint(name = "uk_applications_job_candidate", columnNames = {"job_id", "user_id"})
-})
+@Table(
+        name = "applications",
+        indexes = {
+                @Index(name = "idx_applications_candidate", columnList = "user_id")
+        }, uniqueConstraints = {
+                @UniqueConstraint(name = "uk_applications_job_candidate", columnNames = {"job_id", "user_id"})
+        }
+)
 public class Application {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @UuidGenerator
-    @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "public_id", unique = true, nullable = false, updatable = false,
-            columnDefinition = "VARCHAR(36)")
+    @Column(name = "public_id", unique = true, nullable = false, updatable = false)
     private UUID publicId;
 
     @ManyToOne
-    @JoinColumn(name = "job_id", nullable = false)
+    @JoinColumn(name = "job_id", nullable = false, foreignKey = @ForeignKey(name = "fk_applications_job"))
     private Job job;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_applications_candidate"))
     private User candidate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ApplicationStatus status = ApplicationStatus.PENDING;
 
-    private String resumeUrl;
+    @Column(length = 512)
+    private String resumeObjectKey;
+
+    private String resumeOriginalFilename;
+
+    @Column(length = 100)
+    private String resumeContentType;
+
+    private Long resumeSizeBytes;
+
+    private LocalDateTime resumeUploadedAt;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -56,5 +63,10 @@ public class Application {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    void ensurePublicId() {
+        if (publicId == null) publicId = UUID.randomUUID();
+    }
 
 }
