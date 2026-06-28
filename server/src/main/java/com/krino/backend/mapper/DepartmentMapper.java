@@ -17,17 +17,29 @@ public interface DepartmentMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publicId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
     @Mapping(target = "jobs", ignore = true)
     Department toEntity(DepartmentCreateDTO dto);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publicId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
     @Mapping(target = "jobs", ignore = true)
     void updateEntity(DepartmentUpdateDTO dto, @MappingTarget Department department);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publicId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
     @Mapping(target = "jobs", ignore = true)
     void patchEntity(DepartmentUpdateDTO dto, @MappingTarget Department department);
 }

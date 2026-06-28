@@ -1,6 +1,7 @@
 package com.krino.backend.mapper;
 
 import com.krino.backend.dto.application.ApplicationCreateDTO;
+import com.krino.backend.dto.application.ApplicationResumeDTO;
 import com.krino.backend.dto.application.ApplicationResponseDTO;
 import com.krino.backend.dto.application.ApplicationUpdateDTO;
 import com.krino.backend.entity.Application;
@@ -16,38 +17,72 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface ApplicationMapper {
     @Mapping(target = "id", source = "publicId")
     @Mapping(target = "jobId", source = "job.publicId")
+    @Mapping(target = "jobTitle", source = "job.title")
+    @Mapping(target = "jobDepartment", source = "job.department.name")
+    @Mapping(target = "resume", source = "application")
     ApplicationResponseDTO toResponse(Application application);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publicId", ignore = true)
-    @Mapping(target = "resumeUrl", source = "dto.resumeUrl")
     @Mapping(target = "job", source = "job")
     @Mapping(target = "candidate", source = "candidate")
     @Mapping(target = "status", ignore = true)
+    @Mapping(target = "resumeObjectKey", ignore = true)
+    @Mapping(target = "resumeOriginalFilename", ignore = true)
+    @Mapping(target = "resumeContentType", ignore = true)
+    @Mapping(target = "resumeSizeBytes", ignore = true)
+    @Mapping(target = "resumeUploadedAt", ignore = true)
     @Mapping(target = "appliedAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
     Application toEntity(ApplicationCreateDTO dto, Job job, User candidate);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publicId", ignore = true)
-    @Mapping(target = "job", source = "job",
-            nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "job", ignore = true)
     @Mapping(target = "candidate", ignore = true)
-    @Mapping(target = "resumeUrl", source = "dto.resumeUrl")
+    @Mapping(target = "resumeObjectKey", ignore = true)
+    @Mapping(target = "resumeOriginalFilename", ignore = true)
+    @Mapping(target = "resumeContentType", ignore = true)
+    @Mapping(target = "resumeSizeBytes", ignore = true)
+    @Mapping(target = "resumeUploadedAt", ignore = true)
     @Mapping(target = "status", source = "dto.status",
             nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "appliedAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    void updateEntity(ApplicationUpdateDTO dto, Job job, @MappingTarget Application application);
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
+    void updateEntity(ApplicationUpdateDTO dto, @MappingTarget Application application);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publicId", ignore = true)
-    @Mapping(target = "job", source = "job")
+    @Mapping(target = "job", ignore = true)
     @Mapping(target = "candidate", ignore = true)
-    @Mapping(target = "resumeUrl", source = "dto.resumeUrl")
+    @Mapping(target = "resumeObjectKey", ignore = true)
+    @Mapping(target = "resumeOriginalFilename", ignore = true)
+    @Mapping(target = "resumeContentType", ignore = true)
+    @Mapping(target = "resumeSizeBytes", ignore = true)
+    @Mapping(target = "resumeUploadedAt", ignore = true)
     @Mapping(target = "status", source = "dto.status")
     @Mapping(target = "appliedAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    void patchEntity(ApplicationUpdateDTO dto, Job job, @MappingTarget Application application);
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
+    void patchEntity(ApplicationUpdateDTO dto, @MappingTarget Application application);
+
+    default ApplicationResumeDTO toResume(Application application) {
+        if (application == null || application.getResumeObjectKey() == null || application.getResumeObjectKey().isBlank()) {
+            return null;
+        }
+        return new ApplicationResumeDTO(
+                application.getResumeOriginalFilename(),
+                application.getResumeContentType(),
+                application.getResumeSizeBytes(),
+                application.getResumeUploadedAt());
+    }
 }
