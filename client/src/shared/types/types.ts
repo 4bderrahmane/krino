@@ -1,4 +1,4 @@
-import type {UserResponseDTO} from "../../features/authentication/types/api.types.ts";
+import type {UserResponseDTO} from "@/features/authentication/types/api.types.ts";
 
 export type Language = {
     code: string;
@@ -6,26 +6,6 @@ export type Language = {
     flag: string;
 };
 
-export interface User {
-    email: string;
-    firstName: string;
-    lastName: string;
-    phoneNumber: number;
-    roles: Set<string>;
-}
-
-export interface SuccessToastProps {
-    message: string;
-    isVisible: boolean;
-    onClose: () => void;
-    duration?: number;
-}
-
-export interface ToastState {
-    key: number;
-    message: string;
-    duration: number;
-}
 export interface AuthContextType {
     user: UserResponseDTO | null;
     login: (user: UserResponseDTO) => void;
@@ -33,4 +13,7 @@ export interface AuthContextType {
     isLoading: boolean;
     justLoggedIn: boolean;
     clearJustLoggedIn: () => void;
+    // Re-fetches the current user from the server (e.g. after a password change,
+    // so flags like mustChangePassword reflect the new state).
+    refreshUser: () => Promise<void>;
 }
