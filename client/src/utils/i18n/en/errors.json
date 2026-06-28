@@ -1,0 +1,35 @@
+{
+  "default": "Something went wrong. Please try again.",
+  "codes": {
+    "INVALID_CREDENTIALS": "Invalid email or password. Please try again.",
+    "VALIDATION_ERROR": "Please check the highlighted fields and try again.",
+    "DATA_CONFLICT": "That conflicts with existing data. Please review your input and try again.",
+    "UNAUTHORIZED": "Your session has expired. Please log in again.",
+    "TOKEN_EXPIRED": "Your session has expired. Please log in again.",
+    "ACCESS_DENIED": "You don't have permission to perform this action.",
+    "ACCOUNT_LOCKED": "Your account is locked. Please try again later or contact support.",
+    "RESOURCE_NOT_FOUND": "We couldn't find what you were looking for.",
+    "OPERATION_NOT_ALLOWED": "This action isn't allowed right now.",
+    "METHOD_NOT_ALLOWED": "This action isn't supported.",
+    "NOT_ACCEPTABLE": "This request can't be fulfilled. Please try again.",
+    "UNSUPPORTED_MEDIA_TYPE": "That file type isn't supported.",
+    "PAYLOAD_TOO_LARGE": "That file is too large. Please upload a smaller one.",
+    "RATE_LIMITED": "Too many attempts. Please wait a moment and try again.",
+    "EXTERNAL_SERVICE_FAILURE": "A required service is temporarily unavailable. Please try again shortly.",
+    "TIMEOUT_OCCURRED": "The request timed out. Please try again.",
+    "INTERNAL_SERVER_ERROR": "An unexpected error occurred. Please try again later."
+  },
+  "context": {
+    "login": {
+      "INVALID_CREDENTIALS": "Invalid email or password. Please try again.",
+      "UNAUTHORIZED": "Invalid email or password. Please try again."
+    },
+    "register": {
+      "DATA_CONFLICT": "An account with this email already exists.",
+      "VALIDATION_ERROR": "Please check your details and try again."
+    },
+    "changePassword": {
+      "INVALID_CREDENTIALS": "Your current password is incorrect."
+    }
+  }
+}
