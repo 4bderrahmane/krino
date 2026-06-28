@@ -26,6 +26,9 @@ desktop.ini
 *.log
 logs/
 
+# ----- Local-only docs / artifacts -----
+PROJECT_REVIEW.txt
+
 # ----- Safety nets (also covered per-project) -----
 # Node / client
 node_modules/
