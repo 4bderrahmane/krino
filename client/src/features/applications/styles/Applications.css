@@ -1,0 +1,378 @@
+/* Applications feature styles */
+
+.applications-container {
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
+.applications-header {
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+.applications-title {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-bottom: 6px;
+}
+
+.applications-subtitle {
+    color: var(--color-ink-faint);
+    font-size: 0.95rem;
+}
+
+.applications-table-wrapper {
+    background: var(--color-surface);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-line);
+    overflow-x: auto;
+}
+
+.applications-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.applications-table thead th {
+    text-align: left;
+    padding: 16px 20px;
+    font-weight: 600;
+    color: var(--color-ink-faint);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--color-line);
+    background: var(--color-surface-sunken);
+}
+
+.applications-table tbody td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-surface-sunken);
+    color: var(--color-ink);
+    vertical-align: middle;
+}
+
+.applications-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.applications-table tbody tr:hover {
+    background: var(--color-surface-sunken);
+}
+
+/* Rows navigate to the application detail page. */
+.application-row {
+    cursor: pointer;
+}
+
+.application-row:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
+
+.candidate-name {
+    font-weight: 600;
+    color: var(--color-ink);
+}
+
+.candidate-email {
+    color: var(--color-ink-faint);
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+
+.application-offer-title {
+    font-weight: 600;
+    color: var(--color-ink);
+}
+
+.application-offer-dept {
+    color: var(--color-ink-faint);
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+
+/* Styled as a link but it's a <button>: the resume download goes through an
+   authenticated fetch, not a plain href. */
+.resume-link {
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.resume-link:hover:not(:disabled) {
+    text-decoration: underline;
+}
+
+.resume-link:disabled {
+    color: var(--color-ink-faint);
+    cursor: default;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-pending {
+    background: var(--badge-amber-bg);
+    color: var(--badge-amber-fg);
+}
+
+.status-under_review {
+    background: var(--badge-blue-bg);
+    color: var(--badge-blue-fg);
+}
+
+.status-accepted {
+    background: var(--badge-green-bg);
+    color: var(--badge-green-fg);
+}
+
+.status-rejected {
+    background: var(--badge-red-bg);
+    color: var(--badge-red-fg);
+}
+
+.status-interview_scheduled {
+    background: var(--badge-violet-bg);
+    color: var(--badge-violet-fg);
+}
+
+/* State panels (error / empty) */
+.applications-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--color-ink-faint);
+    font-size: 1.05rem;
+    background: var(--color-surface);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-line);
+    max-width: 480px;
+    margin: 40px auto;
+}
+
+.applications-retry {
+    margin-top: 16px;
+    background: var(--color-primary);
+    color: var(--color-surface);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.applications-retry:hover {
+    background: var(--color-primary-hover);
+}
+
+/* ------------------------------------------------------------------ */
+/* Application detail page                                             */
+/* ------------------------------------------------------------------ */
+.application-detail-container {
+    max-width: 760px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
+.application-back {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: var(--color-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.application-back:hover {
+    text-decoration: underline;
+}
+
+.application-detail-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: var(--shadow-sm);
+    padding: 32px;
+}
+
+.application-detail-header {
+    margin-bottom: 8px;
+}
+
+.application-detail-eyebrow {
+    display: inline-block;
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+    margin-bottom: 8px;
+}
+
+.application-detail-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 0;
+}
+
+.application-detail-status {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.application-detail-applied {
+    color: var(--color-ink-faint);
+    font-size: 0.9rem;
+}
+
+.application-detail-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-line);
+}
+
+.application-detail-heading {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-ink-faint);
+    margin: 0 0 14px;
+}
+
+.application-detail-grid {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.application-detail-row {
+    display: flex;
+    gap: 16px;
+}
+
+.application-detail-row dt {
+    flex: 0 0 120px;
+    color: var(--color-ink-faint);
+    font-size: 0.9rem;
+}
+
+.application-detail-row dd {
+    margin: 0;
+    color: var(--color-ink);
+    font-size: 0.95rem;
+}
+
+.application-detail-offer-link {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.application-detail-offer-link:hover {
+    text-decoration: underline;
+}
+
+.application-detail-resume {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 16px;
+    background: var(--color-surface-sunken);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md, 8px);
+}
+
+.application-detail-resume-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.application-detail-resume-name {
+    font-weight: 600;
+    color: var(--color-ink);
+    word-break: break-word;
+}
+
+.application-detail-resume-sub {
+    font-size: 0.85rem;
+    color: var(--color-ink-faint);
+}
+
+.application-detail-download {
+    flex-shrink: 0;
+    height: 42px;
+    padding: 0 20px;
+    border: none;
+    border-radius: var(--radius-pill, 999px);
+    background: var(--color-primary);
+    color: var(--color-on-primary, #fff);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.application-detail-download:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+}
+
+.application-detail-download:disabled {
+    background: var(--color-ink-faint);
+    cursor: not-allowed;
+}
+
+.application-detail-empty {
+    margin: 0;
+    color: var(--color-ink-faint);
+    font-size: 0.95rem;
+}
+
+@media (max-width: 600px) {
+    .applications-title {
+        font-size: 1.875rem;
+    }
+
+    .applications-table thead th,
+    .applications-table tbody td {
+        padding: 12px 14px;
+    }
+
+    .application-detail-card {
+        padding: 22px;
+    }
+
+    .application-detail-title {
+        font-size: 1.6rem;
+    }
+}
