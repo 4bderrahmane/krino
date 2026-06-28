@@ -1,1 +1,15 @@
-/src/main/resources/application.properties
+target/
+.git/
+.idea/
+.settings/
+.claude/
+.codex/
+.agents/
+*.iml
+.classpath
+.factorypath
+.project
+.env
+.env.*
+!.env.example
+backups/

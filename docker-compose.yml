@@ -1,54 +1,101 @@
-# Docker Compose for local/dev orchestration of the Krino monorepo.
-#
-# The client is a static SPA whose browser code calls the API at
-# http://localhost:8080/api (see client/src/shared/services/api.ts), so the
-# server is published on host port 8080 to match that expectation.
-#
-# NOTE: The server needs a reachable MySQL database and an
-# application.properties (server/src/main/resources/application.properties,
-# which is git-ignored). Uncomment and configure the `db` service below, or
-# point the server at an external database, before relying on this.
-
 services:
+  db:
+    # Disabled by default while testing MinIO only.
+    profiles: ["app"]
+    image: postgres:18-alpine
+    container_name: krino-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-krino}
+      POSTGRES_USER: ${POSTGRES_USER:-krino}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: krino-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-krino-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-minio-password}
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+
+  minio-init:
+    image: quay.io/minio/mc:latest
+    container_name: krino-minio-init
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-krino-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-minio-password}
+      APP_STORAGE_BUCKET: ${APP_STORAGE_BUCKET:-krino-cvs}
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 \"$${MINIO_ROOT_USER}\" \"$${MINIO_ROOT_PASSWORD}\"; do
+        sleep 2;
+      done;
+      mc mb --ignore-existing local/\"$${APP_STORAGE_BUCKET}\";
+      "
+    restart: "no"
+
   server:
+    # Disabled by default while testing MinIO only.
+    profiles: ["app"]
     build:
       context: ./server
-    container_name: ism-server
+    container_name: krino-server
     ports:
       - "8080:8080"
     restart: unless-stopped
-    # Loads server/.env if present (copy from server/.env.example).
-    # Optional so `docker compose up` still works before you create it.
+    # Copy server/.env.example to server/.env for JWT/admin secrets.
+    # Compose overrides DB and MinIO addresses so containers talk over the
+    # internal compose network instead of localhost.
     env_file:
       - path: ./server/.env
-        required: false
-    # depends_on:
-    #   - db
+        required: true
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-krino}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-krino}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      APP_STORAGE_ENDPOINT: http://minio:9000
+      APP_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-krino-minio}
+      APP_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-change-me-minio-password}
+      APP_STORAGE_BUCKET: ${APP_STORAGE_BUCKET:-krino-cvs}
+      APP_STORAGE_MAX_CV_SIZE: ${APP_STORAGE_MAX_CV_SIZE:-5MB}
+      APP_STORAGE_MAX_REQUEST_SIZE: ${APP_STORAGE_MAX_REQUEST_SIZE:-6MB}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
 
   client:
+    # Disabled by default while testing MinIO only.
+    profiles: ["app"]
     build:
       context: ./client
-    container_name: ism-client
+    container_name: krino-client
     ports:
       - "5173:80"
     depends_on:
       - server
     restart: unless-stopped
 
-  # Uncomment to run a local MySQL alongside the services.
-  # db:
-  #   image: mysql:8
-  #   container_name: ism-db
-  #   environment:
-  #     MYSQL_DATABASE: interview_slots
-  #     MYSQL_USER: ism
-  #     MYSQL_PASSWORD: change-me
-  #     MYSQL_ROOT_PASSWORD: change-me-root
-  #   ports:
-  #     - "3306:3306"
-  #   volumes:
-  #     - db-data:/var/lib/mysql
-  #   restart: unless-stopped
-
-# volumes:
-#   db-data:
+volumes:
+  postgres-data:
+  minio-data:
