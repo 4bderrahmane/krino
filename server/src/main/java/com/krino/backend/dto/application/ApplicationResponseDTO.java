@@ -15,9 +15,10 @@ import java.util.UUID;
 public class ApplicationResponseDTO {
     private UUID id;
     private UUID jobId;
+    private String jobTitle;
+    private String jobDepartment;
     private UserResponseDTO candidate;
     private ApplicationStatus status;
-    private String resumeUrl;
+    private ApplicationResumeDTO resume;
     private LocalDateTime appliedAt;
 }
-

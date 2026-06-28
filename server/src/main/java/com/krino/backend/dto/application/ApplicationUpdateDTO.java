@@ -8,7 +8,5 @@ import java.util.UUID;
 @Data
 public class ApplicationUpdateDTO {
     private UUID jobId;
-    private String resumeUrl;
     private ApplicationStatus status;
 }
-
