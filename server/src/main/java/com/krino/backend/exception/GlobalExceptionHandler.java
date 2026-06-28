@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.ArrayList;
@@ -120,6 +121,25 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 "Validation failed for one or more fields.",
                 servletRequest,
                 errors,
+                status
+        );
+        return ResponseEntity.status(status).headers(headers).body(problemDetail);
+    }
+
+    @Override
+    protected @NonNull ResponseEntity<@NonNull Object> handleMaxUploadSizeExceededException(
+            @NonNull MaxUploadSizeExceededException ex,
+            @NonNull HttpHeaders headers,
+            @NonNull HttpStatusCode status,
+            @NonNull WebRequest request
+    ) {
+        HttpServletRequest servletRequest = extractRequest(request);
+        exceptionLogService.logForStatus(status, ex, servletRequest, ErrorCode.PAYLOAD_TOO_LARGE);
+        ProblemDetail problemDetail = problemDetailFactory.buildProblemDetail(
+                ErrorCode.PAYLOAD_TOO_LARGE,
+                "Uploaded file is too large.",
+                servletRequest,
+                null,
                 status
         );
         return ResponseEntity.status(status).headers(headers).body(problemDetail);
