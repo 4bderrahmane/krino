@@ -5,7 +5,12 @@ export default {
         "./src/**/*.{js,ts,jsx,tsx}", // include all React + TS files
     ],
     theme: {
-        extend: {},
+        extend: {
+            fontFamily: {
+                sans: ['Lora', 'Georgia', 'Times New Roman', 'serif'],
+                serif: ['Lora', 'Georgia', 'Times New Roman', 'serif'],
+            },
+        },
     },
     plugins: [],
 }
