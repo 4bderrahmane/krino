@@ -32,13 +32,13 @@ public class SlotController {
 
     @GetMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_READ_SLOT')")
-    public ResponseEntity<SlotResponseDTO> getSlotByPublicId(@PathVariable("publicId") UUID publicId) {
+    public ResponseEntity<SlotResponseDTO> getSlotByPublicId(@PathVariable UUID publicId) {
         SlotResponseDTO slot = slotService.getSlotByPublicId(publicId);
         return ResponseEntity.ok(slot);
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('CAN_READ_SLOT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<PageResponse<SlotResponseDTO>> getAllSlots(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
         PageResponse<SlotResponseDTO> slots = slotService.getAllSlots(pageable);
         return ResponseEntity.ok(slots);
@@ -46,23 +46,21 @@ public class SlotController {
 
     @PutMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_UPDATE_SLOT')")
-    public ResponseEntity<SlotResponseDTO> updateSlot(@PathVariable("publicId") UUID publicId,
-                                                      @Valid @RequestBody SlotUpdateDTO slotUpdateDTO) {
+    public ResponseEntity<SlotResponseDTO> updateSlot(@PathVariable UUID publicId, @Valid @RequestBody SlotUpdateDTO slotUpdateDTO) {
         SlotResponseDTO updatedSlot = slotService.updateSlot(publicId, slotUpdateDTO);
         return ResponseEntity.ok(updatedSlot);
     }
 
     @PatchMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_UPDATE_SLOT')")
-    public ResponseEntity<SlotResponseDTO> patchSlot(@PathVariable("publicId") UUID publicId,
-                                                     @RequestBody SlotUpdateDTO slotUpdateDTO) {
+    public ResponseEntity<SlotResponseDTO> patchSlot(@PathVariable UUID publicId, @RequestBody SlotUpdateDTO slotUpdateDTO) {
         SlotResponseDTO patchedSlot = slotService.patchSlot(publicId, slotUpdateDTO);
         return ResponseEntity.ok(patchedSlot);
     }
 
     @DeleteMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_DELETE_SLOT')")
-    public ResponseEntity<Void> deleteSlot(@PathVariable("publicId") UUID publicId) {
+    public ResponseEntity<Void> deleteSlot(@PathVariable UUID publicId) {
         slotService.deleteSlot(publicId);
         return ResponseEntity.noContent().build();
     }

@@ -9,13 +9,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 
@@ -25,9 +28,9 @@ import java.net.URI;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
-    @PostMapping("/register")
-    public ResponseEntity<RegistrationResponseDTO> register(@Valid @RequestBody UserRegistrationDTO request) {
-        RegistrationResponseDTO registration = authenticationService.register(request);
+    @PostMapping(path = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> register(@Valid @RequestPart("data") UserRegistrationDTO request, @RequestPart("resume") MultipartFile resume) {
+        RegistrationResponseDTO registration = authenticationService.register(request, resume);
         return ResponseEntity.created(URI.create("/api/users/" + registration.getUser().getId())).body(registration);
     }
 
@@ -40,10 +43,8 @@ public class AuthenticationController {
     public record CsrfResponse(String cookieName, String headerName) {}
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponseDTO> login(@Valid @RequestBody UserLoginDTO request,
-                                                           HttpServletResponse response,
-                                                           HttpServletRequest httpRequest) {
-        return ResponseEntity.ok(authenticationService.login(request, response, httpRequest));
+    public ResponseEntity<AuthenticationResponseDTO> login(@Valid @RequestBody UserLoginDTO dto, HttpServletResponse response, HttpServletRequest request) {
+        return ResponseEntity.ok(authenticationService.login(dto, response, request));
     }
 
     @PostMapping("/logout")

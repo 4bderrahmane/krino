@@ -37,10 +37,18 @@ public class InterviewController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('CAN_READ_INTERVIEW')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<PageResponse<InterviewResponseDTO>> getAllInterviews(@PageableDefault(size = 20, sort = "id"
     ) Pageable pageable) {
         PageResponse<InterviewResponseDTO> interviews = interviewService.getAllInterviews(pageable);
+        return ResponseEntity.ok(interviews);
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasAuthority('CAN_READ_INTERVIEW')")
+    public ResponseEntity<PageResponse<InterviewResponseDTO>> getMyInterviews(@PageableDefault(size = 20, sort = "id"
+    ) Pageable pageable) {
+        PageResponse<InterviewResponseDTO> interviews = interviewService.getMyInterviews(pageable);
         return ResponseEntity.ok(interviews);
     }
 

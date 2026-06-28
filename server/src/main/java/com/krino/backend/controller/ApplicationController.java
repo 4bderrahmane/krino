@@ -7,13 +7,21 @@ import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.service.ApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @RestController
@@ -38,10 +46,18 @@ public class ApplicationController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('CAN_READ_APPLICATION')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<PageResponse<ApplicationResponseDTO>> getAllApplications(@PageableDefault(size = 20, sort =
             "id") Pageable pageable) {
         PageResponse<ApplicationResponseDTO> applications = applicationService.getAllApplications(pageable);
+        return ResponseEntity.ok(applications);
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasAuthority('CAN_READ_APPLICATION')")
+    public ResponseEntity<PageResponse<ApplicationResponseDTO>> getMyApplications(@PageableDefault(size = 20, sort =
+            "id") Pageable pageable) {
+        PageResponse<ApplicationResponseDTO> applications = applicationService.getMyApplications(pageable);
         return ResponseEntity.ok(applications);
     }
 
@@ -66,6 +82,51 @@ public class ApplicationController {
     @PreAuthorize("hasAuthority('CAN_DELETE_APPLICATION')")
     public ResponseEntity<Void> deleteApplication(@PathVariable UUID publicId) {
         applicationService.deleteApplication(publicId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping(path = "/{publicId}/resume", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('CAN_UPDATE_APPLICATION')")
+    public ResponseEntity<ApplicationResponseDTO> uploadResume(@PathVariable UUID publicId,
+                                                               @RequestPart("resume") MultipartFile resume) {
+        ApplicationResponseDTO application = applicationService.uploadResume(publicId, resume);
+        return ResponseEntity.ok(application);
+    }
+
+    @PutMapping("/{publicId}/resume/from-base")
+    @PreAuthorize("hasAuthority('CAN_UPDATE_APPLICATION')")
+    public ResponseEntity<ApplicationResponseDTO> applyBaseResume(@PathVariable UUID publicId) {
+        ApplicationResponseDTO application = applicationService.applyBaseResume(publicId);
+        return ResponseEntity.ok(application);
+    }
+
+    @GetMapping("/{publicId}/resume")
+    @PreAuthorize("hasAuthority('CAN_READ_APPLICATION')")
+    public ResponseEntity<Resource> downloadResume(@PathVariable UUID publicId) {
+        ApplicationService.ResumeDownload resume = applicationService.downloadResume(publicId);
+        return getResourceResponseEntity(resume);
+    }
+
+    @NonNull
+    static ResponseEntity<Resource> getResourceResponseEntity(ApplicationService.ResumeDownload resume) {
+        InputStreamResource resource = new InputStreamResource(resume.inputStream());
+        MediaType mediaType = MediaType.parseMediaType(resume.contentType());
+        ContentDisposition contentDisposition = ContentDisposition.attachment()
+                .filename(resume.originalFilename(), StandardCharsets.UTF_8)
+                .build();
+
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString());
+
+        if (resume.sizeBytes() != null) response.contentLength(resume.sizeBytes());
+        return response.body(resource);
+    }
+
+    @DeleteMapping("/{publicId}/resume")
+    @PreAuthorize("hasAuthority('CAN_UPDATE_APPLICATION')")
+    public ResponseEntity<Void> deleteResume(@PathVariable UUID publicId) {
+        applicationService.deleteResume(publicId);
         return ResponseEntity.noContent().build();
     }
 }
