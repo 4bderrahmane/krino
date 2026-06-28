@@ -4,6 +4,7 @@ import com.krino.backend.exception.ExceptionProblemDetailFactory;
 import com.krino.backend.utility.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -14,18 +15,13 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
+@RequiredArgsConstructor
 @Component
 @Slf4j
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
     private final ExceptionProblemDetailFactory problemDetailFactory;
-
-    public CustomAuthenticationEntryPoint(ObjectMapper objectMapper,
-                                          ExceptionProblemDetailFactory problemDetailFactory) {
-        this.objectMapper = objectMapper;
-        this.problemDetailFactory = problemDetailFactory;
-    }
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,

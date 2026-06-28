@@ -24,6 +24,7 @@ import java.io.IOException;
 public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
+    private final CookieUtilities cookieUtilities;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -35,7 +36,7 @@ public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            CookieUtilities.getAccessTokenFromCookie(request).ifPresent(accessToken ->
+            cookieUtilities.getAccessTokenFromCookie(request).ifPresent(accessToken ->
             {
                 try {
                     if (jwtService.validateToken(accessToken)) {

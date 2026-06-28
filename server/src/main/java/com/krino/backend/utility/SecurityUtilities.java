@@ -2,15 +2,14 @@ package com.krino.backend.utility;
 
 import com.krino.backend.entity.CustomUserDetails;
 import lombok.experimental.UtilityClass;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @UtilityClass
@@ -27,18 +26,23 @@ public class SecurityUtilities {
 
     public static Optional<UserDetails> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            return Optional.of((UserDetails) authentication.getPrincipal());
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            return Optional.of(userDetails);
         }
         return Optional.empty();
     }
 
     public static Optional<CustomUserDetails> getCurrentCustomUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
-            return Optional.of((CustomUserDetails) authentication.getPrincipal());
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails customUserDetails) {
+            return Optional.of(customUserDetails);
         }
         return Optional.empty();
+    }
+
+    public static CustomUserDetails requireCurrentCustomUser() {
+        return getCurrentCustomUser()
+                .orElseThrow(() -> new AccessDeniedException("Authentication is required."));
     }
 
     public static Optional<Long> getCurrentUserId() {
@@ -56,7 +60,7 @@ public class SecurityUtilities {
         }
 
         return authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
+                .map(GrantedAuthority::getAuthority).filter(Objects::nonNull)
                 .anyMatch(auth -> auth.equals("ROLE_" + role) || auth.equals(role));
     }
 
@@ -79,6 +83,26 @@ public class SecurityUtilities {
         return authentication != null &&
                 authentication.isAuthenticated() &&
                 !(authentication instanceof AnonymousAuthenticationToken);
+    }
+
+    public static void requireAnyRole(String... roles) {
+        if (!hasAnyRole(roles)) {
+            throw new AccessDeniedException("You do not have permission to perform this action.");
+        }
+    }
+
+    public static void requireCurrentUser(UUID publicId) {
+        CustomUserDetails currentUser = requireCurrentCustomUser();
+        if (!currentUser.getPublicId().equals(publicId)) {
+            throw new AccessDeniedException("You do not have permission to access this resource.");
+        }
+    }
+
+    public static void requireCurrentUserOrAnyRole(UUID publicId, String... roles) {
+        CustomUserDetails currentUser = requireCurrentCustomUser();
+        if (!currentUser.getPublicId().equals(publicId) && !hasAnyRole(roles)) {
+            throw new AccessDeniedException("You do not have permission to access this resource.");
+        }
     }
 
 }
