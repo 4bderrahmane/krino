@@ -1,0 +1,20 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: "${SPRING_JPA_HIBERNATE_DDL_AUTO:update}"
+
+  flyway:
+    enabled: "${SPRING_FLYWAY_ENABLED:false}"
+
+    baseline-on-migrate: "${SPRING_FLYWAY_BASELINE_ON_MIGRATE:true}"
+    baseline-version: "${SPRING_FLYWAY_BASELINE_VERSION:1}"
+
+app:
+  refresh-token:
+    hmac-secret: "${APP_REFRESH_TOKEN_HMAC_SECRET:${JWT_SECRET}}"
+  jwt:
+    issuer: "${APP_JWT_ISSUER:krino-dev}"
+  cors:
+    allowed-origins: "${APP_CORS_ALLOWED_ORIGINS:http://localhost:5000,http://localhost:5173,http://127.0.0.1:5000,http://127.0.0.1:5173}"
+  cookies:
+    secure: "${APP_COOKIES_SECURE:false}"

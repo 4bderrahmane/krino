@@ -1,0 +1,61 @@
+# Test profile properties - use in-memory H2 to avoid needing local MySQL
+# during unit tests.
+spring:
+  datasource:
+    url: "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+  # Let Hibernate create and drop the schema for tests.
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+jwt:
+  # Alternative test secrets:
+  # secret: "xBZYq6Xv7SzsIm28327qtCwQZwIWiCnN9IhuYEHVkpSua16kIC2nG3XozxZYKTaGQ4k47Gjf+jKmRut/YSadVzzyX798IBbe/G9at5K3IKq7l3BWJDm3c6nxEm6yT7aeT51WAg=="
+  # secret: "V29uZGVyZnVsU2VjcmV0S2V5Rm9ySldUQXV0aGVudGljYXRpb25Jc05lZWRlZEhlcmU="
+  secret: "R0EyTHQgIJ8SJYeyEMYwB71zXSEVhLkOqnhauG8lARJ4U8EE80NAnTuVqcd0pjFRNxmy640jmK+PgMHekuhiUebO1U="
+
+app:
+  # JWT issuer / access-token lifetime.
+  jwt:
+    issuer: krino-test
+    access-token-expiration: 15m
+
+  # CORS origins for tests.
+  cors:
+    allowed-origins: "http://localhost:5173"
+
+  # Disable rate limiting by default so the shared application context is not
+  # throttled across tests; the dedicated rate-limit tests re-enable it with
+  # their own properties.
+  ratelimit:
+    enabled: false
+
+  # Cookies: disable the Secure flag so tests don't assume HTTPS.
+  cookies:
+    secure: false
+
+  # Admin bootstrap account used by AdminInitializer.
+  admin:
+    email: admin@test.local
+    password: Test-Admin-Password-123
+
+  storage:
+    endpoint: "http://localhost:9000"
+    access-key: minioadmin
+    secret-key: minioadmin
+    bucket: krino-test-cvs
+    max-cv-size: 5MB
