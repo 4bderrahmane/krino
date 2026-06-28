@@ -1,8 +1,5 @@
 /*
-  LOGIN FORM SPECIFIC STYLES
-
-  This file contains only styles for the LoginForm component.
-  Uses login-specific class names to avoid conflicts.
+  LOGIN FORM STYLES — scoped to the LoginForm component.
 */
 
 .language-switcher-fixed {
@@ -22,10 +19,16 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: #ffffff;
+    background-color: var(--color-paper);
+    background-image:
+        linear-gradient(rgba(252, 251, 249, 0.16), rgba(252, 251, 249, 0.16)),
+        var(--app-background-image);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    padding: 2rem 0;
 }
 
-/* Keep form and links above overlay - simplified since no overlay needed */
 .login-page-container .login-form,
 .login-page-container .forgot-password-link,
 .login-page-container .signup-cta,
@@ -34,21 +37,19 @@
     z-index: 1;
 }
 
-/* Welcome text above the form */
+/* Lora hero above the form */
 .login-page-container .welcome-block {
-    margin-bottom: 1rem;
+    margin-bottom: 1.75rem;
     text-align: center;
-    color: #111827;
-    font-size: 1.25rem;
-    font-weight: 600;
+    color: var(--color-ink);
 }
 
 .login-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
     width: 100%;
-    max-width: 420px; /* keep inputs and button at a nice readable width */
+    max-width: 420px;
     box-sizing: border-box;
     padding: 0 20px;
 }
@@ -57,43 +58,41 @@
     position: relative;
 }
 
-/* Icon input wrappers */
 .input-wrapper {
     position: relative;
-    min-height: var(--control-height); /* Ensure consistent height */
+    min-height: var(--control-height);
 }
 
 .login-form .form-input {
     width: 100%;
-    height: var(--control-height) !important; /* Force consistent height */
+    height: var(--control-height) !important;
     padding: 0 1.25rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-line-strong);
     border-radius: var(--control-radius);
     font-size: 1rem;
-    color: #374151;
+    color: var(--color-ink);
+    background-color: var(--color-surface);
     box-sizing: border-box;
     max-width: 100%;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    line-height: normal; /* Prevent line-height changes */
-    font-family: inherit; /* Use browser default font for written text */
+    transition: border-color var(--transition), box-shadow var(--transition);
+    line-height: normal;
+    font-family: var(--font-sans);
 }
 
 .login-form .form-input:focus {
     outline: none;
-    border-color: #0a66c2;
-    box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: var(--ring);
 }
 
 .login-form .form-input::placeholder {
-    color: #9ca3af;
-    /*here*/
-    font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
-    letter-spacing: 0.02rem;
+    color: var(--color-ink-faint);
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
 }
 
 .login-form .form-input.with-icon {
-    padding-left: 2.75rem; /* space for the icon */
+    padding-left: 2.75rem;
     padding-right: 1.25rem;
 }
 
@@ -108,12 +107,6 @@
     pointer-events: none;
 }
 
-.form-input[type="password"]:not(:placeholder-shown) {
-    letter-spacing: 0.02rem; /* Reduced from 0.08rem to make bullets smaller */
-    /*font-family: 'Courier New', monospace; !* Use monospace font for smaller, more consistent bullets *!*/
-    font-size: 0.9rem; /* Slightly smaller font size for password bullets */
-}
-
 .login-button {
     display: flex;
     justify-content: center;
@@ -123,22 +116,26 @@
     padding: 0 1.25rem;
     border: none;
     border-radius: var(--control-radius);
-    background-color: #2b2b2b;
-    color: white;
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
-    margin-top: 1rem;
+    transition: background-color var(--transition), transform var(--transition);
+    margin-top: 0.75rem;
 }
 
 .login-button:disabled {
-    background-color: #9ca3af;
+    background-color: var(--color-ink-faint);
     cursor: not-allowed;
 }
 
 .login-button:not(:disabled):hover {
-    background-color: #1a1a1a;
+    background-color: var(--color-primary-hover);
+}
+
+.login-button:not(:disabled):active {
+    transform: translateY(1px);
 }
 
 .spinner-icon {
@@ -148,20 +145,16 @@
 }
 
 @keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .error-message {
-    background-color: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #dc2626;
-    padding: 0.75rem;
-    border-radius: 0.375rem;
+    background-color: var(--color-danger-tint);
+    border: 1px solid #eccac6;
+    color: var(--color-danger);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
     font-size: 0.875rem;
     text-align: center;
 }
@@ -171,27 +164,27 @@
     text-align: center;
     font-size: 1rem;
     font-weight: 600;
-    color: black;
+    color: var(--color-ink);
     text-decoration: none;
-    margin-top: 0.75rem;
+    margin-top: 1.25rem;
 }
 
 .forgot-password-link:hover {
+    color: var(--color-ink);
     text-decoration: underline;
 }
 
-/* Sign-up callout under Forgot Password */
 .signup-cta {
     margin-top: 0.5rem;
     text-align: center;
-    color: #111827;
+    color: var(--color-ink-soft);
     font-size: 1rem;
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .signup-cta a {
-    color: #0a66c2;
-    font-weight: 700;
+    color: var(--color-primary);
+    font-weight: 600;
     text-decoration: none;
 }
 

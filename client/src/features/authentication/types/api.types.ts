@@ -1,3 +1,5 @@
+import type {ServerErrorCode} from '@/shared/services/errors';
+
 export interface User {
     email: string;
     password: string;
@@ -20,12 +22,20 @@ export interface UserRegistrationDTO {
 }
 
 export interface UserResponseDTO {
-    id: number;
+    // Public UUID (the API exposes publicId as `id`), not a numeric id.
+    id: string;
     firstName: string;
     lastName: string;
     email: string;
     phoneNumber: string;
-    roles: Set<Role>;
+    // The API serialises roles as a JSON array, not a Set.
+    roles: Role[];
+    // Base-CV metadata; null when the user has no CV on file (e.g. admin-created staff).
+    resumeFilename?: string | null;
+    resumeUploadedAt?: string | null;
+    // True while the user is still on the admin-generated initial password
+    // (staff accounts). Drives the "change your password" reminder.
+    mustChangePassword?: boolean;
 }
 
 export interface ApiResponse<T> {
@@ -67,31 +77,6 @@ export interface BackendErrorResponse {
 }
 
 export interface EnhancedError extends Error {
-    errorCode?: AuthErrorCode;
+    errorCode?: ServerErrorCode;
     backendError?: BackendErrorResponse;
 }
-
-export type AuthErrorCode =
-    | 'UNEXPECTED_ERROR'
-    | 'INVALID_REQUEST_BODY'
-    | 'RESOURCE_NOT_FOUND'
-    | 'INVALID_TOKEN'
-    | 'ACCESS_DENIED'
-    | 'EMAIL_ALREADY_IN_USE'
-    | 'EMAIL_ALREADY_EXISTS'
-    | 'PASSWORD_TOO_WEAK'
-    | 'INVALID_EMAIL_FORMAT'
-    | 'INVALID_CREDENTIALS'
-    | 'ACCOUNT_DISABLED'
-    | 'ACCOUNT_LOCKED'
-    | 'ACCOUNT_NOT_VERIFIED'
-    | 'PASSWORD_CHANGE_FAILED'
-    | 'PASSWORD_RESET_TOKEN_EXPIRED'
-    | 'INVALID_PASSWORD_RESET_TOKEN'
-    | 'NEW_PASSWORD_SAME_AS_OLD'
-    | 'AUTHENTICATION_REQUIRED'
-    | 'AUTHENTICATION_FAILED'
-    | 'USER_NOT_FOUND'
-    | 'USER_ALREADY_EXISTS'
-    | 'VALIDATION_FAILED'
-    | 'INTERNAL_SERVER_ERROR';

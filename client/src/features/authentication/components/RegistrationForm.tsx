@@ -1,19 +1,42 @@
-import React, {useState, type FormEvent, useEffect} from 'react';
+import React, {useState, type FormEvent, useEffect, useRef} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigate, Link} from 'react-router-dom';
-import type {UserRegistrationDTO, AuthErrorCode, EnhancedError} from '../types/api.types';
-import '../styles/RegistrationForm.css';
-import {register} from "../services/AuthenticationService.ts";
-import LanguageSwitcher from "../../../shared/components/LanguageSwitcher.tsx";
-import {useSuccessToast} from "../../../shared/hooks/useSuccessToast.ts";
+import type {UserRegistrationDTO} from '@/features/authentication/types/api.types';
+import '@/features/authentication/styles/RegistrationForm.css';
+import {register} from "@/features/authentication/services/AuthenticationService.ts";
+import LanguageSwitcher from "@/shared/components/LanguageSwitcher.tsx";
+import {useSuccessToast} from "@/shared/hooks/useSuccessToast.ts";
+import {resolveServerError} from "@/shared/services/errors.ts";
+import BrandLogo from "@/shared/components/BrandLogo.tsx";
+import {validateCvFile, type CvFileError} from "@/shared/utils/cvFile.ts";
 
-const hasAuthErrorCode = (error: unknown): error is EnhancedError =>
-    error instanceof Error && 'errorCode' in error;
+// Mirror the backend constraints (UserRegistrationDTO + CvStorageService) so the user
+// gets immediate feedback instead of a round-trip rejection.
+const NAME_MIN = 2;
+const NAME_MAX = 50;
+const PASSWORD_MIN = 8;
+const PHONE_PATTERN = /^\d{9}$/;
+const CV_ERROR_KEYS: Record<CvFileError, string> = {
+    required: 'auth.validation.cvRequired',
+    type: 'auth.validation.cvType',
+    size: 'auth.validation.cvSize',
+};
+
+type FieldName =
+    | 'firstName'
+    | 'lastName'
+    | 'email'
+    | 'phoneNumber'
+    | 'password'
+    | 'confirmPassword'
+    | 'resume';
+
+type FieldErrors = Partial<Record<FieldName, string>>;
 
 const RegistrationForm: React.FC = () => {
     const {t, i18n} = useTranslation();
     const navigate = useNavigate();
-    const { showSuccessToast } = useSuccessToast();
+    const {showSuccessToast} = useSuccessToast();
 
     const [credentials, setCredentials] = useState<UserRegistrationDTO>({
         email: '',
@@ -22,33 +45,92 @@ const RegistrationForm: React.FC = () => {
         phoneNumber: '',
         password: '',
     });
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [resume, setResume] = useState<File | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
 
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const [loading, setLoading] = useState(false);
-    const [errorCode, setErrorCode] = useState<AuthErrorCode | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Clear the (already localized) error when the user switches language so we
+    // never show a message left over in the previous language.
     useEffect(() => {
-        setErrorCode(null);
+        setErrorMessage(null);
     }, [i18n.language]);
+
+    const clearError = (field: FieldName) => {
+        setFieldErrors((prev) => {
+            if (!prev[field]) return prev;
+            const next = {...prev};
+            delete next[field];
+            return next;
+        });
+        if (errorMessage) setErrorMessage(null);
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = e.target;
-        setCredentials((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-        if (errorCode) {
-            setErrorCode(null);
+        setCredentials((prev) => ({...prev, [name]: value}));
+        clearError(name as FieldName);
+    };
+
+    const handleConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setConfirmPassword(e.target.value);
+        clearError('confirmPassword');
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] ?? null;
+        setResume(file);
+        clearError('resume');
+    };
+
+    const validate = (): FieldErrors => {
+        const errors: FieldErrors = {};
+        const firstName = credentials.firstName.trim();
+        const lastName = credentials.lastName.trim();
+        const phone = credentials.phoneNumber.trim();
+
+        if (firstName.length < NAME_MIN || firstName.length > NAME_MAX) {
+            errors.firstName = t('auth.validation.firstName');
         }
+        if (lastName.length < NAME_MIN || lastName.length > NAME_MAX) {
+            errors.lastName = t('auth.validation.lastName');
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentials.email.trim())) {
+            errors.email = t('auth.validation.email');
+        }
+        if (!PHONE_PATTERN.test(phone)) {
+            errors.phoneNumber = t('auth.validation.phone');
+        }
+        if (credentials.password.length < PASSWORD_MIN) {
+            errors.password = t('auth.validation.password');
+        }
+        if (confirmPassword !== credentials.password) {
+            errors.confirmPassword = t('auth.validation.passwordMismatch');
+        }
+        const cvError = validateCvFile(resume);
+        if (cvError) {
+            errors.resume = t(CV_ERROR_KEYS[cvError]);
+        }
+        return errors;
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setLoading(true);
-        setErrorCode(null);
+        setErrorMessage(null);
 
+        const errors = validate();
+        if (Object.keys(errors).length > 0 || !resume) {
+            setFieldErrors(errors);
+            return;
+        }
+
+        setLoading(true);
         try {
-            const data = await register(credentials);
-            console.log('User Response: ', data);
+            await register({...credentials, email: credentials.email.trim()}, resume);
 
             showSuccessToast(t('auth.success.registrationSuccess'));
 
@@ -57,35 +139,10 @@ const RegistrationForm: React.FC = () => {
             navigate('/login');
         } catch (err: unknown) {
             console.error('registration failed:', err);
-
-            if (hasAuthErrorCode(err) && err.errorCode) {
-                setErrorCode(err.errorCode);
-            } else {
-                setErrorCode('UNEXPECTED_ERROR');
-            }
+            setErrorMessage(resolveServerError(t, err, {context: 'register'}));
         } finally {
             setLoading(false);
         }
-    };
-
-    const getErrorMessage = (): string => {
-        if (!errorCode) return '';
-
-        const registrationErrorPath = `auth.errors.registration.${errorCode}`;
-        const registrationError = t(registrationErrorPath);
-
-        if (registrationError !== registrationErrorPath) {
-            return registrationError;
-        }
-
-        const commonErrorPath = `auth.errors.common.${errorCode}`;
-        const commonError = t(commonErrorPath);
-
-        if (commonError !== commonErrorPath) {
-            return commonError;
-        }
-
-        return t('auth.errors.common.UNEXPECTED_ERROR');
     };
 
     return (
@@ -94,7 +151,10 @@ const RegistrationForm: React.FC = () => {
                 <LanguageSwitcher/>
             </div>
             <div className="registration-page-container">
-                <form onSubmit={handleSubmit} className="registration-form">
+                <div className="registration-brand-block">
+                    <BrandLogo variant="auth"/>
+                </div>
+                <form onSubmit={handleSubmit} className="registration-form" noValidate>
                     <div className="form-row">
                         <div className="form-group">
                             <input
@@ -103,10 +163,11 @@ const RegistrationForm: React.FC = () => {
                                 type="text"
                                 value={credentials.firstName}
                                 onChange={handleChange}
-                                required
                                 className="form-input"
                                 placeholder={t('auth.firstName')}
+                                aria-invalid={!!fieldErrors.firstName}
                             />
+                            {fieldErrors.firstName && <span className="field-error">{fieldErrors.firstName}</span>}
                         </div>
                         <div className="form-group">
                             <input
@@ -115,10 +176,11 @@ const RegistrationForm: React.FC = () => {
                                 type="text"
                                 value={credentials.lastName}
                                 onChange={handleChange}
-                                required
                                 className="form-input"
                                 placeholder={t('auth.lastName')}
+                                aria-invalid={!!fieldErrors.lastName}
                             />
+                            {fieldErrors.lastName && <span className="field-error">{fieldErrors.lastName}</span>}
                         </div>
                     </div>
 
@@ -130,10 +192,11 @@ const RegistrationForm: React.FC = () => {
                                 type="email"
                                 value={credentials.email}
                                 onChange={handleChange}
-                                required
                                 className="form-input"
                                 placeholder={t('auth.email')}
+                                aria-invalid={!!fieldErrors.email}
                             />
+                            {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
                         </div>
                         <div className="form-group">
                             <input
@@ -142,29 +205,82 @@ const RegistrationForm: React.FC = () => {
                                 type="tel"
                                 value={credentials.phoneNumber}
                                 onChange={handleChange}
-                                required
                                 className="form-input"
                                 placeholder={t('auth.phoneNumber')}
+                                aria-invalid={!!fieldErrors.phoneNumber}
                             />
+                            {fieldErrors.phoneNumber && <span className="field-error">{fieldErrors.phoneNumber}</span>}
                         </div>
                     </div>
 
                     <div className="form-row">
                         <div className="form-group">
+                            <div className="password-field">
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={credentials.password}
+                                    onChange={handleChange}
+                                    className="form-input"
+                                    placeholder={t('auth.password')}
+                                    aria-invalid={!!fieldErrors.password}
+                                />
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() => setShowPassword((s) => !s)}
+                                    aria-label={showPassword ? t('auth.hide') : t('auth.show')}
+                                >
+                                    {showPassword ? t('auth.hide') : t('auth.show')}
+                                </button>
+                            </div>
+                            {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
+                        </div>
+                        <div className="form-group">
                             <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                value={credentials.password}
-                                onChange={handleChange}
-                                required
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                type={showPassword ? 'text' : 'password'}
+                                value={confirmPassword}
+                                onChange={handleConfirmChange}
                                 className="form-input"
-                                placeholder={t('auth.password')}
+                                placeholder={t('auth.confirmPassword')}
+                                aria-invalid={!!fieldErrors.confirmPassword}
                             />
+                            {fieldErrors.confirmPassword &&
+                                <span className="field-error">{fieldErrors.confirmPassword}</span>}
                         </div>
                     </div>
 
-                    {errorCode && <div className="error-message">{getErrorMessage()}</div>}
+                    <div className="form-group cv-group">
+                        <input
+                            ref={fileInputRef}
+                            id="resume"
+                            name="resume"
+                            type="file"
+                            accept="application/pdf"
+                            onChange={handleFileChange}
+                            className="cv-input-hidden"
+                            aria-invalid={!!fieldErrors.resume}
+                        />
+                        <div className="cv-row">
+                            <button
+                                type="button"
+                                className="cv-button"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                {t('auth.cvButton')}
+                            </button>
+                            <span className="cv-filename">
+                                {resume ? resume.name : t('auth.cvNone')}
+                            </span>
+                        </div>
+                        <p className="cv-hint">{t('auth.cvHint')}</p>
+                        {fieldErrors.resume && <span className="field-error">{fieldErrors.resume}</span>}
+                    </div>
+
+                    {errorMessage && <div className="error-message">{errorMessage}</div>}
 
                     <button type="submit" disabled={loading} className="registration-button">
                         {loading ? (

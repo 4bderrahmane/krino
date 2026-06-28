@@ -1,13 +1,14 @@
 import React, {useState, type FormEvent, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigate} from 'react-router-dom';
-import type {UserLoginDTO, AuthErrorCode} from '../types/api.types';
-import '../styles/LoginForm.css';
-import {login} from "../services/AuthenticationService.ts";
+import type {UserLoginDTO} from '@/features/authentication/types/api.types';
+import '@/features/authentication/styles/LoginForm.css';
+import {login} from "@/features/authentication/services/AuthenticationService.ts";
+import {resolveServerError} from "@/shared/services/errors.ts";
 import {Link} from "react-router-dom";
-import Welcome from './Welcome.tsx';
-import LanguageSwitcher from "../../../shared/components/LanguageSwitcher.tsx";
-import {useAuth} from "../../../shared/hooks/useAuth.ts";
+import LanguageSwitcher from "@/shared/components/LanguageSwitcher.tsx";
+import {useAuth} from "@/shared/hooks/useAuth.ts";
+import BrandLogo from "@/shared/components/BrandLogo.tsx";
 
 const LoginForm: React.FC = () => {
     const {t, i18n} = useTranslation();
@@ -20,11 +21,12 @@ const LoginForm: React.FC = () => {
     });
 
     const [loading, setLoading] = useState(false);
-    const [errorCode, setErrorCode] = useState<AuthErrorCode | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    // Clear the (already localized) error when the user switches language so we
+    // never show a message left over in the previous language.
     useEffect(() => {
-
-        setErrorCode(null);
+        setErrorMessage(null);
     }, [i18n.language]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,57 +35,28 @@ const LoginForm: React.FC = () => {
             ...prev,
             [name]: value,
         }));
-        if (errorCode) {
-            setErrorCode(null);
+        if (errorMessage) {
+            setErrorMessage(null);
         }
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
-        setErrorCode(null);
+        setErrorMessage(null);
 
         try {
             const data = await login(credentials);
-            console.log('User Response: ', data.user);
-
             authLogin(data.user);
 
             // Navigate immediately to dashboard where toast will appear
             navigate('/dashboard');
         } catch (err: unknown) {
             console.error('Login failed:', err);
-
-            const maybeCode = (err as { errorCode?: AuthErrorCode }).errorCode;
-            if (maybeCode) {
-                setErrorCode(maybeCode);
-            } else {
-                setErrorCode('UNEXPECTED_ERROR');
-            }
+            setErrorMessage(resolveServerError(t, err, {context: 'login'}));
         } finally {
             setLoading(false);
         }
-    };
-
-    const getErrorMessage = (): string => {
-        if (!errorCode) return '';
-
-        const loginErrorPath = `auth.errors.login.${errorCode}`;
-        const loginError = t(loginErrorPath);
-
-        if (loginError !== loginErrorPath) {
-            return loginError;
-        }
-
-        const commonErrorPath = `auth.errors.common.${errorCode}`;
-        const commonError = t(commonErrorPath);
-
-        if (commonError !== commonErrorPath) {
-            return commonError;
-        }
-
-        // Final fallback
-        return t('auth.errors.common.UNEXPECTED_ERROR');
     };
 
     const handleForgotPassword = () => {
@@ -97,7 +70,7 @@ const LoginForm: React.FC = () => {
             </div>
             <div className="login-page-container white-bg">
                 <div className="welcome-block">
-                    <Welcome/>
+                    <BrandLogo variant="auth"/>
                 </div>
                 <form onSubmit={handleSubmit} className="login-form">
                     <div className="input-wrapper">
@@ -140,7 +113,7 @@ const LoginForm: React.FC = () => {
                         />
                     </div>
 
-                    {errorCode && <div className="error-message">{getErrorMessage()}</div>}
+                    {errorMessage && <div className="error-message">{errorMessage}</div>}
 
                     <button type="submit" disabled={loading} className="login-button">
                         {loading ? (
