@@ -1,19 +1,27 @@
 import {createBrowserRouter, Navigate} from 'react-router-dom';
 import {Suspense, lazy, type JSX} from "react";
 
-import LoginForm from '../features/authentication/components/LoginForm';
-import ProtectedRoute from '../shared/components/ProtectedRoute';
-import RootRedirect from '../shared/components/RootRedirect';
-import LoadingSpinner from "../shared/components/LoadingSpinner.tsx";
+import LoginForm from '@/features/authentication/components/LoginForm';
+import ProtectedRoute from '@/shared/components/ProtectedRoute';
+import RootRedirect from '@/shared/components/RootRedirect';
+import LoadingSpinner from "@/shared/components/LoadingSpinner.tsx";
 
-const RegistrationForm = lazy(() => import("../features/authentication/components/RegistrationForm"));
-const Dashboard = lazy(() => import("../shared/components/Dashboard"));
-const Layout = lazy(() => import("../shared/components/Layout"));
-const NotFoundPage = lazy(() => import("../shared/components/NotFoundPage"));
-const Profile = lazy(() => import("../features/user-management/components/Profile"));
-const ProfileSettings = lazy(() => import( "../features/user-management/components/settings/ProfileSettings.tsx"));
-const PasswordSettings = lazy(() => import( "../features/user-management/components/settings/PasswordSettings.tsx"));
-const DeleteAccount = lazy(() => import("../features/user-management/components/settings/DeleteAccount.tsx"));
+const RegistrationForm = lazy(() => import("@/features/authentication/components/RegistrationForm"));
+const Dashboard = lazy(() => import("@/shared/components/Dashboard"));
+const Layout = lazy(() => import("@/shared/components/Layout"));
+const NotFoundPage = lazy(() => import("@/shared/components/NotFoundPage"));
+const Profile = lazy(() => import("@/features/user-management/components/Profile"));
+const ProfileSettings = lazy(() => import( "@/features/user-management/components/settings/ProfileSettings.tsx"));
+const PasswordSettings = lazy(() => import( "@/features/user-management/components/settings/PasswordSettings.tsx"));
+const DeleteAccount = lazy(() => import("@/features/user-management/components/settings/DeleteAccount.tsx"));
+const OffersPage = lazy(() => import("@/features/offers/components/OffersPage.tsx"));
+const CreateOfferPage = lazy(() => import("@/features/offers/components/CreateOfferPage.tsx"));
+const ApplicationsPage = lazy(() => import("@/features/applications/components/ApplicationsPage.tsx"));
+const ApplicationDetailPage = lazy(() => import("@/features/applications/components/ApplicationDetailPage.tsx"));
+const OfferDetailPage = lazy(() => import("@/features/offers/components/OfferDetailPage.tsx"));
+const InterviewsPage = lazy(() => import("@/features/interviews/components/InterviewsPage.tsx"));
+const DepartmentsPage = lazy(() => import("@/features/departments/components/DepartmentsPage.tsx"));
+const StaffManagementPage = lazy(() => import("@/features/administration/components/StaffManagementPage.tsx"));
 
 const withSuspense = (element: JSX.Element) => (
     <Suspense fallback={<LoadingSpinner/>}>{element}</Suspense>
@@ -47,6 +55,38 @@ const router = createBrowserRouter([
             {
                 path: "me",
                 element: withSuspense(<Profile/>),
+            },
+            {
+                path: "offers",
+                element: withSuspense(<OffersPage/>),
+            },
+            {
+                path: "offers/new",
+                element: withSuspense(<CreateOfferPage/>),
+            },
+            {
+                path: "offers/:id",
+                element: withSuspense(<OfferDetailPage/>),
+            },
+            {
+                path: "applications",
+                element: withSuspense(<ApplicationsPage/>),
+            },
+            {
+                path: "applications/:id",
+                element: withSuspense(<ApplicationDetailPage/>),
+            },
+            {
+                path: "interviews",
+                element: withSuspense(<InterviewsPage/>),
+            },
+            {
+                path: "departments",
+                element: withSuspense(<DepartmentsPage/>),
+            },
+            {
+                path: "admin/staff",
+                element: withSuspense(<StaffManagementPage/>),
             },
             {
                 path: "settings",

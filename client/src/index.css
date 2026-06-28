@@ -2,54 +2,162 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Krino design tokens — "evergreen on paper"
+   Display: Lora (serif) · UI/body: Inter (sans)
+   ============================================================ */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
   color-scheme: light;
-  color: #213547;
-  background-color: #ffffff;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Surfaces & ink */
+  --color-paper: #fcfbf9;          /* page background */
+  --color-surface: #ffffff;        /* cards, navbar, menus */
+  --color-surface-sunken: #f5f3ee; /* table headers, hovers, quiet fills */
+  --color-ink: #1b1a17;            /* primary text (warm near-black) */
+  --color-ink-soft: #57534b;       /* secondary text */
+  --color-ink-faint: #8a857b;      /* tertiary text, placeholders */
+  --color-line: #e7e3db;           /* hairline borders */
+  --color-line-strong: #d8d2c6;    /* stronger dividers */
+
+  /* Brand: evergreen */
+  --color-primary: #1c6b5a;
+  --color-primary-hover: #155246;
+  --color-primary-active: #0f3f36;
+  --color-primary-tint: #e8f1ed;   /* quiet evergreen fill */
+  --color-on-primary: #ffffff;
+
+  /* Feedback */
+  --color-danger: #b4322a;
+  --color-danger-hover: #92281f;
+  --color-danger-tint: #fbeeec;
+
+  /* Status badges (warm, tuned to paper) */
+  --badge-amber-bg: #f5ead0;  --badge-amber-fg: #875a12;
+  --badge-blue-bg: #e6edf3;   --badge-blue-fg: #2e5476;
+  --badge-green-bg: #e2eee8;  --badge-green-fg: #155246;
+  --badge-red-bg: #f6e5e2;    --badge-red-fg: #9a352b;
+  --badge-violet-bg: #ece6f1; --badge-violet-fg: #694079;
+
+  /* Typography */
+  --font-display: "Lora", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+
+  /* Elevation — soft, warm-tinted shadows */
+  --shadow-xs: 0 1px 2px rgba(27, 26, 23, 0.06);
+  --shadow-sm: 0 1px 2px rgba(27, 26, 23, 0.04), 0 2px 6px rgba(27, 26, 23, 0.05);
+  --shadow-md: 0 2px 6px rgba(27, 26, 23, 0.05), 0 8px 24px rgba(27, 26, 23, 0.07);
+  --shadow-lg: 0 4px 12px rgba(27, 26, 23, 0.06), 0 18px 40px rgba(27, 26, 23, 0.10);
+
+  /* Motion & focus */
+  --transition: 160ms ease;
+  --ring: 0 0 0 3px rgba(28, 107, 90, 0.20);
+
+  /* Shared page artwork */
+  --app-background-image: url("/background.png");
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+/* ============================================================
+   Base elements
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
-a:hover {
-  color: #535bf2;
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f8fafc;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.55;
+  font-weight: 400;
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  color: var(--color-ink);
+  margin: 0 0 0.5em;
+  text-wrap: balance;
+}
+
+h1 { font-size: var(--text-4xl); }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
+
+p { margin: 0 0 1rem; }
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
   font-family: inherit;
-  background-color: #f9f9f9;
   cursor: pointer;
-  transition: border-color 0.25s;
-  color: #213547;
 }
-button:hover {
-  border-color: #646cff;
+
+/* Keyboard focus only — visible, on-brand, never on mouse click */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
