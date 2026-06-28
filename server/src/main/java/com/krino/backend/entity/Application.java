@@ -2,15 +2,14 @@ package com.krino.backend.entity;
 
 import com.krino.backend.entity.enums.ApplicationStatus;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -25,13 +24,7 @@ import java.util.UUID;
                 @UniqueConstraint(name = "uk_applications_job_candidate", columnNames = {"job_id", "user_id"})
         }
 )
-public class Application {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "public_id", unique = true, nullable = false, updatable = false)
-    private UUID publicId;
+public class Application extends AbstractPublicEntity {
 
     @ManyToOne
     @JoinColumn(name = "job_id", nullable = false, foreignKey = @ForeignKey(name = "fk_applications_job"))
@@ -57,16 +50,17 @@ public class Application {
 
     private LocalDateTime resumeUploadedAt;
 
+    // Domain event — when the candidate applied. Distinct from the base's
+    // createdDate audit column (which they coincide with today, but appliedAt is
+    // the business-meaningful timestamp exposed to clients).
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime appliedAt;
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    void ensurePublicId() {
-        if (publicId == null) publicId = UUID.randomUUID();
-    }
+    // Prevents silent lost updates from concurrent edits.
+    @Version
+    @Column(nullable = false)
+    @Setter(AccessLevel.NONE)
+    private long version;
 
 }

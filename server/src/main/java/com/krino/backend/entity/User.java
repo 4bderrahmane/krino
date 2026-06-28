@@ -5,37 +5,22 @@ import com.krino.backend.entity.enums.Permission;
 import com.krino.backend.entity.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.type.SqlTypes;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
-@Builder
+@SuperBuilder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "users", indexes = {
-        @Index(name = "idx_users_public_id", columnList = "public_id")
-})
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @UuidGenerator
-    @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "public_id", unique = true, nullable = false, updatable = false,
-            columnDefinition = "VARCHAR(36)")
-    private UUID publicId;
+@Table(name = "users")
+public class User extends AbstractPublicEntity {
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -53,6 +38,32 @@ public class User {
 
     private boolean isApproved = false;
 
+    // True while the account is still on its admin-generated initial password
+    // (set at staff creation, cleared on the first password change). Drives the
+    // client's "change your password" reminder. Self-registered candidates, who
+    // choose their own password, start false.
+    //
+    // @ColumnDefault is required so Hibernate's ddl-auto adds this NOT NULL column
+    // to the already-populated users table with a DEFAULT, backfilling existing
+    // rows to false instead of failing with "column contains null values".
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private boolean mustChangePassword = false;
+
+    // Base CV captured at candidate self-registration. Nullable: admin-created staff
+    // (HR / interviewers) have no CV. Per-application CVs live on Application instead.
+    @Column(length = 512)
+    private String resumeObjectKey;
+
+    private String resumeOriginalFilename;
+
+    @Column(length = 100)
+    private String resumeContentType;
+
+    private Long resumeSizeBytes;
+
+    private LocalDateTime resumeUploadedAt;
+
     public User(String email, String password, String firstName, String lastName, String phoneNumber) {
         this.email = email;
         this.password = password;
@@ -63,15 +74,11 @@ public class User {
     }
 
     @ElementCollection(targetClass = UserRole.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), indexes = {
+            @Index(name = "idx_user_roles_roles", columnList = "roles")
+    })
     @Enumerated(EnumType.STRING)
     private Set<UserRole> roles;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
@@ -99,15 +106,10 @@ public class User {
 
 
     public UserRole getPrimaryRole() {
-        if (this.roles.contains(UserRole.ADMIN)) {
-            return UserRole.ADMIN;
-        } else if (this.roles.contains(UserRole.HR_MANAGER)) {
-            return UserRole.HR_MANAGER;
-        } else if (this.roles.contains(UserRole.INTERVIEWER)) {
-            return UserRole.INTERVIEWER;
-        } else if (this.roles.contains(UserRole.CANDIDATE)) {
-            return UserRole.CANDIDATE;
-        }
+        if (this.roles.contains(UserRole.ADMIN)) return UserRole.ADMIN;
+        else if (this.roles.contains(UserRole.HR_MANAGER)) return UserRole.HR_MANAGER;
+        else if (this.roles.contains(UserRole.INTERVIEWER)) return UserRole.INTERVIEWER;
+        else if (this.roles.contains(UserRole.CANDIDATE)) return UserRole.CANDIDATE;
         return null;
     }
 

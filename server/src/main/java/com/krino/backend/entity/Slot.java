@@ -2,14 +2,10 @@ package com.krino.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.type.SqlTypes;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -17,19 +13,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "slots", indexes = {
-        @Index(name = "idx_slots_public_id", columnList = "public_id")
+        @Index(name = "idx_slots_interviewer", columnList = "interviewer_id")
 })
-public class Slot {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @UuidGenerator
-    @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "public_id", unique = true, nullable = false, updatable = false,
-            columnDefinition = "VARCHAR(36)")
-    private UUID publicId;
-
+public class Slot extends AbstractPublicEntity {
 
     // The interviewer whose availability this slot represents.
     @ManyToOne(fetch = FetchType.LAZY)
@@ -42,6 +28,12 @@ public class Slot {
     private LocalDate interviewDate;
     private LocalTime startTime;
     private LocalTime endTime;
+
+    // Prevents silent lost updates from concurrent edits.
+    @Version
+    @Column(nullable = false)
+    @Setter(AccessLevel.NONE)
+    private long version;
 
     @Setter(AccessLevel.NONE)
     @OneToOne(mappedBy = "slot")

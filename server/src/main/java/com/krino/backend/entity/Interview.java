@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.AccessLevel;
 
-import java.util.UUID;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,13 +22,7 @@ import java.util.UUID;
                 @UniqueConstraint(name = "uk_interviews_slot", columnNames = "slot_id")
         }
 )
-public class Interview {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "public_id", unique = true, nullable = false, updatable = false)
-    private UUID publicId;
+public class Interview extends AbstractPublicEntity {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "application_id", nullable = false, foreignKey = @ForeignKey(name = "fk_interviews_application"))
@@ -62,6 +54,12 @@ public class Interview {
     @Column(length = 512)
     private String meetingUrl;
 
+    // Prevents silent lost updates from concurrent edits.
+    @Version
+    @Column(nullable = false)
+    @Setter(AccessLevel.NONE)
+    private long version;
+
     public void setSlot(Slot s) {
         if (slot != null) {
             Slot previous = slot;
@@ -73,11 +71,6 @@ public class Interview {
             slot = s;
             slot.setInterview(this);
         }
-    }
-
-    @PrePersist
-    void ensurePublicId() {
-        if (publicId == null) publicId = UUID.randomUUID();
     }
 
     public User getCandidate() {

@@ -1,15 +1,18 @@
 package com.krino.backend.entity;
 
 import lombok.Getter;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serial;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter
 public class CustomUserDetails implements UserDetails {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final transient User user;
@@ -20,8 +23,8 @@ public class CustomUserDetails implements UserDetails {
     private final boolean enabled;
     private final Collection<? extends GrantedAuthority> authorities;
 
-    public CustomUserDetails(User user) {
-        this.user = user;
+    public CustomUserDetails(User u) {
+        user = u;
         id = user.getId();
         publicId = user.getPublicId();
         email = user.getEmail();
@@ -35,12 +38,12 @@ public class CustomUserDetails implements UserDetails {
     }
 
     @Override
-    public String getUsername() {
+    public @NonNull String getUsername() {
         return email;
     }
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
+    public @NonNull Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
 

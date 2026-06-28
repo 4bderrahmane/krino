@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Setter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -20,21 +18,18 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "refresh_tokens", indexes = {
-        @Index(name = "idx_token_hash", columnList = "token_hash"),
-        @Index(name = "idx_expires_at", columnList = "expires_at")
+        @Index(name = "idx_refresh_tokens_expires_at", columnList = "expires_at")
 })
 public class RefreshToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(columnDefinition = "VARCHAR(36)")
     private UUID id;
 
     /**
      * HMAC-SHA256 of the raw token using the server-side refresh-token secret.
      */
-    @Column(name = "token_hash", nullable = false, unique = true, columnDefinition = "BINARY(32)")
+    @Column(name = "token_hash", nullable = false, unique = true, length = 32)
     private byte[] tokenHash;
 
     @ManyToOne(fetch = FetchType.LAZY)
