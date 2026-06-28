@@ -62,7 +62,9 @@ class UserMapperTest
         assertThat(user.getEmail()).isEqualTo("candidate@test.local");
         assertThat(user.getPassword()).isEqualTo("encoded-password");
         assertThat(user.getId()).isNull();
-        assertThat(user.getPublicId()).isNull();
+        // publicId is auto-assigned at construction (stable identity for transient
+        // entities); only the DB surrogate id stays unset until persist.
+        assertThat(user.getPublicId()).isNotNull();
         assertThat(user.isApproved()).isFalse();
         assertThat(user.getRoles()).isEmpty();
     }

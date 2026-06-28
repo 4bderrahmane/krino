@@ -25,8 +25,8 @@ class RefreshTokenMapperTest
     {
         User user = new User();
         byte[] tokenHash = {1, 2, 3, 4};
-        Instant expiresAt = Instant.now().plusSeconds(3600);
-        Instant createdAt = Instant.now();
+        Instant createdAt = Instant.parse("2026-01-15T10:30:00Z");
+        Instant expiresAt = createdAt.plusSeconds(3600);
 
         RefreshToken token = refreshTokenMapper.toEntity(user, tokenHash, expiresAt, createdAt, "Firefox on Linux",
                 "127.0.0.1");
