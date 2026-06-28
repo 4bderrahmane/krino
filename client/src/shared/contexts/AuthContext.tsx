@@ -1,7 +1,8 @@
 import React, {useState, useEffect} from 'react';
-import type {UserResponseDTO} from '../../features/authentication/types/api.types';
-import type {AuthContextType} from '../types/types.ts';
-import {checkAuthStatus} from '../../features/authentication/services/AuthenticationService.ts';
+import type {UserResponseDTO} from '@/features/authentication/types/api.types';
+import type {AuthContextType} from '@/shared/types/types.ts';
+import {checkAuthStatus} from '@/features/authentication/services/AuthenticationService.ts';
+import {setupTokenRefresh, clearTokenRefresh} from '@/shared/services/api.ts';
 import {AuthContext} from './authContext.ts';
 
 interface AuthProviderProps {
@@ -19,6 +20,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
                 const userData = await checkAuthStatus();
                 if (userData) {
                     setUser(userData);
+                    // Resume proactive refresh for the restored session so it
+                    // stays alive across reloads (not only right after login).
+                    setupTokenRefresh();
                     // Don't set justLoggedIn to true for existing sessions
                 }
             } catch (error) {
@@ -32,18 +36,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     }, []);
 
     const login = (userData: UserResponseDTO) => {
-        console.log('AuthContext login called with:', userData);
         setUser(userData);
         setJustLoggedIn(true); // Set flag when user logs in
     };
 
     const logout = () => {
+        clearTokenRefresh();
         setUser(null);
         setJustLoggedIn(false);
     };
 
     const clearJustLoggedIn = () => {
         setJustLoggedIn(false);
+    };
+
+    // Pull the latest user from /users/me. Used after mutations that change user
+    // state server-side (e.g. a password change clearing mustChangePassword).
+    const refreshUser = async () => {
+        const userData = await checkAuthStatus();
+        if (userData) {
+            setUser(userData);
+        }
     };
 
     const value: AuthContextType = {
@@ -53,6 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         isLoading,
         justLoggedIn,
         clearJustLoggedIn,
+        refreshUser,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

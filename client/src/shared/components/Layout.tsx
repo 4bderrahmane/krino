@@ -1,7 +1,8 @@
 import React from 'react';
 import {Outlet} from 'react-router-dom';
 import NavBar from './NavBar';
-import '../styles/Layout.css';
+import PasswordReminderModal from './PasswordReminderModal';
+import '@/shared/styles/Layout.css';
 
 const Layout: React.FC = () => {
     return (
@@ -10,6 +11,7 @@ const Layout: React.FC = () => {
             <main className="main-content">
                 <Outlet/>
             </main>
+            <PasswordReminderModal/>
         </div>
     );
 };

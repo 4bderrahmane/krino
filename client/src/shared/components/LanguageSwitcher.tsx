@@ -1,9 +1,9 @@
 import React, {useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import type {Language} from "../types/types";
-import enFlag from '../../assets/us.svg';
-import frFlag from '../../assets/fr.svg';
-import '../styles/LanguageSwitcher.css';
+import type {Language} from "@/shared/types/types";
+import enFlag from '@/assets/us.svg';
+import frFlag from '@/assets/fr.svg';
+import '@/shared/styles/LanguageSwitcher.css';
 
 const LanguageSwitcher: React.FC = () => {
     const {i18n} = useTranslation();

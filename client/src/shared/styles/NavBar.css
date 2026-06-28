@@ -1,121 +1,170 @@
 .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1.5rem;
     padding: 0 2rem;
-    height: 60px;
-    background-color: #ffffff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    height: 64px;
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-line);
+}
+
+.navbar-brand {
+    flex: 1 1 0;
+    min-width: 0;
 }
 
 .navbar-brand a {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #2563eb;
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--color-ink);
     text-decoration: none;
 }
 
-.navbar-menu {
-    display: flex;
-    align-items: center;
+.navbar-brand a:hover {
+    color: var(--color-ink);
+    text-decoration: none;
 }
 
 .navbar-links {
+    flex: 0 1 auto;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.75rem;
     list-style: none;
     margin: 0;
     padding: 0;
 }
 
-.navbar-links li {
-    margin-right: 1.5rem;
-}
-
-.navbar-links li.active {
-    /* background-color: #e6f7ff; lol */
-    border-bottom: 2px solid #1890ff;
-}
-
-.navbar-links li.active a {
-    color: #1890ff;
-    font-weight: bold;
-}
-
 .navbar-links a {
-    color: #4b5563;
+    position: relative;
+    padding: 6px 1px;
+    color: var(--color-ink-soft);
     text-decoration: none;
     font-weight: 500;
-    transition: color 0.3s;
+    transition: color var(--transition);
+}
+
+.navbar-links a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 2px;
+    background-color: var(--color-primary);
+    border-radius: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--transition);
 }
 
 .navbar-links a:hover {
-    color: #2563eb;
+    color: var(--color-ink);
+    text-decoration: none;
+}
+
+.navbar-links a:hover::after,
+.navbar-links li.active a::after {
+    transform: scaleX(1);
+}
+
+.navbar-links li.active a {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.navbar-actions {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1.25rem;
 }
 
 .navbar-user {
     position: relative;
-    margin-left: 1rem;
 }
 
 .user-profile {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
     cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 4px;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    background: none;
+    color: var(--color-ink);
+    transition: background-color var(--transition), border-color var(--transition);
 }
 
 .user-profile:hover {
-    background-color: #f3f4f6;
+    background-color: var(--color-surface-sunken);
+    border-color: var(--color-line);
 }
 
 .user-name {
     font-weight: 500;
-    margin-right: 0.5rem;
 }
 
 .dropdown-icon {
-    font-size: 0.75rem;
-    color: #6b7280;
+    font-size: 0.65rem;
+    color: var(--color-ink-faint);
 }
 
 .dropdown-menu {
     position: absolute;
     right: 0;
-    top: calc(100% + 10px); /* Position below the user profile with a small gap */
-    min-width: 180px; /* Set a minimum width */
-    background-color: white;
-    border-radius: 4px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    top: calc(100% + 10px);
+    min-width: 188px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
     z-index: 10;
-    padding: 0.5rem 0;
-    width: auto; /* Allow width to be determined by content */
+    padding: 0.4rem;
 }
 
 .dropdown-item {
     display: flex;
     align-items: center;
-    padding: 0.5rem 1rem;
-    color: #4b5563;
+    gap: 0.6rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: var(--radius-sm);
+    color: var(--color-ink-soft);
     text-decoration: none;
-    transition: background-color 0.3s;
+    transition: background-color var(--transition), color var(--transition);
 }
 
 .dropdown-item .dropdown-icon-svg {
-    vertical-align: middle;
-    font-size: 1.2em;
-    margin-bottom: 2px;
-    margin-right: 0.5em;
+    font-size: 1.15em;
+    color: var(--color-ink-faint);
+    flex-shrink: 0;
+    transition: color var(--transition);
 }
 
 .dropdown-item:hover {
-    background-color: #f3f4f6;
+    background-color: var(--color-surface-sunken);
+    color: var(--color-ink);
+    text-decoration: none;
+}
+
+.dropdown-item:hover .dropdown-icon-svg {
+    color: var(--color-primary);
 }
 
 .dropdown-divider {
     height: 1px;
-    background-color: #e5e7eb;
-    margin: 0.5rem 0;
+    background-color: var(--color-line);
+    margin: 0.4rem 0.2rem;
 }
 
 .logout-button {
@@ -125,68 +174,19 @@
     border: none;
     cursor: pointer;
     font-size: 1rem;
-    color: #ef4444;
+    color: var(--color-danger);
 }
 
 .logout-button:hover {
-    background-color: #fef2f2;
+    background-color: var(--color-danger-tint);
+    color: var(--color-danger);
 }
 
-.navbar-actions {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
+.logout-button:hover .dropdown-icon-svg {
+    color: var(--color-danger);
 }
 
-/* Remove underline from welcome message username */
-.welcome-message span,
-.welcome-username,
-.user-welcome span {
-    text-decoration: none !important;
-    border-bottom: none !important;
-}
-
-/*
-  Try to identify the specific class used for the "Welcome, username" message
-  or the span wrapping the username within the Navbar.
-  Common examples might be .navbar-user-greeting, .welcome-text, .username-display, etc.
-  Replace '.navbar-username-span-class' with the actual class if you know it.
-*/
-
-/* General approach for spans within typical navbar user sections */
-.navbar .user-info span,
-.navbar .user-greeting span,
-.navbar .welcome-message span,
-.navbar .navbar-text span, /* If it's a generic text element in the navbar */
-.navbar p span, /* If the welcome message is in a paragraph */
-.navbar-username-span-class /* Replace with actual class if known */ {
-    text-decoration: none !important;
-    border-bottom: none !important;
-    background-image: none !important; /* In case underline is a background image */
-    box-shadow: none !important; /* In case underline is a shadow */
-    /* Remove any pseudo-elements that might be creating a line */
-    position: relative; /* Often needed if ::after was positioned absolutely */
-}
-
-.navbar .user-info span::after,
-.navbar .user-info span::before,
-.navbar .user-greeting span::after,
-.navbar .user-greeting span::before,
-.navbar .welcome-message span::after,
-.navbar .welcome-message span::before,
-.navbar .navbar-text span::after,
-.navbar .navbar-text span::before,
-.navbar p span::after,
-.navbar p span::before,
-.navbar-username-span-class::after,
-.navbar-username-span-class::before {
-    display: none !important;
-    content: '' !important;
-    height: 0 !important;
-    border: none !important;
-    background: none !important;
-}
-
+/* Settings flyout submenu */
 .dropdown-parent {
     position: relative;
 }
@@ -197,13 +197,14 @@
     right: 100%;
     left: auto;
     top: 0;
-    min-width: 180px;
-    background: #fff;
-    border-radius: 4px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    min-width: 188px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
     z-index: 20;
-    padding: 0.5rem 0;
-    margin-right: 4px;
+    padding: 0.4rem;
+    margin-right: 6px;
 }
 
 .dropdown-parent:hover .dropdown-submenu,
@@ -213,15 +214,8 @@
 
 .dropdown-submenu .dropdown-item {
     white-space: nowrap;
-    padding: 0.5rem 1rem;
-    color: #4b5563;
+    width: 100%;
     background: none;
     border: none;
     text-align: left;
-    width: 100%;
-}
-
-.dropdown-submenu .dropdown-item:hover {
-    background: #f3f4f6;
-    color: #2563eb;
 }

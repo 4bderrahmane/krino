@@ -2,10 +2,25 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background-color: var(--color-paper);
 }
 
 .main-content {
     flex: 1;
     padding-top: 20px;
-    background-color: white;
+    background-color: var(--color-paper);
+    background-image:
+        linear-gradient(rgba(252, 251, 249, 0.9), rgba(252, 251, 249, 0.94)),
+        var(--app-background-image);
+    background-position: center top;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: calc(100vh - 64px);
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        background-attachment: scroll;
+    }
 }

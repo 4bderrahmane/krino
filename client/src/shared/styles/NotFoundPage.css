@@ -7,19 +7,19 @@
 .not-found-number {
     font-size: 6rem;
     font-weight: bold;
-    color: #ef4444;
+    color: var(--color-danger);
     margin: 0;
     line-height: 1;
 }
 
 .not-found-title {
     font-size: 1.5rem;
-    color: #374151;
+    color: var(--color-ink-soft);
     margin: 1rem 0 0.5rem 0;
 }
 
 .not-found-description {
-    color: #6b7280;
+    color: var(--color-ink-faint);
     margin-bottom: 2rem;
 }
 
@@ -36,5 +36,5 @@
 
 .not-found-secondary-link {
     text-align: center;
-    color: #6366f1;
+    color: var(--color-primary);
 }

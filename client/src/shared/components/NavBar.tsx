@@ -1,15 +1,16 @@
 import React, {useState} from 'react';
 import {Link, useNavigate, useLocation} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import '../styles/NavBar.css';
+import '@/shared/styles/NavBar.css';
 import LanguageSwitcher from './LanguageSwitcher';
-import Welcome from "./Welcome.tsx";
-import {useSuccessToast} from '../hooks/useSuccessToast';
-import {useAuth} from '../hooks/useAuth';
-import useOutsideClick from '../hooks/useOutsideClick';
+import BrandLogo from "@/shared/components/BrandLogo.tsx";
+import {useSuccessToast} from '@/shared/hooks/useSuccessToast';
+import {useAuth} from '@/shared/hooks/useAuth';
+import {usePermissions} from '@/shared/hooks/usePermissions';
+import useOutsideClick from '@/shared/hooks/useOutsideClick';
 import {MdSettings, MdPerson, MdLogout} from "react-icons/md";
-import {logout as logoutService} from '../../features/authentication/services/AuthenticationService';
-import SettingsDropDown from "../../features/user-management/components/settings/SettingsDropDown.tsx";
+import {logout as logoutService} from '@/features/authentication/services/AuthenticationService';
+import SettingsDropDown from "@/features/user-management/components/settings/SettingsDropDown.tsx";
 
 const NavBar: React.FC = () => {
 
@@ -50,18 +51,19 @@ const NavBar: React.FC = () => {
         return location.pathname === path;
     };
 
+    const {isAdmin} = usePermissions();
+
     const displayName = user?.firstName || 'User';
 
     return (
         <nav className="navbar">
             <div className="navbar-brand">
-                <Link to="/dashboard">{
-                    <Welcome/>
-                }</Link>
+                <Link to="/dashboard" aria-label="KRINO dashboard">
+                    <BrandLogo variant="navbar"/>
+                </Link>
             </div>
 
-            <div className="navbar-menu">
-                <ul className="navbar-links">
+            <ul className="navbar-links">
                     <li className={isCurrentPage('/dashboard') ? 'active' : ''}>
                         <Link to="/dashboard">
                             {t('nav.dashboard')}
@@ -72,9 +74,9 @@ const NavBar: React.FC = () => {
                             {t('nav.applications')}
                         </Link>
                     </li>
-                    <li className={isCurrentPage('/jobs') ? 'active' : ''}>
-                        <Link to="/jobs">
-                            {t('nav.jobs')}
+                    <li className={isCurrentPage('/offers') ? 'active' : ''}>
+                        <Link to="/offers">
+                            {t('nav.offers')}
                         </Link>
                     </li>
                     <li className={isCurrentPage('/interviews') ? 'active' : ''}>
@@ -82,6 +84,18 @@ const NavBar: React.FC = () => {
                             {t('nav.interviews')}
                         </Link>
                     </li>
+                    <li className={isCurrentPage('/departments') ? 'active' : ''}>
+                        <Link to="/departments">
+                            {t('nav.departments')}
+                        </Link>
+                    </li>
+                    {isAdmin && (
+                        <li className={isCurrentPage('/admin/staff') ? 'active' : ''}>
+                            <Link to="/admin/staff">
+                                {t('nav.staff')}
+                            </Link>
+                        </li>
+                    )}
                 </ul>
 
                 <div className="navbar-actions">
@@ -120,7 +134,6 @@ const NavBar: React.FC = () => {
                         )}
                     </div>
                 </div>
-            </div>
         </nav>
     );
 };
