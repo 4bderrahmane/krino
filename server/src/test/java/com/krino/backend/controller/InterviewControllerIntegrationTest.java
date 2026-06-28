@@ -1,14 +1,14 @@
 package com.krino.backend.controller;
 
+import com.krino.backend.entity.Application;
 import com.krino.backend.entity.Department;
 import com.krino.backend.entity.Interview;
 import com.krino.backend.entity.Job;
 import com.krino.backend.entity.Slot;
 import com.krino.backend.entity.User;
-import com.krino.backend.entity.enums.ContractType;
-import com.krino.backend.entity.enums.EmploymentType;
-import com.krino.backend.entity.enums.JobStatus;
+import com.krino.backend.entity.enums.ApplicationStatus;
 import com.krino.backend.entity.enums.UserRole;
+import com.krino.backend.support.TestJobs;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Month;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class InterviewControllerIntegrationTest extends AbstractControllerIntegrationTest
 {
+    private static final String OTHER_CANDIDATE_EMAIL = "other-candidate@test.local";
+
     @Test
     void adminBooksInterviewIntoFreeSlotReturnsCreatedAndPersists() throws Exception
     {
@@ -32,16 +35,19 @@ class InterviewControllerIntegrationTest extends AbstractControllerIntegrationTe
         User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
         Job job = openJob();
+        Application application = applicationFor(candidate, job);
         Slot slot = slotRepository.save(slotFor(interviewer));
         Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
 
         mockMvc.perform(withCsrf(post("/api/interviews"))
                         .cookie(accessCookie)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bookingBody(candidate, job, slot)))
+                        .content(bookingBody(application, slot)))
                 .andExpect(status().isCreated());
 
         assertThat(interviewRepository.count()).isEqualTo(1);
+        assertThat(applicationRepository.findByPublicId(application.getPublicId()).orElseThrow().getStatus())
+                .isEqualTo(ApplicationStatus.INTERVIEW_SCHEDULED);
     }
 
     @Test
@@ -51,9 +57,10 @@ class InterviewControllerIntegrationTest extends AbstractControllerIntegrationTe
         User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
         Job job = openJob();
+        Application application = applicationFor(candidate, job);
         Slot slot = slotRepository.save(slotFor(interviewer));
         Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
-        String body = bookingBody(candidate, job, slot);
+        String body = bookingBody(application, slot);
 
         mockMvc.perform(withCsrf(post("/api/interviews"))
                         .cookie(accessCookie)
@@ -69,21 +76,20 @@ class InterviewControllerIntegrationTest extends AbstractControllerIntegrationTe
     }
 
     @Test
-    void bookingWithUnknownCandidateReturnsNotFound() throws Exception
+    void bookingWithUnknownApplicationReturnsNotFound() throws Exception
     {
         createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
         User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
-        Job job = openJob();
         Slot slot = slotRepository.save(slotFor(interviewer));
         Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
 
         String body = """
                 {
-                  "candidateId": "%s",
-                  "jobId": "%s",
-                  "slotId": "%s"
+                  "applicationId": "%s",
+                  "slotId": "%s",
+                  "isOnline": false
                 }
-                """.formatted(UUID.randomUUID(), job.getPublicId(), slot.getPublicId());
+                """.formatted(UUID.randomUUID(), slot.getPublicId());
 
         mockMvc.perform(withCsrf(post("/api/interviews"))
                         .cookie(accessCookie)
@@ -99,9 +105,10 @@ class InterviewControllerIntegrationTest extends AbstractControllerIntegrationTe
         User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
         Job job = openJob();
+        Application application = applicationFor(candidate, job);
         Slot slot = slotRepository.save(slotFor(interviewer));
         Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
-        Interview interview = interviewRepository.save(interviewFor(interviewer, candidate, job, slot));
+        Interview interview = interviewRepository.save(interviewFor(interviewer, application, slot));
 
         MvcResult result = mockMvc.perform(get("/api/interviews/" + interview.getPublicId())
                         .cookie(accessCookie))
@@ -110,9 +117,27 @@ class InterviewControllerIntegrationTest extends AbstractControllerIntegrationTe
 
         assertThat(result.getResponse().getContentAsString()).contains(
                 "\"id\":\"" + interview.getPublicId() + "\"",
+                "\"applicationId\":\"" + application.getPublicId() + "\"",
                 "\"title\":\"Backend Engineer\"",
                 "\"email\":\"" + CANDIDATE_EMAIL + "\""
         );
+    }
+
+    @Test
+    void candidateCannotReadAnotherCandidatesInterview() throws Exception
+    {
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        User otherCandidate = createUser(OTHER_CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Job job = openJob();
+        Application application = applicationFor(otherCandidate, job);
+        Slot slot = slotRepository.save(slotFor(interviewer));
+        Interview interview = interviewRepository.save(interviewFor(interviewer, application, slot));
+        Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+
+        mockMvc.perform(get("/api/interviews/" + interview.getPublicId())
+                        .cookie(accessCookie))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -133,32 +158,23 @@ class InterviewControllerIntegrationTest extends AbstractControllerIntegrationTe
                 .andExpect(status().isUnauthorized());
     }
 
-    private String bookingBody(User candidate, Job job, Slot slot)
+    private String bookingBody(Application application, Slot slot)
     {
         return """
                 {
-                  "candidateId": "%s",
-                  "jobId": "%s",
+                  "applicationId": "%s",
                   "slotId": "%s",
                   "notes": "Intro call",
                   "isOnline": true,
                   "meetingUrl": "https://meet.example/abc"
                 }
-                """.formatted(candidate.getPublicId(), job.getPublicId(), slot.getPublicId());
+                """.formatted(application.getPublicId(), slot.getPublicId());
     }
 
     private Job openJob()
     {
         Department department = departmentRepository.save(department());
-
-        Job job = new Job();
-        job.setDepartment(department);
-        job.setTitle("Backend Engineer");
-        job.setEmploymentType(EmploymentType.FULL_TIME);
-        job.setContractType(ContractType.PERMANENT);
-        job.setStatus(JobStatus.OPEN);
-        job.setApplyingDeadline(LocalDate.now().plusDays(30));
-        return jobRepository.save(job);
+        return jobRepository.save(TestJobs.open(department, "Backend Engineer"));
     }
 
     private Department department()
@@ -168,22 +184,30 @@ class InterviewControllerIntegrationTest extends AbstractControllerIntegrationTe
         return department;
     }
 
+    private Application applicationFor(User candidate, Job job)
+    {
+        Application application = new Application();
+        application.setCandidate(candidate);
+        application.setJob(job);
+        application.setStatus(ApplicationStatus.UNDER_REVIEW);
+        return applicationRepository.save(application);
+    }
+
     private Slot slotFor(User interviewer)
     {
         Slot slot = new Slot();
         slot.setInterviewer(interviewer);
-        slot.setInterviewDate(LocalDate.now().plusDays(1));
+        slot.setInterviewDate(LocalDate.of(2999, Month.JANUARY, 1));
         slot.setStartTime(LocalTime.of(9, 0));
         slot.setEndTime(LocalTime.of(9, 45));
         return slot;
     }
 
-    private Interview interviewFor(User interviewer, User candidate, Job job, Slot slot)
+    private Interview interviewFor(User interviewer, Application application, Slot slot)
     {
         Interview interview = new Interview();
         interview.setInterviewer(interviewer);
-        interview.setCandidate(candidate);
-        interview.setJob(job);
+        interview.setApplication(application);
         interview.setSlot(slot);
         return interview;
     }

@@ -4,16 +4,13 @@ import com.krino.backend.entity.Application;
 import com.krino.backend.entity.Department;
 import com.krino.backend.entity.Job;
 import com.krino.backend.entity.User;
-import com.krino.backend.entity.enums.ContractType;
-import com.krino.backend.entity.enums.EmploymentType;
-import com.krino.backend.entity.enums.JobStatus;
 import com.krino.backend.entity.enums.UserRole;
+import com.krino.backend.support.TestJobs;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,6 +20,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class ApplicationControllerIntegrationTest extends AbstractControllerIntegrationTest
 {
+    private static final String OTHER_CANDIDATE_EMAIL = "other-candidate@test.local";
+
     @Test
     void candidateAppliesToOpenJobReturnsCreatedAndPersists() throws Exception
     {
@@ -35,8 +34,7 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "jobId": "%s",
-                                  "resumeUrl": "https://cv.example/me.pdf"
+                                  "jobId": "%s"
                                 }
                                 """.formatted(job.getPublicId())))
                 .andExpect(status().isCreated());
@@ -53,8 +51,7 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
 
         String body = """
                 {
-                  "jobId": "%s",
-                  "resumeUrl": "https://cv.example/me.pdf"
+                  "jobId": "%s"
                 }
                 """.formatted(job.getPublicId());
 
@@ -82,8 +79,7 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "jobId": "%s",
-                                  "resumeUrl": "https://cv.example/me.pdf"
+                                  "jobId": "%s"
                                 }
                                 """.formatted(UUID.randomUUID())))
                 .andExpect(status().isNotFound());
@@ -110,6 +106,20 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
     }
 
     @Test
+    void candidateCannotReadAnotherCandidatesApplication() throws Exception
+    {
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        User otherCandidate = createUser(OTHER_CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        Job job = openJob();
+        Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+        Application application = applicationRepository.save(applicationFor(job, otherCandidate));
+
+        mockMvc.perform(get("/api/applications/" + application.getPublicId())
+                        .cookie(accessCookie))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void readingUnknownApplicationReturnsNotFound() throws Exception
     {
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
@@ -130,15 +140,7 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
     private Job openJob()
     {
         Department department = departmentRepository.save(department());
-
-        Job job = new Job();
-        job.setDepartment(department);
-        job.setTitle("Backend Engineer");
-        job.setEmploymentType(EmploymentType.FULL_TIME);
-        job.setContractType(ContractType.PERMANENT);
-        job.setStatus(JobStatus.OPEN);
-        job.setApplyingDeadline(LocalDate.now().plusDays(30));
-        return jobRepository.save(job);
+        return jobRepository.save(TestJobs.open(department, "Backend Engineer"));
     }
 
     private Department department()
@@ -153,7 +155,6 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
         Application application = new Application();
         application.setJob(job);
         application.setCandidate(candidate);
-        application.setResumeUrl("https://cv.example/me.pdf");
         return application;
     }
 }

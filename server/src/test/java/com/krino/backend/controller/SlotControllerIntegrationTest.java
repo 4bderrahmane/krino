@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Month;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
 {
+    private static final String OTHER_INTERVIEWER_EMAIL = "other-interviewer@test.local";
+
     @Test
     void adminCreatesSlotForInterviewerReturnsCreatedAndPersists() throws Exception
     {
@@ -116,11 +119,34 @@ class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void interviewerCannotCreateSlotForAnotherInterviewer() throws Exception
+    {
+        createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        User otherInterviewer = createUser(OTHER_INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Cookie accessCookie = loginAndGetAccessCookie(INTERVIEWER_EMAIL);
+
+        mockMvc.perform(withCsrf(post("/api/slots"))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "interviewerId": "%s",
+                                  "interviewDate": "2099-01-01",
+                                  "startTime": "09:00:00",
+                                  "endTime": "09:45:00"
+                                }
+                                """.formatted(otherInterviewer.getPublicId())))
+                .andExpect(status().isForbidden());
+
+        assertThat(slotRepository.count()).isZero();
+    }
+
     private Slot slotFor(User interviewer)
     {
         Slot slot = new Slot();
         slot.setInterviewer(interviewer);
-        slot.setInterviewDate(LocalDate.of(2099, 1, 1));
+        slot.setInterviewDate(LocalDate.of(2099, Month.JANUARY, 1));
         slot.setStartTime(LocalTime.of(9, 0));
         slot.setEndTime(LocalTime.of(9, 45));
         return slot;

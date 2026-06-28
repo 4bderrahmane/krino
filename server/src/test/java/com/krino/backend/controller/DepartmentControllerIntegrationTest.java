@@ -12,7 +12,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class DepartmentControllerIntegrationTest extends AbstractControllerIntegrationTest
@@ -74,6 +76,60 @@ class DepartmentControllerIntegrationTest extends AbstractControllerIntegrationT
                                 }
                                 """))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void creatingDepartmentWithBlankNameReturnsBadRequest() throws Exception
+    {
+        createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
+        Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
+
+        mockMvc.perform(withCsrf(post("/api/departments"))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "   ",
+                                  "description": "Builds the product"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void puttingDepartmentWithoutNameReturnsBadRequest() throws Exception
+    {
+        createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
+        Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
+        Department saved = departmentRepository.save(department("Engineering", "Builds"));
+
+        mockMvc.perform(withCsrf(put("/api/departments/" + saved.getPublicId()))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "description": "Builds the product"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void patchingDepartmentWithBlankNameReturnsBadRequest() throws Exception
+    {
+        createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
+        Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
+        Department saved = departmentRepository.save(department("Engineering", "Builds"));
+
+        mockMvc.perform(withCsrf(patch("/api/departments/" + saved.getPublicId()))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "   "
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

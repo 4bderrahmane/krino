@@ -6,8 +6,10 @@ import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.repository.ApplicationRepository;
 import com.krino.backend.repository.DepartmentRepository;
 import com.krino.backend.repository.InterviewRepository;
+import com.krino.backend.repository.JobSkillRepository;
 import com.krino.backend.repository.JobRepository;
 import com.krino.backend.repository.RefreshTokenRepository;
+import com.krino.backend.repository.SkillRepository;
 import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
@@ -52,6 +54,10 @@ abstract class AbstractControllerIntegrationTest
     @Autowired
     protected JobRepository jobRepository;
     @Autowired
+    protected JobSkillRepository jobSkillRepository;
+    @Autowired
+    protected SkillRepository skillRepository;
+    @Autowired
     protected SlotRepository slotRepository;
     @Autowired
     protected ApplicationRepository applicationRepository;
@@ -78,8 +84,10 @@ abstract class AbstractControllerIntegrationTest
         refreshTokenRepository.deleteAllInBatch();
         interviewRepository.deleteAllInBatch();
         applicationRepository.deleteAllInBatch();
+        jobSkillRepository.deleteAllInBatch();
         slotRepository.deleteAllInBatch();
         jobRepository.deleteAllInBatch();
+        skillRepository.deleteAllInBatch();
         departmentRepository.deleteAllInBatch();
         userRepository.deleteAllInBatch();
     }

@@ -47,10 +47,13 @@ import static org.mockito.Mockito.when;
  *
  * Intended matrix (C=create, R=read, U=update, D=delete):
  *   Job          ADMIN:CRUD  HR:CRUD   INTERVIEWER:R    CANDIDATE:R
- *   Slot         ADMIN:CRUD  HR:CRUD   INTERVIEWER:CRUD CANDIDATE:R
+ *   Slot         ADMIN:CRUD  HR:CRUD   INTERVIEWER:CRUD CANDIDATE:item R
  *   Department   ADMIN:CRUD  HR:CRUD   INTERVIEWER:R    CANDIDATE:R
- *   Application  ADMIN:CRUD  HR:RUD    INTERVIEWER:R    CANDIDATE:CRUD
- *   Interview    ADMIN:CRUD  HR:CRUD   INTERVIEWER:RU   CANDIDATE:R
+ *   Application  ADMIN:CRUD  HR:RUD    INTERVIEWER:item R CANDIDATE:item CRUD
+ *   Interview    ADMIN:CRUD  HR:CRUD   INTERVIEWER:item RU CANDIDATE:item R
+ *
+ * Collection endpoints for slots, applications, and interviews are intentionally staff-only.
+ * Candidate/interviewer item access is filtered in the service layer by ownership/participation.
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ControllerAuthorizationTest.Config.class)
@@ -176,17 +179,19 @@ class ControllerAuthorizationTest
         // own availability: full slot management
         allowed(() -> slotController.createSlot(null));
         allowed(() -> slotController.deleteSlot(ID));
-        // conduct interviews: read + update only
-        allowed(() -> interviewController.getAllInterviews(PAGEABLE));
+        // conduct interviews: item read + update only; global list is staff-only
+        allowed(() -> interviewController.getInterviewByPublicId(ID));
         allowed(() -> interviewController.updateInterview(ID, null));
         // read context to assess candidates
         allowed(() -> jobController.getAllJobs(PAGEABLE));
-        allowed(() -> applicationController.getAllApplications(PAGEABLE));
+        allowed(() -> applicationController.getApplicationByPublicId(ID));
         allowed(() -> departmentController.getAllDepartments(PAGEABLE));
 
         denied(() -> interviewController.createInterview(null));
         denied(() -> interviewController.deleteInterview(ID));
+        denied(() -> interviewController.getAllInterviews(PAGEABLE));
         denied(() -> jobController.createJob(null));
+        denied(() -> applicationController.getAllApplications(PAGEABLE));
         denied(() -> applicationController.createApplication(null));
         denied(() -> departmentController.createDepartment(null));
     }
@@ -197,16 +202,19 @@ class ControllerAuthorizationTest
         authenticateAs(UserRole.CANDIDATE);
         allowed(() -> jobController.getAllJobs(PAGEABLE));
         allowed(() -> applicationController.createApplication(null));
-        allowed(() -> applicationController.getAllApplications(PAGEABLE));
+        allowed(() -> applicationController.getApplicationByPublicId(ID));
         allowed(() -> applicationController.updateApplication(ID, null));
         allowed(() -> applicationController.deleteApplication(ID));
-        allowed(() -> slotController.getAllSlots(PAGEABLE));
-        allowed(() -> interviewController.getAllInterviews(PAGEABLE));
+        allowed(() -> slotController.getSlotByPublicId(ID));
+        allowed(() -> interviewController.getInterviewByPublicId(ID));
         allowed(() -> departmentController.getAllDepartments(PAGEABLE));
 
         // candidates cannot author the catalogue or run interviews
         denied(() -> jobController.createJob(null));
         denied(() -> slotController.createSlot(null));
+        denied(() -> slotController.getAllSlots(PAGEABLE));
+        denied(() -> applicationController.getAllApplications(PAGEABLE));
+        denied(() -> interviewController.getAllInterviews(PAGEABLE));
         denied(() -> departmentController.createDepartment(null));
         denied(() -> interviewController.createInterview(null));
         denied(() -> interviewController.updateInterview(ID, null));
