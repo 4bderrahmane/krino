@@ -21,46 +21,60 @@
     "phoneNumber": "Phone Number",
     "email": "Enter email",
     "haveAccount": "Already have an account?",
+    "confirmPassword": "Confirm password",
+    "cvButton": "Choose PDF",
+    "cvNone": "No file chosen",
+    "cvHint": "Your CV is required — PDF only, up to 5MB.",
+    "validation": {
+      "firstName": "First name must be between 2 and 50 characters.",
+      "lastName": "Last name must be between 2 and 50 characters.",
+      "email": "Please enter a valid email address.",
+      "phone": "Phone number must be exactly 9 digits.",
+      "password": "Password must be at least 8 characters.",
+      "passwordMismatch": "Passwords don't match.",
+      "cvRequired": "Please attach your CV (PDF).",
+      "cvType": "Your CV must be a PDF file.",
+      "cvSize": "Your CV must be 5MB or smaller."
+    },
     "success": {
       "loginSuccess": "Successfully logged in! Welcome back.",
       "registrationSuccess": "Account created successfully! Please log in with your new credentials.",
       "logoutSuccess": "You have been logged out successfully."
-    },
-    "errors": {
-      "login": {
-        "INVALID_CREDENTIALS": "Invalid email or password. Please try again.",
-        "USER_NOT_FOUND": "User not found. Please check your email address.",
-        "ACCOUNT_DISABLED": "Your account has been disabled. Please contact support.",
-        "ACCOUNT_LOCKED": "Your account has been locked due to multiple failed login attempts. Please try again later.",
-        "ACCOUNT_NOT_VERIFIED": "Please verify your account before logging in. Check your email for verification instructions.",
-        "AUTHENTICATION_FAILED": "Authentication failed. Please log in again.",
-        "AUTHENTICATION_REQUIRED": "Authentication is required to access this resource.",
-        "INVALID_TOKEN": "Invalid or expired authentication token.",
-        "ACCESS_DENIED": "Access denied. You don't have permission to perform this action."
-      },
-      "registration": {
-        "EMAIL_ALREADY_IN_USE": "An account with this email already exists.",
-        "EMAIL_ALREADY_EXISTS": "This email address is already registered.",
-        "USER_ALREADY_EXISTS": "A user with this information already exists.",
-        "PASSWORD_TOO_WEAK": "Password is too weak. Please use a stronger password with at least 8 characters, including uppercase, lowercase, and numbers.",
-        "INVALID_EMAIL_FORMAT": "Please enter a valid email address.",
-        "VALIDATION_FAILED": "Validation failed. Please check your input and try again.",
-        "INVALID_REQUEST_BODY": "Invalid request data. Please check your input."
-      },
-      "common": {
-        "UNEXPECTED_ERROR": "An unexpected error occurred. Please try again later.",
-        "RESOURCE_NOT_FOUND": "The requested resource was not found.",
-        "PASSWORD_CHANGE_FAILED": "Failed to change password. Please try again.",
-        "PASSWORD_RESET_TOKEN_EXPIRED": "Password reset token has expired. Please request a new one.",
-        "INVALID_PASSWORD_RESET_TOKEN": "Invalid password reset token. Please request a new password reset.",
-        "NEW_PASSWORD_SAME_AS_OLD": "New password must be different from your current password.",
-        "INTERNAL_SERVER_ERROR": "An internal server error occurred. Please try again later."
-      }
     }
   },
   "app": {
     "loading": "Loading...",
     "welcome": "Welcome to KRINO!"
+  },
+  "passwordReminder": {
+    "title": "Set your password",
+    "body": "Your account is still using the temporary password you were given. For your security, please choose a new one.",
+    "later": "Later",
+    "changeNow": "Change now"
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "Good morning, {{name}}",
+      "afternoon": "Good afternoon, {{name}}",
+      "evening": "Good evening, {{name}}"
+    },
+    "subtitleStaff": "Here's an overview of your hiring activity.",
+    "subtitleCandidate": "Here's an overview of your applications and interviews.",
+    "overview": "Overview",
+    "stats": {
+      "offers": "Open offers",
+      "applications": "Applications",
+      "myApplications": "My applications",
+      "interviews": "Interviews",
+      "myInterviews": "My interviews"
+    },
+    "manage": "Manage",
+    "links": {
+      "profile": "Your profile",
+      "profileDesc": "View and update your details",
+      "settings": "Settings",
+      "settingsDesc": "Account and security preferences"
+    }
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -70,14 +84,333 @@
     "settings": "Settings",
     "availability": "Availability",
     "jobs": "Jobs",
+    "offers": "Offers",
     "applications": "Applications",
-    "interviews": "Interviews"
+    "interviews": "Interviews",
+    "departments": "Departments",
+    "staff": "Staff"
   },
-  "common": {
-    "pageNotFound": "Page Not Found",
-    "pageNotFoundDescription": "The page you are looking for does not exist or has been moved.",
-    "goToDashboard": "Go to Dashboard",
-    "goToLogin": "Go to Login"
+  "admin": {
+    "title": "Create Staff Account",
+    "subtitle": "Create HR managers and interviewers. They sign in with the generated password and change it later.",
+    "submit": "Create account",
+    "created": "{{name}}'s account was created.",
+    "initialPassword": "Initial password",
+    "copy": "Copy",
+    "copied": "Copied",
+    "passwordHint": "Share this password with the new staff member. They can change it from their settings after signing in.",
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phoneNumber": "Phone number",
+      "role": "Role"
+    },
+    "roles": {
+      "HR_MANAGER": "HR Manager",
+      "INTERVIEWER": "Interviewer"
+    },
+    "validation": {
+      "firstName": "First name must be between 2 and 50 characters.",
+      "lastName": "Last name must be between 2 and 50 characters.",
+      "email": "Please enter a valid email address.",
+      "phone": "Phone number must be exactly 9 digits."
+    }
+  },
+  "offers": {
+    "title": "Open Offers",
+    "count_one": "{{count}} offer available",
+    "count_other": "{{count}} offers available",
+    "empty": "There are no offers available right now.",
+    "loadError": "Failed to load offers. Please try again.",
+    "filterDepartment": "Department",
+    "allDepartments": "All departments",
+    "pagination": "Pagination",
+    "pageIndicator": "Page {{current}} of {{total}}",
+    "filters": {
+      "title": "Filters",
+      "toggle": "Filters",
+      "search": "Search",
+      "searchPlaceholder": "Title or skill",
+      "workArrangement": "Work arrangement",
+      "employmentType": "Employment type",
+      "contractType": "Contract type",
+      "experienceLevel": "Experience level",
+      "city": "City",
+      "allCities": "All cities",
+      "salary": "Salary",
+      "disclosedOnly": "Disclosed salary only",
+      "minSalary": "Minimum salary",
+      "minSalaryAny": "Any",
+      "minSalaryValue": "≥ {{amount}} · {{period}}",
+      "clearAll": "Clear all",
+      "activeLabel": "Active filters",
+      "removeFilter": "Remove filter: {{name}}",
+      "noMatches": "No offers match your filters."
+    },
+    "card": {
+      "salaryNotDisclosed": "Salary not disclosed",
+      "salaryFrom": "From {{amount}}",
+      "salaryUpTo": "Up to {{amount}}",
+      "openPositions_one": "{{count}} open position",
+      "openPositions_other": "{{count}} open positions",
+      "applyBy": "Apply by {{date}}",
+      "skillsMore": "+{{count}} more",
+      "viewDetails": "View details"
+    },
+    "status": {
+      "SCHEDULED": "Scheduled",
+      "PAUSED": "Paused",
+      "CANCELLED": "Cancelled",
+      "DRAFT": "Draft",
+      "OPEN": "Open",
+      "CLOSED": "Closed",
+      "FILLED": "Filled",
+      "ARCHIVED": "Archived"
+    },
+    "employmentType": {
+      "FULL_TIME": "Full-time",
+      "PART_TIME": "Part-time"
+    },
+    "contractType": {
+      "PERMANENT": "Permanent",
+      "FIXED_TERM": "Fixed-term",
+      "INTERNSHIP": "Internship",
+      "FREELANCE": "Freelance"
+    },
+    "experienceLevel": {
+      "INTERN": "Intern",
+      "ENTRY_LEVEL": "Entry level",
+      "JUNIOR": "Junior",
+      "MID_LEVEL": "Mid-level",
+      "SENIOR": "Senior",
+      "LEAD": "Lead",
+      "MANAGER": "Manager"
+    },
+    "remotePolicy": {
+      "ON_SITE": "On-site",
+      "HYBRID": "Hybrid",
+      "REMOTE": "Remote"
+    },
+    "salaryPeriod": {
+      "HOURLY": "per hour",
+      "DAILY": "per day",
+      "MONTHLY": "per month",
+      "YEARLY": "per year"
+    },
+    "skillImportance": {
+      "REQUIRED": "Required",
+      "PREFERRED": "Preferred"
+    },
+    "cities": {
+      "AGADIR": "Agadir",
+      "AL_HOCEIMA": "Al Hoceima",
+      "BENI_MELLAL": "Beni Mellal",
+      "BERRECHID": "Berrechid",
+      "CASABLANCA": "Casablanca",
+      "CHEFCHAOUEN": "Chefchaouen",
+      "DAKHLA": "Dakhla",
+      "EL_JADIDA": "El Jadida",
+      "ERRACHIDIA": "Errachidia",
+      "ESSAOUIRA": "Essaouira",
+      "FES": "Fès",
+      "GUELMIM": "Guelmim",
+      "INEZGANE": "Inezgane",
+      "KENITRA": "Kenitra",
+      "KHOURIBGA": "Khouribga",
+      "LAAYOUNE": "Laayoune",
+      "LARACHE": "Larache",
+      "MARRAKECH": "Marrakech",
+      "MEKNES": "Meknes",
+      "MOHAMMEDIA": "Mohammedia",
+      "NADOR": "Nador",
+      "OUARZAZATE": "Ouarzazate",
+      "OUJDA": "Oujda",
+      "RABAT": "Rabat",
+      "SAFI": "Safi",
+      "SALE": "Salé",
+      "SETTAT": "Settat",
+      "TANGIER": "Tangier",
+      "TAROUDANT": "Taroudant",
+      "TAZA": "Taza",
+      "TEMARA": "Temara",
+      "TETOUAN": "Tetouan"
+    },
+    "detail": {
+      "back": "← Back to offers",
+      "overview": "Overview",
+      "status": "Status",
+      "location": "Location",
+      "workArrangement": "Work arrangement",
+      "employmentType": "Employment type",
+      "contractType": "Contract type",
+      "experienceLevel": "Experience level",
+      "openPositions": "Open positions",
+      "deadline": "Application deadline",
+      "salary": "Salary",
+      "skills": "Skills",
+      "noSkills": "No specific skills listed.",
+      "description": "Description",
+      "department": "About the department",
+      "noDescription": "No description provided.",
+      "applyHeading": "Apply"
+    },
+    "apply": {
+      "useBaseCv": "Apply with my CV ({{name}})",
+      "uploadNew": "Upload a new CV for this offer",
+      "choosePdf": "Choose PDF",
+      "noFile": "No file chosen",
+      "submit": "Submit application",
+      "success": "Application submitted!",
+      "submitted": "You've applied to this offer.",
+      "candidatesOnly": "Only candidates can apply to offers.",
+      "cvRequired": "Please attach a CV (PDF).",
+      "cvType": "Your CV must be a PDF file.",
+      "cvSize": "Your CV must be 5MB or smaller."
+    },
+    "create": {
+      "cardTitle": "Create an offer",
+      "cardHint": "Post a new opening",
+      "title": "Create a new offer",
+      "subtitle": "Fill in the details of the position you want to publish.",
+      "draftRestored": "We restored your unsaved draft.",
+      "discardDraft": "Discard draft",
+      "sections": {
+        "basics": "Basics",
+        "classification": "Classification",
+        "location": "Location & arrangement",
+        "compensation": "Compensation",
+        "timeline": "Timeline",
+        "skills": "Skills"
+      },
+      "fields": {
+        "department": "Department",
+        "departmentPlaceholder": "Select a department",
+        "title": "Job title",
+        "titlePlaceholder": "e.g. Senior Backend Engineer",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe the role, responsibilities and requirements…",
+        "employmentType": "Employment type",
+        "contractType": "Contract type",
+        "experienceLevel": "Experience level",
+        "minimumExperienceYears": "Minimum years of experience",
+        "openPositions": "Open positions",
+        "remotePolicy": "Work arrangement",
+        "city": "City",
+        "salaryMin": "Minimum salary",
+        "salaryMax": "Maximum salary",
+        "salaryCurrency": "Currency",
+        "salaryPeriod": "Pay period",
+        "salaryVisible": "Show salary to candidates",
+        "salaryNegotiable": "Salary is negotiable",
+        "applyingDeadline": "Application deadline",
+        "plannedStartDate": "Planned start date",
+        "skillName": "Skill name",
+        "notSpecified": "Not specified"
+      },
+      "skillsHint": "List the skills this role calls for and how important each one is.",
+      "addSkill": "Add skill",
+      "removeSkill": "Remove skill",
+      "submit": "Publish offer",
+      "success": "Offer created successfully!",
+      "errors": {
+        "departmentRequired": "Please choose a department.",
+        "titleRequired": "A job title is required.",
+        "titleTooLong": "The title cannot exceed 100 characters.",
+        "deadlineRequired": "An application deadline is required.",
+        "deadlineFuture": "The deadline must be in the future.",
+        "salaryRange": "Maximum salary cannot be lower than the minimum.",
+        "openPositions": "There must be at least one open position."
+      }
+    }
+  },
+  "departments": {
+    "title": "Departments",
+    "count_one": "{{count}} department",
+    "count_other": "{{count}} departments",
+    "empty": "There are no departments yet.",
+    "loadError": "Failed to load departments. Please try again.",
+    "pagination": "Pagination",
+    "pageIndicator": "Page {{current}} of {{total}}",
+    "create": {
+      "newDepartment": "New department",
+      "title": "Create a department",
+      "name": "Name",
+      "namePlaceholder": "e.g. Engineering",
+      "description": "Description",
+      "descriptionPlaceholder": "What does this department do? (optional)",
+      "submit": "Create department",
+      "success": "Department created successfully!",
+      "errors": {
+        "nameRequired": "A department name is required.",
+        "nameTooLong": "The name cannot exceed 100 characters."
+      }
+    }
+  },
+  "applications": {
+    "title": "Applications",
+    "myTitle": "My Applications",
+    "count_one": "{{count}} application",
+    "count_other": "{{count}} applications",
+    "empty": "There are no applications yet.",
+    "emptyMine": "You haven't applied to any offers yet.",
+    "loadError": "Failed to load applications. Please try again.",
+    "viewResume": "View résumé",
+    "viewDetails": "View application details",
+    "downloading": "Opening…",
+    "resumeError": "Could not open the résumé. Please try again.",
+    "columns": {
+      "candidate": "Candidate",
+      "offer": "Offer",
+      "status": "Status",
+      "appliedAt": "Applied",
+      "resume": "Résumé"
+    },
+    "detail": {
+      "back": "← Back to applications",
+      "appliedOn": "Applied on {{date}}",
+      "untitledOffer": "Untitled offer",
+      "candidate": "Candidate",
+      "name": "Name",
+      "email": "Email",
+      "offer": "Offer",
+      "resume": "Résumé",
+      "downloadResume": "Download résumé",
+      "noResume": "No résumé was attached to this application."
+    },
+    "status": {
+      "PENDING": "Pending",
+      "UNDER_REVIEW": "Under review",
+      "ACCEPTED": "Accepted",
+      "REJECTED": "Rejected",
+      "INTERVIEW_SCHEDULED": "Interview scheduled"
+    }
+  },
+  "interviews": {
+    "title": "Interviews",
+    "myTitle": "My Interviews",
+    "count_one": "{{count}} interview",
+    "count_other": "{{count}} interviews",
+    "empty": "There are no interviews yet.",
+    "emptyMine": "You don't have any interviews yet.",
+    "loadError": "Failed to load interviews. Please try again.",
+    "join": "Join meeting",
+    "online": "Online",
+    "inPerson": "In person",
+    "columns": {
+      "offer": "Offer",
+      "candidate": "Candidate",
+      "interviewer": "Interviewer",
+      "when": "When",
+      "status": "Status",
+      "mode": "Mode"
+    },
+    "status": {
+      "SCHEDULED": "Scheduled",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "NO_SHOW": "No show"
+    }
   },
   "profile": {
     "myProfile": "My Profile",
@@ -93,7 +426,9 @@
     "updateFailed": "Failed to update profile. Please try again.",
     "changePasswordFailed": "Failed to change password. Please try again.",
     "changeDataSentence": "To change your account details, please contact your administrator or visit the",
-    "updateSuccess": "Profile updated successfully!"
+    "updateSuccess": "Profile updated successfully!",
+    "fetchError": "Failed to load your profile. Please try again.",
+    "updateError": "Failed to update profile. Please try again."
   },
   "settings": {
     "confirmDeletion": "Are you sure you want to delete your account?",
@@ -105,13 +440,15 @@
     "password": "Modify Password",
     "updateProfile": "Update Profile",
     "changePassword": "Change Password",
-    "deleteAccount": "Delete Account",
     "deleteWarning": "Are you sure you want to delete your account?",
-    "changePassword": "Change Password",
     "confirmNewPassword": "Confirm New Password",
     "currentPassword": "Current Password",
     "newPassword": "New Password",
-    "passwordsDoNotMatch": "Passwords don't match! make sure you enter the same one twice."
+    "passwordsDoNotMatch": "Passwords don't match! make sure you enter the same one twice.",
+    "passwordChangedSuccess": "Password changed successfully.",
+    "passwordChangeFailed": "Failed to change password. Please check your current password and try again.",
+    "accountDeletedSuccess": "Your account has been deleted.",
+    "deleteFailed": "Failed to delete your account. Please try again."
   },
   "page": {
     "settings": "Settings Page",

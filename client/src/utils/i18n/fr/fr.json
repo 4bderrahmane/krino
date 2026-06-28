@@ -21,46 +21,60 @@
     "phoneNumber": "Numéro de téléphone",
     "email": "Entrez l'e-mail",
     "haveAccount": "Vous avez déjà un compte ?",
+    "confirmPassword": "Confirmer le mot de passe",
+    "cvButton": "Choisir un PDF",
+    "cvNone": "Aucun fichier choisi",
+    "cvHint": "Votre CV est obligatoire — PDF uniquement, jusqu'à 5 Mo.",
+    "validation": {
+      "firstName": "Le prénom doit comporter entre 2 et 50 caractères.",
+      "lastName": "Le nom doit comporter entre 2 et 50 caractères.",
+      "email": "Veuillez saisir une adresse e-mail valide.",
+      "phone": "Le numéro de téléphone doit comporter exactement 9 chiffres.",
+      "password": "Le mot de passe doit comporter au moins 8 caractères.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "cvRequired": "Veuillez joindre votre CV (PDF).",
+      "cvType": "Votre CV doit être un fichier PDF.",
+      "cvSize": "Votre CV doit faire 5 Mo ou moins."
+    },
     "success": {
       "loginSuccess": "Connexion réussie ! Bon retour.",
       "registrationSuccess": "Compte créé avec succès ! Veuillez vous connecter avec vos nouveaux identifiants.",
       "logoutSuccess": "Vous avez été déconnecté avec succès."
-    },
-    "errors": {
-      "login": {
-        "INVALID_CREDENTIALS": "E-mail ou mot de passe invalide. Veuillez réessayer.",
-        "USER_NOT_FOUND": "Utilisateur non trouvé. Veuillez vérifier votre adresse e-mail.",
-        "ACCOUNT_DISABLED": "Votre compte a été désactivé. Veuillez contacter le support.",
-        "ACCOUNT_LOCKED": "Votre compte a été verrouillé en raison de multiples tentatives de connexion échouées. Veuillez réessayer plus tard.",
-        "ACCOUNT_NOT_VERIFIED": "Veuillez vérifier votre compte avant de vous connecter. Vérifiez votre e-mail pour les instructions de vérification.",
-        "AUTHENTICATION_FAILED": "Échec de l'authentification. Veuillez vous reconnecter.",
-        "AUTHENTICATION_REQUIRED": "L'authentification est requise pour accéder à cette ressource.",
-        "INVALID_TOKEN": "Jeton d'authentification invalide ou expiré.",
-        "ACCESS_DENIED": "Accès refusé. Vous n'avez pas la permission d'effectuer cette action."
-      },
-      "registration": {
-        "EMAIL_ALREADY_IN_USE": "Un compte avec cet e-mail existe déjà.",
-        "EMAIL_ALREADY_EXISTS": "Cette adresse e-mail est déjà enregistrée.",
-        "USER_ALREADY_EXISTS": "Un utilisateur avec ces informations existe déjà.",
-        "PASSWORD_TOO_WEAK": "Le mot de passe est trop faible. Veuillez utiliser un mot de passe plus fort avec au moins 8 caractères, incluant majuscules, minuscules et chiffres.",
-        "INVALID_EMAIL_FORMAT": "Veuillez entrer une adresse e-mail valide.",
-        "VALIDATION_FAILED": "Échec de la validation. Veuillez vérifier votre saisie et réessayer.",
-        "INVALID_REQUEST_BODY": "Données de requête invalides. Veuillez vérifier votre saisie."
-      },
-      "common": {
-        "UNEXPECTED_ERROR": "Une erreur inattendue s'est produite. Veuillez réessayer plus tard.",
-        "RESOURCE_NOT_FOUND": "La ressource demandée n'a pas été trouvée.",
-        "PASSWORD_CHANGE_FAILED": "Échec du changement de mot de passe. Veuillez réessayer.",
-        "PASSWORD_RESET_TOKEN_EXPIRED": "Le jeton de réinitialisation du mot de passe a expiré. Veuillez en demander un nouveau.",
-        "INVALID_PASSWORD_RESET_TOKEN": "Jeton de réinitialisation de mot de passe invalide. Veuillez demander une nouvelle réinitialisation.",
-        "NEW_PASSWORD_SAME_AS_OLD": "Le nouveau mot de passe doit être différent de votre mot de passe actuel.",
-        "INTERNAL_SERVER_ERROR": "Une erreur interne du serveur s'est produite. Veuillez réessayer plus tard."
-      }
     }
   },
   "app": {
     "loading": "Chargement...",
     "welcome": "Bienvenue à KRINO!"
+  },
+  "passwordReminder": {
+    "title": "Définissez votre mot de passe",
+    "body": "Votre compte utilise encore le mot de passe temporaire qui vous a été attribué. Pour votre sécurité, veuillez en choisir un nouveau.",
+    "later": "Plus tard",
+    "changeNow": "Changer maintenant"
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "Bonjour, {{name}}",
+      "afternoon": "Bon après-midi, {{name}}",
+      "evening": "Bonsoir, {{name}}"
+    },
+    "subtitleStaff": "Voici un aperçu de votre activité de recrutement.",
+    "subtitleCandidate": "Voici un aperçu de vos candidatures et entretiens.",
+    "overview": "Aperçu",
+    "stats": {
+      "offers": "Offres disponibles",
+      "applications": "Candidatures",
+      "myApplications": "Mes candidatures",
+      "interviews": "Entretiens",
+      "myInterviews": "Mes entretiens"
+    },
+    "manage": "Gérer",
+    "links": {
+      "profile": "Votre profil",
+      "profileDesc": "Consulter et mettre à jour vos informations",
+      "settings": "Paramètres",
+      "settingsDesc": "Préférences de compte et de sécurité"
+    }
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -70,7 +84,333 @@
     "settings": "Paramètres",
     "availability": "Disponibilité",
     "jobs": "Emplois",
-    "applications": "Applications"
+    "offers": "Offres",
+    "applications": "Candidatures",
+    "interviews": "Entretiens",
+    "departments": "Départements",
+    "staff": "Personnel"
+  },
+  "admin": {
+    "title": "Créer un compte du personnel",
+    "subtitle": "Créez des responsables RH et des recruteurs. Ils se connectent avec le mot de passe généré et le modifient ensuite.",
+    "submit": "Créer le compte",
+    "created": "Le compte de {{name}} a été créé.",
+    "initialPassword": "Mot de passe initial",
+    "copy": "Copier",
+    "copied": "Copié",
+    "passwordHint": "Communiquez ce mot de passe au nouveau membre. Il pourra le modifier depuis ses paramètres après connexion.",
+    "fields": {
+      "firstName": "Prénom",
+      "lastName": "Nom de famille",
+      "email": "E-mail",
+      "phoneNumber": "Numéro de téléphone",
+      "role": "Rôle"
+    },
+    "roles": {
+      "HR_MANAGER": "Responsable RH",
+      "INTERVIEWER": "Recruteur"
+    },
+    "validation": {
+      "firstName": "Le prénom doit comporter entre 2 et 50 caractères.",
+      "lastName": "Le nom doit comporter entre 2 et 50 caractères.",
+      "email": "Veuillez saisir une adresse e-mail valide.",
+      "phone": "Le numéro de téléphone doit comporter exactement 9 chiffres."
+    }
+  },
+  "offers": {
+    "title": "Offres disponibles",
+    "count_one": "{{count}} offre disponible",
+    "count_other": "{{count}} offres disponibles",
+    "empty": "Aucune offre n'est disponible pour le moment.",
+    "loadError": "Échec du chargement des offres. Veuillez réessayer.",
+    "filterDepartment": "Département",
+    "allDepartments": "Tous les départements",
+    "pagination": "Pagination",
+    "pageIndicator": "Page {{current}} sur {{total}}",
+    "filters": {
+      "title": "Filtres",
+      "toggle": "Filtres",
+      "search": "Recherche",
+      "searchPlaceholder": "Intitulé ou compétence",
+      "workArrangement": "Mode de travail",
+      "employmentType": "Type d'emploi",
+      "contractType": "Type de contrat",
+      "experienceLevel": "Niveau d'expérience",
+      "city": "Ville",
+      "allCities": "Toutes les villes",
+      "salary": "Salaire",
+      "disclosedOnly": "Salaire affiché uniquement",
+      "minSalary": "Salaire minimum",
+      "minSalaryAny": "Indifférent",
+      "minSalaryValue": "≥ {{amount}} · {{period}}",
+      "clearAll": "Tout effacer",
+      "activeLabel": "Filtres actifs",
+      "removeFilter": "Retirer le filtre : {{name}}",
+      "noMatches": "Aucune offre ne correspond à vos filtres."
+    },
+    "card": {
+      "salaryNotDisclosed": "Salaire non communiqué",
+      "salaryFrom": "À partir de {{amount}}",
+      "salaryUpTo": "Jusqu'à {{amount}}",
+      "openPositions_one": "{{count}} poste à pourvoir",
+      "openPositions_other": "{{count}} postes à pourvoir",
+      "applyBy": "Candidature avant le {{date}}",
+      "skillsMore": "+{{count}} de plus",
+      "viewDetails": "Voir l'offre"
+    },
+    "status": {
+      "SCHEDULED": "Planifiée",
+      "PAUSED": "En pause",
+      "CANCELLED": "Annulée",
+      "DRAFT": "Brouillon",
+      "OPEN": "Ouverte",
+      "CLOSED": "Fermée",
+      "FILLED": "Pourvue",
+      "ARCHIVED": "Archivée"
+    },
+    "employmentType": {
+      "FULL_TIME": "Temps plein",
+      "PART_TIME": "Temps partiel"
+    },
+    "contractType": {
+      "PERMANENT": "CDI",
+      "FIXED_TERM": "CDD",
+      "INTERNSHIP": "Stage",
+      "FREELANCE": "Freelance"
+    },
+    "experienceLevel": {
+      "INTERN": "Stagiaire",
+      "ENTRY_LEVEL": "Débutant",
+      "JUNIOR": "Junior",
+      "MID_LEVEL": "Confirmé",
+      "SENIOR": "Senior",
+      "LEAD": "Lead",
+      "MANAGER": "Manager"
+    },
+    "remotePolicy": {
+      "ON_SITE": "Sur site",
+      "HYBRID": "Hybride",
+      "REMOTE": "À distance"
+    },
+    "salaryPeriod": {
+      "HOURLY": "par heure",
+      "DAILY": "par jour",
+      "MONTHLY": "par mois",
+      "YEARLY": "par an"
+    },
+    "skillImportance": {
+      "REQUIRED": "Requis",
+      "PREFERRED": "Souhaité"
+    },
+    "cities": {
+      "AGADIR": "Agadir",
+      "AL_HOCEIMA": "Al Hoceïma",
+      "BENI_MELLAL": "Béni Mellal",
+      "BERRECHID": "Berrechid",
+      "CASABLANCA": "Casablanca",
+      "CHEFCHAOUEN": "Chefchaouen",
+      "DAKHLA": "Dakhla",
+      "EL_JADIDA": "El Jadida",
+      "ERRACHIDIA": "Errachidia",
+      "ESSAOUIRA": "Essaouira",
+      "FES": "Fès",
+      "GUELMIM": "Guelmim",
+      "INEZGANE": "Inezgane",
+      "KENITRA": "Kénitra",
+      "KHOURIBGA": "Khouribga",
+      "LAAYOUNE": "Laâyoune",
+      "LARACHE": "Larache",
+      "MARRAKECH": "Marrakech",
+      "MEKNES": "Meknès",
+      "MOHAMMEDIA": "Mohammedia",
+      "NADOR": "Nador",
+      "OUARZAZATE": "Ouarzazate",
+      "OUJDA": "Oujda",
+      "RABAT": "Rabat",
+      "SAFI": "Safi",
+      "SALE": "Salé",
+      "SETTAT": "Settat",
+      "TANGIER": "Tanger",
+      "TAROUDANT": "Taroudant",
+      "TAZA": "Taza",
+      "TEMARA": "Témara",
+      "TETOUAN": "Tétouan"
+    },
+    "detail": {
+      "back": "← Retour aux offres",
+      "overview": "Aperçu",
+      "status": "Statut",
+      "location": "Lieu",
+      "workArrangement": "Organisation du travail",
+      "employmentType": "Type d'emploi",
+      "contractType": "Type de contrat",
+      "experienceLevel": "Niveau d'expérience",
+      "openPositions": "Postes à pourvoir",
+      "deadline": "Date limite de candidature",
+      "salary": "Salaire",
+      "skills": "Compétences",
+      "noSkills": "Aucune compétence spécifique indiquée.",
+      "description": "Description",
+      "department": "À propos du département",
+      "noDescription": "Aucune description fournie.",
+      "applyHeading": "Postuler"
+    },
+    "apply": {
+      "useBaseCv": "Postuler avec mon CV ({{name}})",
+      "uploadNew": "Téléverser un nouveau CV pour cette offre",
+      "choosePdf": "Choisir un PDF",
+      "noFile": "Aucun fichier choisi",
+      "submit": "Envoyer la candidature",
+      "success": "Candidature envoyée !",
+      "submitted": "Vous avez postulé à cette offre.",
+      "candidatesOnly": "Seuls les candidats peuvent postuler aux offres.",
+      "cvRequired": "Veuillez joindre un CV (PDF).",
+      "cvType": "Votre CV doit être un fichier PDF.",
+      "cvSize": "Votre CV doit faire 5 Mo ou moins."
+    },
+    "create": {
+      "cardTitle": "Créer une offre",
+      "cardHint": "Publier un nouveau poste",
+      "title": "Créer une nouvelle offre",
+      "subtitle": "Renseignez les détails du poste que vous souhaitez publier.",
+      "draftRestored": "Nous avons restauré votre brouillon non enregistré.",
+      "discardDraft": "Supprimer le brouillon",
+      "sections": {
+        "basics": "Informations de base",
+        "classification": "Classification",
+        "location": "Lieu et organisation",
+        "compensation": "Rémunération",
+        "timeline": "Calendrier",
+        "skills": "Compétences"
+      },
+      "fields": {
+        "department": "Département",
+        "departmentPlaceholder": "Sélectionnez un département",
+        "title": "Intitulé du poste",
+        "titlePlaceholder": "ex. Ingénieur Backend Senior",
+        "description": "Description",
+        "descriptionPlaceholder": "Décrivez le poste, les responsabilités et les prérequis…",
+        "employmentType": "Type d'emploi",
+        "contractType": "Type de contrat",
+        "experienceLevel": "Niveau d'expérience",
+        "minimumExperienceYears": "Années d'expérience minimum",
+        "openPositions": "Postes à pourvoir",
+        "remotePolicy": "Organisation du travail",
+        "city": "Ville",
+        "salaryMin": "Salaire minimum",
+        "salaryMax": "Salaire maximum",
+        "salaryCurrency": "Devise",
+        "salaryPeriod": "Période de paie",
+        "salaryVisible": "Afficher le salaire aux candidats",
+        "salaryNegotiable": "Salaire négociable",
+        "applyingDeadline": "Date limite de candidature",
+        "plannedStartDate": "Date de début prévue",
+        "skillName": "Nom de la compétence",
+        "notSpecified": "Non spécifié"
+      },
+      "skillsHint": "Indiquez les compétences requises pour ce poste et leur importance.",
+      "addSkill": "Ajouter une compétence",
+      "removeSkill": "Supprimer la compétence",
+      "submit": "Publier l'offre",
+      "success": "Offre créée avec succès !",
+      "errors": {
+        "departmentRequired": "Veuillez choisir un département.",
+        "titleRequired": "L'intitulé du poste est obligatoire.",
+        "titleTooLong": "L'intitulé ne peut pas dépasser 100 caractères.",
+        "deadlineRequired": "Une date limite de candidature est obligatoire.",
+        "deadlineFuture": "La date limite doit être dans le futur.",
+        "salaryRange": "Le salaire maximum ne peut pas être inférieur au minimum.",
+        "openPositions": "Il doit y avoir au moins un poste à pourvoir."
+      }
+    }
+  },
+  "departments": {
+    "title": "Départements",
+    "count_one": "{{count}} département",
+    "count_other": "{{count}} départements",
+    "empty": "Il n'y a pas encore de départements.",
+    "loadError": "Échec du chargement des départements. Veuillez réessayer.",
+    "pagination": "Pagination",
+    "pageIndicator": "Page {{current}} sur {{total}}",
+    "create": {
+      "newDepartment": "Nouveau département",
+      "title": "Créer un département",
+      "name": "Nom",
+      "namePlaceholder": "ex. Ingénierie",
+      "description": "Description",
+      "descriptionPlaceholder": "Que fait ce département ? (facultatif)",
+      "submit": "Créer le département",
+      "success": "Département créé avec succès !",
+      "errors": {
+        "nameRequired": "Le nom du département est obligatoire.",
+        "nameTooLong": "Le nom ne peut pas dépasser 100 caractères."
+      }
+    }
+  },
+  "applications": {
+    "title": "Candidatures",
+    "myTitle": "Mes candidatures",
+    "count_one": "{{count}} candidature",
+    "count_other": "{{count}} candidatures",
+    "empty": "Il n'y a pas encore de candidatures.",
+    "emptyMine": "Vous n'avez postulé à aucune offre pour le moment.",
+    "loadError": "Échec du chargement des candidatures. Veuillez réessayer.",
+    "viewResume": "Voir le CV",
+    "viewDetails": "Voir les détails de la candidature",
+    "downloading": "Ouverture…",
+    "resumeError": "Impossible d'ouvrir le CV. Veuillez réessayer.",
+    "columns": {
+      "candidate": "Candidat",
+      "offer": "Offre",
+      "status": "Statut",
+      "appliedAt": "Postulé le",
+      "resume": "CV"
+    },
+    "detail": {
+      "back": "← Retour aux candidatures",
+      "appliedOn": "Postulé le {{date}}",
+      "untitledOffer": "Offre sans titre",
+      "candidate": "Candidat",
+      "name": "Nom",
+      "email": "E-mail",
+      "offer": "Offre",
+      "resume": "CV",
+      "downloadResume": "Télécharger le CV",
+      "noResume": "Aucun CV n'a été joint à cette candidature."
+    },
+    "status": {
+      "PENDING": "En attente",
+      "UNDER_REVIEW": "En cours d'examen",
+      "ACCEPTED": "Acceptée",
+      "REJECTED": "Refusée",
+      "INTERVIEW_SCHEDULED": "Entretien planifié"
+    }
+  },
+  "interviews": {
+    "title": "Entretiens",
+    "myTitle": "Mes entretiens",
+    "count_one": "{{count}} entretien",
+    "count_other": "{{count}} entretiens",
+    "empty": "Il n'y a pas encore d'entretiens.",
+    "emptyMine": "Vous n'avez pas encore d'entretiens.",
+    "loadError": "Échec du chargement des entretiens. Veuillez réessayer.",
+    "join": "Rejoindre la réunion",
+    "online": "En ligne",
+    "inPerson": "En présentiel",
+    "columns": {
+      "offer": "Offre",
+      "candidate": "Candidat",
+      "interviewer": "Recruteur",
+      "when": "Quand",
+      "status": "Statut",
+      "mode": "Mode"
+    },
+    "status": {
+      "SCHEDULED": "Planifié",
+      "COMPLETED": "Terminé",
+      "CANCELLED": "Annulé",
+      "NO_SHOW": "Absent"
+    }
   },
   "profile": {
     "myProfile": "Mon Profile",
@@ -81,15 +421,14 @@
     "phoneNumber": "Numéro de téléphone:",
     "editProfile": "Modifier le profil",
     "saveChanges": "Enregistrer les modifications",
-    "changePassword": "Changer le mot de passe",
-    "currentPassword": "Mot de passe actuel",
-    "newPassword": "Nouveau mot de passe",
-    "confirmNewPassword": "Confirmer le nouveau mot de passe",
     "profileUpdated": "Profil mis à jour avec succès.",
     "passwordChanged": "Mot de passe changé avec succès.",
     "updateFailed": "Échec de la mise à jour du profil. Veuillez réessayer.",
     "changePasswordFailed": "Échec du changement de mot de passe. Veuillez réessayer.",
-    "changeDataSentence": "Pour modifier vos informations de compte, veuillez contacter votre administrateur ou visitez la"
+    "changeDataSentence": "Pour modifier vos informations de compte, veuillez contacter votre administrateur ou visitez la",
+    "updateSuccess": "Profil mis à jour avec succès !",
+    "fetchError": "Échec du chargement de votre profil. Veuillez réessayer.",
+    "updateError": "Échec de la mise à jour du profil. Veuillez réessayer."
   },
   "settings": {
     "confirmDeletion": "Êtes-vous sûr de vouloir supprimer votre compte ?",
@@ -105,7 +444,11 @@
     "confirmNewPassword": "Confirmer le nouveau mot de passe",
     "currentPassword": "Mot de passe actuel",
     "newPassword": "Nouveau mot de passe",
-    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas ! Assurez-vous de saisir le même mot de passe deux fois."
+    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas ! Assurez-vous de saisir le même mot de passe deux fois.",
+    "passwordChangedSuccess": "Mot de passe modifié avec succès.",
+    "passwordChangeFailed": "Échec du changement de mot de passe. Vérifiez votre mot de passe actuel et réessayez.",
+    "accountDeletedSuccess": "Votre compte a été supprimé.",
+    "deleteFailed": "Échec de la suppression de votre compte. Veuillez réessayer."
   },
   "page": {
     "settings": "page des paramètres",
