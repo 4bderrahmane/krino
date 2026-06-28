@@ -1,0 +1,47 @@
+.brand-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.04em;
+    color: var(--color-ink);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.brand-logo-mark {
+    display: block;
+    flex: 0 0 auto;
+    object-fit: contain;
+}
+
+.brand-logo-wordmark {
+    margin-left: -0.04em;
+    color: currentColor;
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.brand-logo--navbar {
+    font-size: 1.4rem;
+}
+
+.brand-logo--navbar .brand-logo-mark {
+    width: 0.95em;
+    height: 0.95em;
+}
+
+.brand-logo--auth {
+    font-size: 3rem;
+}
+
+.brand-logo--auth .brand-logo-mark {
+    width: 0.95em;
+    height: 0.95em;
+}
+
+@media (max-width: 480px) {
+    .brand-logo--auth {
+        font-size: 2.45rem;
+    }
+}
