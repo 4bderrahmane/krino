@@ -1,0 +1,297 @@
+/* Departments feature styles */
+
+.departments-container {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
+.departments-header {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.departments-title {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-bottom: 6px;
+}
+
+.departments-subtitle {
+    color: var(--color-ink-faint);
+    font-size: 0.95rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Create toolbar + inline form (staff only)                           */
+/* ------------------------------------------------------------------ */
+.departments-toolbar {
+    margin-bottom: 22px;
+}
+
+.departments-create-toggle {
+    display: block;
+    margin: 0 auto;
+    height: 42px;
+    padding: 0 22px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: var(--shadow-xs);
+    transition: border-color var(--transition), background var(--transition), color var(--transition);
+}
+
+.departments-create-toggle:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+}
+
+.department-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 22px 24px 24px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.department-form-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 0;
+}
+
+.department-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.department-field-label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-ink);
+}
+
+.department-input {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.department-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-tint);
+}
+
+.department-input.has-error {
+    border-color: var(--color-danger);
+}
+
+.department-textarea {
+    height: auto;
+    padding: 10px 12px;
+    line-height: 1.55;
+    resize: vertical;
+}
+
+.department-field-error {
+    font-size: var(--text-xs);
+    color: var(--color-danger);
+}
+
+.department-form-error {
+    background-color: var(--color-danger-tint);
+    border: 1px solid #eccac6;
+    color: var(--color-danger);
+    padding: 0.7rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+}
+
+.department-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+}
+
+.department-form-cancel {
+    border: none;
+    background: none;
+    padding: 12px 8px;
+    color: var(--color-ink-soft);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.department-form-cancel:hover {
+    color: var(--color-ink);
+    text-decoration: underline;
+}
+
+.department-form-submit {
+    height: 44px;
+    padding: 0 26px;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.department-form-submit:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+}
+
+.department-form-submit:disabled {
+    background: var(--color-ink-faint);
+    cursor: not-allowed;
+}
+
+/* Vertical list of full-width department rows */
+.departments-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.department-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.department-row:hover {
+    border-color: var(--color-line-strong);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.department-row-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.department-row-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 0 0 6px;
+}
+
+.department-row-description {
+    color: var(--color-ink-soft);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    margin: 0;
+}
+
+/* Pagination */
+.departments-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 28px;
+}
+
+.departments-page-button {
+    height: 40px;
+    padding: 0 18px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+.departments-page-button:hover:not(:disabled) {
+    background: var(--color-surface-sunken);
+}
+
+.departments-page-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.departments-page-indicator {
+    color: var(--color-ink-soft);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* State panels (error / empty) */
+.departments-state {
+    text-align: center;
+    padding: 56px 24px;
+    color: var(--color-ink-faint);
+    font-size: 1.05rem;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-line);
+    max-width: 480px;
+    margin: 32px auto;
+}
+
+.departments-retry {
+    margin-top: 16px;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.departments-retry:hover {
+    background: var(--color-primary-hover);
+}
+
+@media (max-width: 600px) {
+    .departments-title {
+        font-size: 1.875rem;
+    }
+}
