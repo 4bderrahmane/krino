@@ -34,6 +34,12 @@ public class ProductionConfigurationValidator implements ApplicationRunner {
         rejectSharedTokenSecrets(errors);
         requireNonBlank("app.jwt.issuer", errors);
         validateCorsOrigins(errors);
+        requireNonBlank("app.storage.endpoint", errors);
+        requireNonBlank("app.storage.access-key", errors);
+        requireNonBlank("app.storage.secret-key", errors);
+        requireNonBlank("app.storage.bucket", errors);
+        requireNonBlank("app.storage.max-cv-size", errors);
+        rejectDefaultStorageCredentials(errors);
 
         if (!errors.isEmpty()) {
             throw new IllegalStateException("Unsafe production configuration:\n - " + String.join("\n - ", errors));
@@ -65,6 +71,14 @@ public class ProductionConfigurationValidator implements ApplicationRunner {
         String refreshSecret = environment.getProperty("app.refresh-token.hmac-secret");
         if (StringUtils.hasText(jwtSecret) && jwtSecret.equals(refreshSecret)) {
             errors.add("JWT and refresh-token HMAC secrets must be different in production");
+        }
+    }
+
+    private void rejectDefaultStorageCredentials(List<String> errors) {
+        String accessKey = environment.getProperty("app.storage.access-key");
+        String secretKey = environment.getProperty("app.storage.secret-key");
+        if ("minioadmin".equals(accessKey) || "minioadmin".equals(secretKey)) {
+            errors.add("MinIO storage credentials must not use default minioadmin values in production");
         }
     }
 
