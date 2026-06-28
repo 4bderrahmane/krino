@@ -14,6 +14,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +28,7 @@ class JwtServiceTest
     private static final String SECRET = "test-signing-secret-that-is-long-enough-for-hs256-0123456789";
     private static final String ISSUER = "krino-test";
     private static final long ACCESS_TOKEN_TTL_MS = 900_000L;
+    private static final Duration ACCESS_TOKEN_TTL = Duration.ofMillis(ACCESS_TOKEN_TTL_MS);
 
     private static final UUID PUBLIC_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final String EMAIL = "candidate@test.local";
@@ -36,7 +38,7 @@ class JwtServiceTest
     @BeforeEach
     void setUp()
     {
-        jwtService = newJwtService(SECRET, ACCESS_TOKEN_TTL_MS);
+        jwtService = newJwtService(SECRET, ACCESS_TOKEN_TTL);
     }
 
     @Test
@@ -45,7 +47,7 @@ class JwtServiceTest
         JwtService service = new JwtService();
         ReflectionTestUtils.setField(service, "secretKey", "too-short");
         ReflectionTestUtils.setField(service, "issuer", ISSUER);
-        ReflectionTestUtils.setField(service, "accessTokenExpirationInMs", ACCESS_TOKEN_TTL_MS);
+        ReflectionTestUtils.setField(service, "accessTokenExpiration", ACCESS_TOKEN_TTL);
 
         assertThatThrownBy(service::init)
                 .isInstanceOf(TokenException.class)
@@ -58,7 +60,7 @@ class JwtServiceTest
         JwtService service = new JwtService();
         ReflectionTestUtils.setField(service, "secretKey", SECRET);
         ReflectionTestUtils.setField(service, "issuer", " ");
-        ReflectionTestUtils.setField(service, "accessTokenExpirationInMs", ACCESS_TOKEN_TTL_MS);
+        ReflectionTestUtils.setField(service, "accessTokenExpiration", ACCESS_TOKEN_TTL);
 
         assertThatThrownBy(service::init)
                 .isInstanceOf(TokenException.class)
@@ -71,7 +73,7 @@ class JwtServiceTest
         JwtService service = new JwtService();
         ReflectionTestUtils.setField(service, "secretKey", SECRET);
         ReflectionTestUtils.setField(service, "issuer", ISSUER);
-        ReflectionTestUtils.setField(service, "accessTokenExpirationInMs", 0L);
+        ReflectionTestUtils.setField(service, "accessTokenExpiration", Duration.ZERO);
 
         assertThatThrownBy(service::init)
                 .isInstanceOf(TokenException.class)
@@ -107,7 +109,7 @@ class JwtServiceTest
     @Test
     void validateToken_tokenSignedWithDifferentKey_returnsFalse()
     {
-        JwtService otherService = newJwtService("another-completely-different-secret-key-0123456789abcd", ACCESS_TOKEN_TTL_MS);
+        JwtService otherService = newJwtService("another-completely-different-secret-key-0123456789abcd", ACCESS_TOKEN_TTL);
         String foreignToken = otherService.generateAccessToken(userDetails());
 
         assertThat(jwtService.validateToken(foreignToken)).isFalse();
@@ -195,12 +197,12 @@ class JwtServiceTest
         assertThat(jwtService.getAccessTokenExpiryInSeconds()).isEqualTo(900L);
     }
 
-    private JwtService newJwtService(String secret, long ttlMs)
+    private JwtService newJwtService(String secret, Duration ttl)
     {
         JwtService service = new JwtService();
         ReflectionTestUtils.setField(service, "secretKey", secret);
         ReflectionTestUtils.setField(service, "issuer", ISSUER);
-        ReflectionTestUtils.setField(service, "accessTokenExpirationInMs", ttlMs);
+        ReflectionTestUtils.setField(service, "accessTokenExpiration", ttl);
         service.init();
         return service;
     }

@@ -15,11 +15,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -41,6 +45,7 @@ class AuthenticationServiceTest
     private AuthenticationManager authenticationManager;
     private UserMapper userMapper;
     private CookieUtilities cookieUtilities;
+    private CvStorageService cvStorageService;
     private AuthenticationService authenticationService;
 
     @BeforeEach
@@ -53,6 +58,7 @@ class AuthenticationServiceTest
         authenticationManager = mock(AuthenticationManager.class);
         userMapper = mock(UserMapper.class);
         cookieUtilities = mock(CookieUtilities.class);
+        cvStorageService = mock(CvStorageService.class);
 
         authenticationService = new AuthenticationService(
                 userRepository,
@@ -61,7 +67,8 @@ class AuthenticationServiceTest
                 refreshTokenService,
                 authenticationManager,
                 userMapper,
-                cookieUtilities
+                cookieUtilities,
+                cvStorageService
         );
     }
 
@@ -89,11 +96,18 @@ class AuthenticationServiceTest
         ));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(userMapper.toResponse(any(User.class))).thenReturn(response);
+        when(cvStorageService.uploadUserResume(any(), any(MultipartFile.class))).thenReturn(
+                new CvStorageService.StoredResume("users/key/resume/cv.pdf", "cv.pdf", "application/pdf", 1024L,
+                        LocalDateTime.of(2026, Month.JANUARY, 15, 10, 30)));
 
-        RegistrationResponseDTO registration = authenticationService.register(request);
+        MockMultipartFile resume = new MockMultipartFile(
+                "resume", "cv.pdf", "application/pdf", "%PDF-1.7\ncontent".getBytes());
+
+        RegistrationResponseDTO registration = authenticationService.register(request, resume);
 
         assertThat(registration.getUser().getEmail()).isEqualTo("candidate@test.local");
         verify(userRepository).findByEmail("candidate@test.local");
+        verify(cvStorageService).uploadUserResume(any(), any(MultipartFile.class));
         verify(userRepository).save(org.mockito.ArgumentMatchers.argThat(user ->
                 user.getEmail().equals("candidate@test.local")
                         && user.getFirstName().equals("Test")
@@ -136,13 +150,15 @@ class AuthenticationServiceTest
                         && authentication.getCredentials().equals("Password123!")
         ));
         verify(userRepository).findByEmail("candidate@test.local");
-        verify(cookieUtilities).setCookies("access-token", "refresh-token", httpResponse, "/", "/api/auth/");
+        verify(cookieUtilities).setCookies("access-token", "refresh-token", httpResponse);
     }
 
     @Test
     void refreshWithoutCookieThrowsInvalidRefreshTokenException()
     {
-        assertThatThrownBy(() -> authenticationService.refresh(new MockHttpServletRequest(), new MockHttpServletResponse()))
+        MockHttpServletRequest httpRequest = new MockHttpServletRequest();
+        MockHttpServletResponse httpResponse = new MockHttpServletResponse();
+        assertThatThrownBy(() -> authenticationService.refresh(httpRequest, httpResponse))
                 .isInstanceOf(InvalidRefreshTokenException.class)
                 .hasMessage("No refresh token provided");
     }

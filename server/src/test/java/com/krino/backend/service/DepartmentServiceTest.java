@@ -4,7 +4,7 @@ import com.krino.backend.dto.department.DepartmentCreateDTO;
 import com.krino.backend.dto.department.DepartmentResponseDTO;
 import com.krino.backend.dto.department.DepartmentUpdateDTO;
 import com.krino.backend.entity.Department;
-import com.krino.backend.entity.Job;
+import com.krino.backend.support.TestJobs;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
 import com.krino.backend.mapper.DepartmentMapper;
@@ -24,23 +24,20 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class DepartmentServiceTest
-{
+class DepartmentServiceTest {
     private DepartmentRepository departmentRepository;
     private DepartmentMapper departmentMapper;
     private DepartmentService departmentService;
 
     @BeforeEach
-    void setUp()
-    {
+    void setUp() {
         departmentRepository = mock(DepartmentRepository.class);
         departmentMapper = mock(DepartmentMapper.class);
         departmentService = new DepartmentService(departmentRepository, departmentMapper);
     }
 
     @Test
-    void createDepartment_uniqueName_mapsSavesAndReturnsResponse()
-    {
+    void createDepartment_uniqueName_mapsSavesAndReturnsResponse() {
         DepartmentCreateDTO dto = new DepartmentCreateDTO();
         dto.setName("Engineering");
 
@@ -60,8 +57,7 @@ class DepartmentServiceTest
     }
 
     @Test
-    void createDepartment_duplicateName_throwsConflictAndDoesNotSave()
-    {
+    void createDepartment_duplicateName_throwsConflictAndDoesNotSave() {
         DepartmentCreateDTO dto = new DepartmentCreateDTO();
         dto.setName("Engineering");
 
@@ -75,20 +71,19 @@ class DepartmentServiceTest
     }
 
     @Test
-    void updateDepartment_unknownPublicId_throwsResourceNotFound()
-    {
+    void updateDepartment_unknownPublicId_throwsResourceNotFound() {
         UUID publicId = UUID.randomUUID();
         when(departmentRepository.findByPublicId(publicId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> departmentService.updateDepartment(publicId, new DepartmentUpdateDTO()))
+        DepartmentUpdateDTO update = new DepartmentUpdateDTO();
+        assertThatThrownBy(() -> departmentService.updateDepartment(publicId, update))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(departmentRepository, never()).save(any());
     }
 
     @Test
-    void updateDepartment_renameToExistingDifferentDepartment_throwsConflict()
-    {
+    void updateDepartment_renameToExistingDifferentDepartment_throwsConflict() {
         UUID publicId = UUID.randomUUID();
         Department existing = new Department();
         existing.setName("Engineering");
@@ -107,8 +102,7 @@ class DepartmentServiceTest
     }
 
     @Test
-    void updateDepartment_keepingSameName_appliesUpdateAndSaves()
-    {
+    void updateDepartment_keepingSameName_appliesUpdateAndSaves() {
         UUID publicId = UUID.randomUUID();
         Department existing = new Department();
         existing.setName("Engineering");
@@ -128,8 +122,7 @@ class DepartmentServiceTest
     }
 
     @Test
-    void patchDepartment_nullName_skipsConflictCheckAndSaves()
-    {
+    void patchDepartment_nullName_skipsConflictCheckAndSaves() {
         UUID publicId = UUID.randomUUID();
         Department existing = new Department();
         existing.setName("Engineering");
@@ -149,8 +142,7 @@ class DepartmentServiceTest
     }
 
     @Test
-    void deleteDepartment_unknownPublicId_throwsResourceNotFound()
-    {
+    void deleteDepartment_unknownPublicId_throwsResourceNotFound() {
         UUID publicId = UUID.randomUUID();
         when(departmentRepository.findByPublicId(publicId)).thenReturn(Optional.empty());
 
@@ -161,12 +153,11 @@ class DepartmentServiceTest
     }
 
     @Test
-    void deleteDepartment_withAttachedJobs_throwsConflictAndDoesNotDelete()
-    {
+    void deleteDepartment_withAttachedJobs_throwsConflictAndDoesNotDelete() {
         UUID publicId = UUID.randomUUID();
         Department existing = new Department();
         existing.setName("Engineering");
-        existing.setJobs(Set.of(new Job()));
+        existing.setJobs(Set.of(TestJobs.draft("Backend Engineer")));
 
         when(departmentRepository.findByPublicId(publicId)).thenReturn(Optional.of(existing));
 
@@ -178,8 +169,7 @@ class DepartmentServiceTest
     }
 
     @Test
-    void deleteDepartment_withoutJobs_deletesDepartment()
-    {
+    void deleteDepartment_withoutJobs_deletesDepartment() {
         UUID publicId = UUID.randomUUID();
         Department existing = new Department();
         existing.setName("Engineering");
@@ -192,8 +182,7 @@ class DepartmentServiceTest
     }
 
     @Test
-    void getDepartmentByPublicId_unknownPublicId_throwsResourceNotFound()
-    {
+    void getDepartmentByPublicId_unknownPublicId_throwsResourceNotFound() {
         UUID publicId = UUID.randomUUID();
         when(departmentRepository.findByPublicId(publicId)).thenReturn(Optional.empty());
 

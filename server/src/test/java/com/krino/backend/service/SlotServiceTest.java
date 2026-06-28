@@ -3,18 +3,25 @@ package com.krino.backend.service;
 import com.krino.backend.dto.slot.SlotRequestDTO;
 import com.krino.backend.dto.slot.SlotResponseDTO;
 import com.krino.backend.dto.slot.SlotUpdateDTO;
+import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.entity.Interview;
 import com.krino.backend.entity.Slot;
 import com.krino.backend.entity.User;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
 import com.krino.backend.mapper.SlotMapper;
 import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,9 +48,16 @@ class SlotServiceTest
         slotService = new SlotService(slotRepository, userRepository, slotMapper);
     }
 
+    @AfterEach
+    void clearSecurityContext()
+    {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void createSlot_withInterviewerId_resolvesInterviewerMapsAndSaves()
     {
+        authenticateAs(UserRole.ADMIN, UUID.randomUUID());
         UUID interviewerId = UUID.randomUUID();
         SlotRequestDTO dto = new SlotRequestDTO();
         dto.setInterviewerId(interviewerId);
@@ -67,6 +81,7 @@ class SlotServiceTest
     @Test
     void createSlot_unknownInterviewerId_throwsResourceNotFound()
     {
+        authenticateAs(UserRole.ADMIN, UUID.randomUUID());
         UUID interviewerId = UUID.randomUUID();
         SlotRequestDTO dto = new SlotRequestDTO();
         dto.setInterviewerId(interviewerId);
@@ -95,7 +110,8 @@ class SlotServiceTest
         UUID publicId = UUID.randomUUID();
         when(slotRepository.findByPublicId(publicId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> slotService.updateSlot(publicId, new SlotUpdateDTO()))
+        SlotUpdateDTO update = new SlotUpdateDTO();
+        assertThatThrownBy(() -> slotService.updateSlot(publicId, update))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(slotRepository, never()).save(any());
@@ -116,6 +132,7 @@ class SlotServiceTest
     @Test
     void deleteSlot_withBookedInterview_throwsConflictAndDoesNotDelete()
     {
+        authenticateAs(UserRole.ADMIN, UUID.randomUUID());
         UUID publicId = UUID.randomUUID();
         Slot slot = new Slot();
         slot.setInterview(new Interview());
@@ -132,6 +149,7 @@ class SlotServiceTest
     @Test
     void deleteSlot_withoutInterview_deletesSlot()
     {
+        authenticateAs(UserRole.ADMIN, UUID.randomUUID());
         UUID publicId = UUID.randomUUID();
         Slot slot = new Slot();
 
@@ -140,5 +158,22 @@ class SlotServiceTest
         slotService.deleteSlot(publicId);
 
         verify(slotRepository).delete(slot);
+    }
+
+    private void authenticateAs(UserRole role, UUID publicId)
+    {
+        User user = User.builder()
+                .id(1L)
+                .publicId(publicId)
+                .email("principal@test.local")
+                .password("encoded")
+                .roles(Set.of(role))
+                .isApproved(true)
+                .build();
+        CustomUserDetails principal = new CustomUserDetails(user);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new UsernamePasswordAuthenticationToken(principal, null,
+                principal.getAuthorities()));
+        SecurityContextHolder.setContext(context);
     }
 }
