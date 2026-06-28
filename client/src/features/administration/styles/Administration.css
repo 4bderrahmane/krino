@@ -1,0 +1,189 @@
+/* Administration feature styles */
+
+.admin-staff-container {
+    max-width: 640px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
+.admin-staff-header {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.admin-staff-title {
+    font-family: var(--font-display);
+    font-size: 2.25rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-bottom: 6px;
+}
+
+.admin-staff-subtitle {
+    color: var(--color-ink-faint);
+    font-size: 0.95rem;
+}
+
+/* Generated-credentials panel shown after a successful creation */
+.admin-credentials {
+    background: var(--color-primary-tint);
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    margin-bottom: 24px;
+}
+
+.admin-credentials-title {
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 0 0 12px;
+}
+
+.admin-credentials-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-credentials-label {
+    color: var(--color-ink-soft);
+    font-size: 0.9rem;
+    min-width: 120px;
+}
+
+.admin-credentials-value {
+    color: var(--color-ink);
+    font-size: 0.95rem;
+}
+
+.admin-credentials-password {
+    font-family: var(--font-mono, monospace);
+    background: var(--color-surface);
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+    padding: 4px 10px;
+    color: var(--color-ink);
+    font-size: 0.95rem;
+}
+
+.admin-copy-button {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.admin-copy-button:hover {
+    background: var(--color-primary-hover);
+}
+
+.admin-credentials-hint {
+    margin: 8px 0 0;
+    color: var(--color-ink-soft);
+    font-size: 0.82rem;
+}
+
+/* Form */
+.admin-staff-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.admin-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-ink-soft);
+}
+
+.admin-optional {
+    color: var(--color-ink-faint);
+    font-weight: 400;
+}
+
+.admin-input {
+    height: 48px;
+    padding: 0 16px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    color: var(--color-ink);
+    background-color: var(--color-surface);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.admin-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: var(--ring);
+}
+
+.admin-input[aria-invalid="true"] {
+    border-color: var(--color-danger);
+}
+
+.admin-select {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a857b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 42px;
+}
+
+.admin-field-error {
+    color: var(--color-danger);
+    font-size: 0.8rem;
+}
+
+.admin-error {
+    background-color: var(--color-danger-tint);
+    border: 1px solid #eccac6;
+    color: var(--color-danger);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.admin-submit {
+    height: 48px;
+    border: none;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--transition);
+    margin-top: 4px;
+}
+
+.admin-submit:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+}
+
+.admin-submit:disabled {
+    background-color: var(--color-ink-faint);
+    cursor: not-allowed;
+}
