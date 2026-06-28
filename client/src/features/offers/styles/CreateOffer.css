@@ -1,0 +1,301 @@
+/* ==========================================================================
+   Create-offer form — a single, sectioned posting sheet. Reuses the offers
+   design tokens (surface, line, ink, primary) so it sits naturally alongside
+   the offer detail page (the back link and error pill are shared styles).
+   ========================================================================== */
+.offer-form-container {
+    max-width: 820px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
+.offer-form-header {
+    margin-bottom: 24px;
+}
+
+.offer-form-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 8px 0 0;
+}
+
+.offer-form-subtitle {
+    margin: 6px 0 0;
+    color: var(--color-ink-faint);
+    font-size: 0.95rem;
+}
+
+/* Restored-draft notice — quiet amber strip so it reads as a heads-up, not an
+   error, with an inline way to throw the draft away. */
+.offer-draft-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding: 12px 16px;
+    border: 1px solid var(--badge-amber-fg, var(--color-line-strong));
+    background: var(--badge-amber-bg, var(--color-surface-sunken));
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    color: var(--color-ink);
+}
+
+.offer-draft-discard {
+    border: none;
+    background: none;
+    padding: 4px;
+    color: var(--color-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.offer-draft-discard:hover {
+    text-decoration: underline;
+}
+
+.offer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+/* ---- Section card ---- */
+.offer-form-section {
+    margin: 0;
+    padding: 22px 24px 24px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.offer-form-legend {
+    padding: 0 8px;
+    margin-left: -8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-faint);
+}
+
+.offer-form-hint {
+    margin: 0 0 14px;
+    font-size: var(--text-sm);
+    color: var(--color-ink-faint);
+}
+
+/* ---- Field grid ---- */
+.offer-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+    margin-bottom: 16px;
+}
+
+.offer-form-grid:last-child {
+    margin-bottom: 0;
+}
+
+.offer-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.offer-field-label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-ink);
+}
+
+/* ---- Inputs ---- */
+.offer-input {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.offer-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-tint);
+}
+
+.offer-input.has-error {
+    border-color: var(--color-danger);
+}
+
+.offer-textarea {
+    height: auto;
+    padding: 10px 12px;
+    line-height: 1.55;
+    resize: vertical;
+}
+
+.offer-field-error {
+    font-size: var(--text-xs);
+    color: var(--color-danger);
+}
+
+/* ---- Checkboxes ---- */
+.offer-form-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    margin-top: 4px;
+}
+
+.offer-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    color: var(--color-ink);
+    cursor: pointer;
+}
+
+.offer-check input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+}
+
+/* ---- Skills ---- */
+.offer-skill-rows {
+    list-style: none;
+    margin: 0 0 14px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.offer-skill-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 160px 42px;
+    gap: 10px;
+    align-items: center;
+}
+
+.offer-skill-remove {
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-ink-faint);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color var(--transition), color var(--transition);
+}
+
+.offer-skill-remove:hover:not(:disabled) {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.offer-skill-remove:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.offer-skill-add {
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    padding: 9px 18px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+}
+
+.offer-skill-add:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    background: var(--color-surface-sunken);
+}
+
+.offer-skill-add:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ---- Actions ---- */
+.offer-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+}
+
+.offer-form-cancel {
+    color: var(--color-ink-soft);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 12px 8px;
+}
+
+.offer-form-cancel:hover {
+    color: var(--color-ink);
+    text-decoration: underline;
+}
+
+.offer-form-submit {
+    height: 46px;
+    padding: 0 30px;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.offer-form-submit:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+}
+
+.offer-form-submit:disabled {
+    background: var(--color-ink-faint);
+    cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+    .offer-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .offer-skill-row {
+        grid-template-columns: minmax(0, 1fr) 42px;
+        grid-template-areas:
+            "name remove"
+            "importance importance";
+    }
+
+    .offer-skill-name { grid-area: name; }
+    .offer-skill-remove { grid-area: remove; }
+    .offer-skill-importance { grid-area: importance; }
+
+    .offer-form-title {
+        font-size: 1.6rem;
+    }
+}

@@ -1,0 +1,534 @@
+/* Offers feature styles */
+
+.offers-container {
+    max-width: 1280px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
+.offers-header {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.offers-title {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-bottom: 6px;
+}
+
+.offers-subtitle {
+    color: var(--color-ink-faint);
+    font-size: 0.95rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Layout: sticky filter rail + results                                */
+/* ------------------------------------------------------------------ */
+.offers-layout {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.offers-results {
+    min-width: 0;
+}
+
+/* The filter rail (the OfferFilters root). Sticky on desktop; it scrolls
+   internally if it outgrows the viewport. */
+.offers-sidebar {
+    position: sticky;
+    top: 20px;
+    align-self: start;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+
+/* Mobile-only toggle that reveals the rail. Hidden on desktop, where the rail
+   is always shown. */
+.offers-filter-toggle {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    margin-bottom: 16px;
+    padding: 0 18px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-xs);
+}
+
+.filter-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ */
+/* Active filter chips                                                  */
+/* ------------------------------------------------------------------ */
+.offers-active-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    margin-bottom: 18px;
+}
+
+.offers-active {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+}
+
+.offers-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px 4px 12px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-ink-soft);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: border-color var(--transition), color var(--transition);
+}
+
+.offers-chip:hover {
+    border-color: var(--color-primary);
+    color: var(--color-ink);
+}
+
+.offers-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-sunken);
+    color: var(--color-ink-faint);
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.offers-chip:hover .offers-chip-remove {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+}
+
+.offers-clear {
+    margin-left: auto;
+    border: none;
+    background: none;
+    color: var(--color-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 4px;
+}
+
+.offers-clear:hover {
+    text-decoration: underline;
+}
+
+/* Three offer cards per row on desktop; steps down to two then one as the
+   available width shrinks (see the media queries at the foot of this file). */
+.offers-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+/* The list item is a flex box so its card stretches to the row height,
+   keeping the "View details" footer aligned across each row. */
+.offers-grid-item {
+    display: flex;
+}
+
+/* Department chip — retained for the offer detail page header. */
+.offer-department {
+    flex-shrink: 0;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Pagination */
+.offers-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 28px;
+}
+
+.offers-page-button {
+    height: 40px;
+    padding: 0 18px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+.offers-page-button:hover:not(:disabled) {
+    background: var(--color-surface-sunken);
+}
+
+.offers-page-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.offers-page-indicator {
+    color: var(--color-ink-soft);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* State panels (error / empty / no results) */
+.offers-state {
+    text-align: center;
+    padding: 56px 24px;
+    color: var(--color-ink-faint);
+    font-size: 1.05rem;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-line);
+    max-width: 480px;
+    margin: 32px auto;
+}
+
+.offers-retry {
+    margin-top: 16px;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.offers-retry:hover {
+    background: var(--color-primary-hover);
+}
+
+/* ------------------------------------------------------------------ */
+/* Offer detail page                                                   */
+/* ------------------------------------------------------------------ */
+.offer-detail-container {
+    max-width: 760px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
+.offer-back {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: var(--color-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.offer-back:hover {
+    text-decoration: underline;
+}
+
+.offer-detail-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 32px;
+}
+
+.offer-detail-header {
+    margin-bottom: 24px;
+}
+
+.offer-detail-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 12px 0 0;
+}
+
+.offer-detail-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-line);
+}
+
+.offer-detail-heading {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-ink-faint);
+    margin: 0 0 10px;
+}
+
+.offer-detail-description {
+    color: var(--color-ink-soft);
+    font-size: 1rem;
+    line-height: 1.65;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+/* Overview: label/value pairs in a responsive two-column grid. */
+.offer-detail-overview {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 32px;
+}
+
+.offer-detail-overview-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.offer-detail-overview-row dt {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-faint);
+}
+
+.offer-detail-overview-row dd {
+    margin: 0;
+    font-size: 0.98rem;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Skills: required filled, preferred outlined (same language as the card). */
+.offer-detail-skills {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+}
+
+.offer-detail-skill {
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+.offer-detail-skill-required {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+}
+
+.offer-detail-skill-preferred {
+    background: transparent;
+    border-color: var(--color-line-strong);
+    color: var(--color-ink-soft);
+}
+
+@media (max-width: 600px) {
+    .offer-detail-overview {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+}
+
+/* Apply panel */
+.offer-apply-note {
+    color: var(--color-ink-faint);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.offer-apply-success {
+    background: var(--color-primary-tint);
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    color: var(--color-ink);
+    font-weight: 500;
+}
+
+.offer-apply-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.offer-apply-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    color: var(--color-ink);
+    font-size: 0.95rem;
+}
+
+.offer-apply-upload {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-left: 26px;
+}
+
+.cv-input-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.offer-apply-file-button {
+    height: 42px;
+    padding: 0 18px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+}
+
+.offer-apply-file-button:hover {
+    border-color: var(--color-primary);
+    background: var(--color-surface-sunken);
+}
+
+.offer-apply-filename {
+    color: var(--color-ink-soft);
+    font-size: 0.9rem;
+}
+
+.offer-apply-error {
+    background-color: var(--color-danger-tint);
+    border: 1px solid #eccac6;
+    color: var(--color-danger);
+    padding: 0.7rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+}
+
+.offer-apply-submit {
+    align-self: flex-start;
+    height: 46px;
+    padding: 0 28px;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.offer-apply-submit:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+}
+
+.offer-apply-submit:disabled {
+    background: var(--color-ink-faint);
+    cursor: not-allowed;
+}
+
+/* Below this width the rail leaves too little room for three cards across. */
+@media (max-width: 1140px) {
+    .offers-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Collapse to a single column: the rail hides behind the toggle. */
+@media (max-width: 860px) {
+    .offers-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .offers-filter-toggle {
+        display: inline-flex;
+    }
+
+    .offers-sidebar {
+        position: static;
+        max-height: none;
+        overflow: visible;
+        display: none;
+        margin-bottom: 20px;
+    }
+
+    .offers-sidebar.is-open {
+        display: block;
+    }
+}
+
+@media (max-width: 600px) {
+    .offers-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .offers-title {
+        font-size: 1.875rem;
+    }
+
+    .offer-detail-card {
+        padding: 22px;
+    }
+
+    .offer-detail-title {
+        font-size: 1.6rem;
+    }
+}
