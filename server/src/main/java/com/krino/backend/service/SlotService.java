@@ -28,6 +28,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SlotService {
 
+    private static final String ADMIN = "ADMIN";
+    private static final String HR_MANAGER = "HR_MANAGER";
     private static final String PUBLIC_ID = "publicId";
     private final SlotRepository slotRepository;
     private final UserRepository userRepository;
@@ -45,25 +47,29 @@ public class SlotService {
      * interviewer), or to the authenticated user when no interviewer is specified.
      */
     private User resolveInterviewer(UUID interviewerPublicId) {
+        CustomUserDetails currentUser = SecurityUtilities.requireCurrentCustomUser();
         if (interviewerPublicId != null) {
+            if (!currentUser.getPublicId().equals(interviewerPublicId)) {
+                SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
+            }
             return userRepository.findByPublicId(interviewerPublicId)
                     .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID,
                             interviewerPublicId));
         }
 
-        return SecurityUtilities.getCurrentCustomUser()
-                .map(CustomUserDetails::getId)
-                .flatMap(userRepository::findById)
+        return userRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new AccessDeniedException("No authenticated user to own the slot"));
     }
 
     public SlotResponseDTO getSlotByPublicId(UUID publicId) {
         Slot slot = slotRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), PUBLIC_ID, publicId));
+        requireSlotOwnerOrStaff(slot);
         return slotMapper.toResponse(slot);
     }
 
     public PageResponse<SlotResponseDTO> getAllSlots(Pageable pageable) {
+        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
         return PageResponse.from(slotRepository.findAll(pageable),
                 slotMapper::toResponse);
     }
@@ -71,6 +77,7 @@ public class SlotService {
     public SlotResponseDTO updateSlot(UUID publicId, SlotUpdateDTO slotUpdateDTO) {
         Slot existingSlot = slotRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), PUBLIC_ID, publicId));
+        requireSlotOwnerOrStaff(existingSlot);
 
         slotMapper.updateEntity(slotUpdateDTO, existingSlot);
         Slot updatedSlot = slotRepository.save(existingSlot);
@@ -80,6 +87,7 @@ public class SlotService {
     public SlotResponseDTO patchSlot(UUID publicId, SlotUpdateDTO slotUpdateDTO) {
         Slot existingSlot = slotRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), PUBLIC_ID, publicId));
+        requireSlotOwnerOrStaff(existingSlot);
 
         slotMapper.patchEntity(slotUpdateDTO, existingSlot);
 
@@ -90,6 +98,7 @@ public class SlotService {
     public void deleteSlot(UUID publicId) {
         Slot slot = slotRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), PUBLIC_ID, publicId));
+        requireSlotOwnerOrStaff(slot);
 
         if (slot.getInterview() != null) {
             throw new ResourceConflictException(
@@ -99,5 +108,16 @@ public class SlotService {
         }
 
         slotRepository.delete(slot);
+    }
+
+    private void requireSlotOwnerOrStaff(Slot slot) {
+        if (SecurityUtilities.hasAnyRole(ADMIN, HR_MANAGER)) {
+            return;
+        }
+        User interviewer = slot.getInterviewer();
+        if (interviewer == null || interviewer.getPublicId() == null) {
+            throw new AccessDeniedException("You do not have permission to access this slot.");
+        }
+        SecurityUtilities.requireCurrentUser(interviewer.getPublicId());
     }
 }

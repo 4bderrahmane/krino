@@ -15,9 +15,10 @@ import org.springframework.security.core.GrantedAuthority;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,38 +35,38 @@ public class JwtService {
     @Value("${app.jwt.issuer}")
     private String issuer;
 
-    @Value("${app.jwt.access-token-expiration.ms}")
-    private long accessTokenExpirationInMs;
+    @Value("${app.jwt.access-token-expiration}")
+    private Duration accessTokenExpiration;
 
     private SecretKey signingKey;
 
     @PostConstruct
     protected void init() {
-        if (secretKey == null || secretKey.length() < 32) {
+        if (secretKey == null || secretKey.length() < 32)
             throw new TokenException("Invalid JWT secret: it must be at least 32 characters for HS256.");
-        }
-        if (issuer == null || issuer.isBlank()) {
+
+        if (issuer == null || issuer.isBlank())
             throw new TokenException("Invalid JWT issuer: it must not be blank.");
-        }
-        if (accessTokenExpirationInMs <= 0) {
+
+        if (accessTokenExpiration.isNegative() || accessTokenExpiration.isZero())
             throw new TokenException("Invalid access-token lifetime: it must be greater than zero.");
-        }
+
         this.signingKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateAccessToken(CustomUserDetails userDetails) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + accessTokenExpirationInMs);
+        Instant now = Instant.now();
+        Instant expiry = now.plus(accessTokenExpiration);
 
         return Jwts.builder()
                 .subject(userDetails.getPublicId().toString())
-                .issuedAt(now)
-                .expiration(expiryDate)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
                 .issuer(issuer)
-                .claim("email", userDetails.getEmail())
+                .claim(EMAIL_CLAIM, userDetails.getEmail())
                 .claim("roles", userDetails.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
-                        .collect(Collectors.toList()))
+                        .toList())
                 .claim(TOKEN_TYPE_CLAIM, ACCESS_TOKEN_TYPE)
                 .signWith(signingKey, Jwts.SIG.HS256)
                 .compact();
@@ -107,11 +108,11 @@ public class JwtService {
 
     public String getEmailFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        return claims.get("email", String.class);
+        return claims.get(EMAIL_CLAIM, String.class);
     }
 
     public long getAccessTokenExpiryInSeconds() {
-        return accessTokenExpirationInMs / 1000;
+        return accessTokenExpiration.toSeconds();
     }
 
     public Date getExpirationFromToken(String token) {
@@ -120,8 +121,8 @@ public class JwtService {
     }
 
     public boolean isTokenExpired(String token) {
-        Date expiration = getExpirationFromToken(token);
-        return expiration.before(new Date());
+        Instant expiration = getExpirationFromToken(token).toInstant();
+        return expiration.isBefore(Instant.now());
     }
 
     private Claims parseAndValidateClaims(String token) {
@@ -152,8 +153,7 @@ public class JwtService {
         requireValidSubject(claims);
         requirePresent(claims.getIssuedAt(), "JWT issued-at claim is required");
         requirePresent(claims.getExpiration(), "JWT expiration claim is required");
-        requireClaimValue(ACCESS_TOKEN_TYPE, claims.get(TOKEN_TYPE_CLAIM, String.class),
-                "JWT token type must be access");
+        requireAccessTokenType(claims.get(TOKEN_TYPE_CLAIM, String.class));
         requireNonBlank(claims.get(EMAIL_CLAIM, String.class), "JWT email claim is required");
     }
 
@@ -168,20 +168,16 @@ public class JwtService {
     }
 
     private void requirePresent(Object value, String message) {
-        if (value == null) {
-            throw new MalformedJwtException(message);
-        }
+        if (value == null) throw new MalformedJwtException(message);
     }
 
     private void requireNonBlank(String value, String message) {
-        if (value == null || value.isBlank()) {
-            throw new MalformedJwtException(message);
-        }
+        if (value == null || value.isBlank()) throw new MalformedJwtException(message);
     }
 
-    private void requireClaimValue(String expectedValue, String actualValue, String message) {
-        if (!expectedValue.equals(actualValue)) {
-            throw new MalformedJwtException(message);
+    private void requireAccessTokenType(String actualValue) {
+        if (!ACCESS_TOKEN_TYPE.equals(actualValue)) {
+            throw new MalformedJwtException("JWT token type must be access");
         }
     }
 }

@@ -29,6 +29,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -45,9 +46,10 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final UserMapper userMapper;
     private final CookieUtilities cookieUtilities;
+    private final CvStorageService cvStorageService;
 
     @Transactional
-    public RegistrationResponseDTO register(@NonNull final UserRegistrationDTO request) {
+    public RegistrationResponseDTO register(@NonNull final UserRegistrationDTO request, @NonNull final MultipartFile resume) {
         if (request.getEmail() == null || request.getEmail().trim().isEmpty())
             throw new IllegalArgumentException("Email cannot be null or empty");
 
@@ -65,7 +67,17 @@ public class AuthenticationService {
         User user = userMapper.toEntity(request, normalizedEmail, passwordEncoder.encode(request.getPassword()));
         user.addRole(UserRole.CANDIDATE);
 
+        // Persist first so Hibernate's @UuidGenerator populates publicId, which keys the
+        // CV object. The base CV is mandatory for self-registering candidates: a storage
+        // failure throws and rolls back this transaction, so no user row is left behind.
         User savedUser = userRepository.save(user);
+
+        CvStorageService.StoredResume storedResume = cvStorageService.uploadUserResume(savedUser.getPublicId(), resume);
+        savedUser.setResumeObjectKey(storedResume.objectKey());
+        savedUser.setResumeOriginalFilename(storedResume.originalFilename());
+        savedUser.setResumeContentType(storedResume.contentType());
+        savedUser.setResumeSizeBytes(storedResume.sizeBytes());
+        savedUser.setResumeUploadedAt(storedResume.uploadedAt());
 
         UserResponseDTO userResponse = userMapper.toResponse(savedUser);
 
@@ -92,7 +104,7 @@ public class AuthenticationService {
         String refreshToken = refreshTokenService.generateAndSaveRefreshToken(user, extractDeviceInfo(httpRequest),
                 extractIpAddress(httpRequest));
 
-        cookieUtilities.setCookies(accessToken, refreshToken, response, "/", "/api/auth/");
+        cookieUtilities.setCookies(accessToken, refreshToken, response);
 
         return new AuthenticationResponseDTO("Bearer", jwtService.getAccessTokenExpiryInSeconds(), userResponse);
     }
@@ -108,7 +120,7 @@ public class AuthenticationService {
                 throw new InvalidCredentialsException("Authentication failed");
             }
 
-        } catch (AuthenticationException e) {
+        } catch (AuthenticationException _) {
             log.warn("Authentication failed for email: {}", email);
             throw new InvalidCredentialsException("Invalid email or password");
         }
@@ -116,19 +128,18 @@ public class AuthenticationService {
 
     @Transactional
     public AuthenticationResponseDTO refresh(HttpServletRequest request, HttpServletResponse response) {
-        String providedRefreshToken = cookieUtilities.getCookieValueByName(request, "refresh_token");
-        if (providedRefreshToken == null)
-            throw new InvalidRefreshTokenException("No refresh token provided");
+        String providedRefreshToken = cookieUtilities.getRefreshTokenFromCookie(request)
+                .orElseThrow(() -> new InvalidRefreshTokenException("No refresh token provided"));
 
 
-        RefreshToken tokenEntity = refreshTokenService.findValidRefreshTokenForUpdate(providedRefreshToken)
+        RefreshToken token = refreshTokenService.findValidRefreshTokenForUpdate(providedRefreshToken)
                 .orElseThrow(() -> new InvalidRefreshTokenException("Invalid or expired refresh token"));
 
-        User user = tokenEntity.getUser();
+        User user = token.getUser();
         if (user == null)
             throw new InvalidRefreshTokenException("User not found for refresh token");
 
-        refreshTokenService.consumeToken(tokenEntity);
+        refreshTokenService.consumeToken(token);
         String newRefreshToken = refreshTokenService.generateAndSaveRefreshToken(
                 user,
                 extractDeviceInfo(request),
@@ -140,8 +151,8 @@ public class AuthenticationService {
         String newAccessToken = jwtService.generateAccessToken(userDetails);
 
 
-        CookieUtilities.setAccessTokenCookie(response, newAccessToken, "/");
-        CookieUtilities.setRefreshTokenCookie(response, newRefreshToken, "/api/auth/");
+        cookieUtilities.setAccessTokenCookie(response, newAccessToken);
+        cookieUtilities.setRefreshTokenCookie(response, newRefreshToken);
 
         UserResponseDTO userResponse = userMapper.toResponse(user);
 
@@ -155,11 +166,11 @@ public class AuthenticationService {
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        CookieUtilities.getRefreshTokenFromCookie(request)
+        cookieUtilities.getRefreshTokenFromCookie(request)
                 .flatMap(refreshTokenService::findValidRefreshToken)
                 .ifPresent(refreshTokenService::revokeToken);
 
-        CookieUtilities.clearAuthenticationCookies(response);
+        cookieUtilities.clearAuthenticationCookies(response);
 
         log.info("User logged out successfully");
     }
@@ -175,14 +186,10 @@ public class AuthenticationService {
 
     private String extractIpAddress(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) return xForwardedFor.split(",")[0].trim();
 
         String xRealIp = request.getHeader("X-Real-IP");
-        if (xRealIp != null && !xRealIp.isEmpty()) {
-            return xRealIp;
-        }
+        if (xRealIp != null && !xRealIp.isEmpty()) return xRealIp;
 
         return request.getRemoteAddr();
     }

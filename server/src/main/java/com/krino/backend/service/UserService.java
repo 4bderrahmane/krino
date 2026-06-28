@@ -1,6 +1,8 @@
 package com.krino.backend.service;
 
 import com.krino.backend.dto.common.PageResponse;
+import com.krino.backend.dto.user.StaffCreateDTO;
+import com.krino.backend.dto.user.StaffCreationResponseDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.dto.user.UserUpdatePasswordDTO;
@@ -18,12 +20,17 @@ import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.utility.ErrorCode;
+import com.krino.backend.utility.SecurityUtilities;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.io.InputStream;
+import java.time.Clock;
+import java.time.Year;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,6 +40,12 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    public static final String PUBLIC_ID = "publicId";
+    public static final String EMAIL = "email";
+    public static final String FIELD = "field";
+    public static final String VALUE = "value";
+    private static final String ADMIN = "ADMIN";
+    private static final String HR_MANAGER = "HR_MANAGER";
     private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -41,6 +54,8 @@ public class UserService {
     private final ApplicationRepository applicationRepository;
     private final InterviewRepository interviewRepository;
     private final SlotRepository slotRepository;
+    private final CvStorageService cvStorageService;
+    private final Clock clock;
 
     public List<User> getAllInterviewers() {
         return userRepository.findByRolesContaining(UserRole.INTERVIEWER);
@@ -48,6 +63,53 @@ public class UserService {
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    /**
+     * Admin-only creation of a staff account (HR manager or interviewer). The account is
+     * approved immediately and seeded with a generated password derived from the name; the
+     * cleartext password is returned once so the admin can pass it to the new staff member.
+     */
+    public StaffCreationResponseDTO createStaff(StaffCreateDTO request) {
+        if (request.getRole() != UserRole.HR_MANAGER && request.getRole() != UserRole.INTERVIEWER) {
+            throw new IllegalArgumentException("Staff role must be HR_MANAGER or INTERVIEWER.");
+        }
+
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
+            throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, normalizedEmail),
+                    ErrorCode.DATA_CONFLICT,
+                    Map.of(FIELD, EMAIL, VALUE, normalizedEmail));
+        }
+
+        String firstName = request.getFirstName().trim();
+        String lastName = request.getLastName().trim();
+        String phoneNumber = request.getPhoneNumber() == null ? null : request.getPhoneNumber().trim();
+        String initialPassword = generateInitialPassword(firstName, lastName);
+
+        User user = new User(normalizedEmail, passwordEncoder.encode(initialPassword), firstName, lastName, phoneNumber);
+        user.addRole(request.getRole());
+        user.setApproved(true);
+        // Force a password change on first sign-in: the account is on a generated,
+        // guessable default until the staff member sets their own.
+        user.setMustChangePassword(true);
+
+        User savedUser = userRepository.save(user);
+        return new StaffCreationResponseDTO(userMapper.toResponse(savedUser), initialPassword);
+    }
+
+    // Default password, e.g. "John.Doe2025". Staff change it after first sign-in. Names are
+    // already constrained to >= 2 chars, so this always clears the 8-character minimum.
+    private String generateInitialPassword(String firstName, String lastName) {
+        return capitalize(firstName) + "." + capitalize(lastName) + Year.now(clock).getValue();
+    }
+
+    private static String capitalize(String value) {
+        String cleaned = value.trim().replaceAll("\\s+", "");
+        if (cleaned.isEmpty()) {
+            return cleaned;
+        }
+        return Character.toUpperCase(cleaned.charAt(0)) + cleaned.substring(1).toLowerCase();
     }
 
     public User addRoleToUser(Long userId, UserRole role) {
@@ -60,21 +122,43 @@ public class UserService {
 
     public User getUserByPublicId(UUID publicId) {
         return userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
     }
 
     public UserResponseDTO getUserResponseByPublicId(UUID publicId) {
+        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, ADMIN, HR_MANAGER);
         return userMapper.toResponse(getUserByPublicId(publicId));
     }
 
+    public ApplicationService.ResumeDownload downloadResume(UUID publicId) {
+        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, ADMIN, HR_MANAGER);
+        User user = getUserByPublicId(publicId);
+        if (!StringUtils.hasText(user.getResumeObjectKey())) {
+            throw new ResourceNotFoundException("Resume file not found for this user.");
+        }
+
+        InputStream inputStream = cvStorageService.downloadResume(user.getResumeObjectKey());
+        return new ApplicationService.ResumeDownload(
+                StringUtils.hasText(user.getResumeOriginalFilename())
+                        ? user.getResumeOriginalFilename()
+                        : "resume.pdf",
+                StringUtils.hasText(user.getResumeContentType())
+                        ? user.getResumeContentType()
+                        : "application/pdf",
+                user.getResumeSizeBytes(),
+                inputStream);
+    }
+
     public PageResponse<UserResponseDTO> getAllUsers(Pageable pageable) {
+        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
         return PageResponse.from(userRepository.findAll(pageable),
                 userMapper::toResponse);
     }
 
     public UserResponseDTO updateUserPartially(UUID publicId, UserUpdateDTO userUpdateDTO) {
+        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, ADMIN, HR_MANAGER);
         User currentUser = userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
 
         String normalizedEmail = null;
         if (userUpdateDTO.getEmail() != null) {
@@ -87,7 +171,7 @@ public class UserService {
                         {
                             throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE,
                                     emailToValidate), ErrorCode.DATA_CONFLICT,
-                                    Map.of("field", "email", "value", emailToValidate));
+                                    Map.of(FIELD, EMAIL, VALUE, emailToValidate));
                         });
             }
         }
@@ -99,8 +183,9 @@ public class UserService {
     }
 
     public UserResponseDTO updateUserFully(UUID publicId, UserUpdateDTO userUpdateDTO) {
+        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, ADMIN, HR_MANAGER);
         User existingUser = userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
 
         if (userUpdateDTO.getEmail() == null
                 || userUpdateDTO.getFirstName() == null || userUpdateDTO.getLastName() == null
@@ -117,7 +202,7 @@ public class UserService {
                     {
                         throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE,
                                 normalizedEmail), ErrorCode.DATA_CONFLICT,
-                                Map.of("field", "email", "value", normalizedEmail));
+                                Map.of(FIELD, EMAIL, VALUE, normalizedEmail));
                     });
         }
 
@@ -128,8 +213,9 @@ public class UserService {
     }
 
     public void changePassword(UUID publicId, UserUpdatePasswordDTO passwordChangeDTO) {
+        SecurityUtilities.requireCurrentUser(publicId);
         User existingUser = userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
 
         if (!passwordEncoder.matches(passwordChangeDTO.getCurrentPassword(), existingUser.getPassword())) {
             throw new IncorrectPasswordException("Current password is not correct.");
@@ -140,18 +226,21 @@ public class UserService {
         }
 
         existingUser.setPassword(passwordEncoder.encode(passwordChangeDTO.getNewPassword()));
+        // They've chosen their own password — the initial-password reminder is done.
+        existingUser.setMustChangePassword(false);
 
         userRepository.save(existingUser);
     }
 
     public void deleteUserByPublicId(UUID publicId) {
+        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, ADMIN);
         User userToDelete = userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
 
         // Applications, interviews and slots keep the recruitment history; deleting a
-        // user that owns any of them would orphan those records (FK violation).
+        // user that owns any of them would orphan those records (FK violation). A candidate's
+        // interviews hang off their applications, so the application check already covers them.
         if (applicationRepository.existsByCandidate(userToDelete)
-                || interviewRepository.existsByCandidate(userToDelete)
                 || interviewRepository.existsByInterviewer(userToDelete)
                 || slotRepository.existsByInterviewer(userToDelete)) {
             throw new ResourceConflictException(
@@ -165,13 +254,15 @@ public class UserService {
     }
 
     public void approveUser(UUID publicId) {
+        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
         User user = userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
 
         user.setApproved(true);
     }
 
     public PageResponse<UserResponseDTO> getNonApprovedUsers(Pageable pageable) {
+        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
         return PageResponse.from(userRepository.findByIsApprovedFalse(pageable),
                 userMapper::toResponse);
     }

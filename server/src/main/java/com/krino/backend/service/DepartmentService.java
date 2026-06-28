@@ -22,15 +22,19 @@ import java.util.UUID;
 @AllArgsConstructor
 @Transactional
 public class DepartmentService {
+    public static final String RESOURCE = Department.class.getSimpleName();
     private static final String DEPARTMENT_ALREADY_EXISTS = "Department '%s' already exists";
+    public static final String PUBLIC_ID = "publicId";
+    public static final String FIELD = "field";
+    public static final String NAME = "name";
+    public static final String VALUE = "value";
     private final DepartmentRepository departmentRepository;
     private final DepartmentMapper departmentMapper;
 
     public void deleteDepartmentByPublicId(UUID publicId) {
         // use object-name constructor to get DEPARTMENT_NOT_FOUND ErrorCode
         Department department = departmentRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId",
-                        publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE, PUBLIC_ID, publicId));
 
         if (department.getJobs() != null && !department.getJobs().isEmpty()) {
             throw new ResourceConflictException(
@@ -46,10 +50,9 @@ public class DepartmentService {
         if (departmentRepository.findByName(department.getName()).isPresent()) {
             throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS, department.getName()),
                     ErrorCode.DATA_CONFLICT,
-                    Map.of("field", "name", "value", department.getName()));
+                    Map.of(FIELD, NAME, VALUE, department.getName()));
         }
         Department newDepartment = departmentMapper.toEntity(department);
-
         Department savedDepartment = departmentRepository.save(newDepartment);
 
         return departmentMapper.toResponse(savedDepartment);
@@ -57,13 +60,12 @@ public class DepartmentService {
 
     public DepartmentResponseDTO updateDepartment(UUID publicId, DepartmentUpdateDTO departmentUpdateDTO) {
         Department existingDepartment = departmentRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId",
-                        publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE, PUBLIC_ID, publicId));
 
         if (departmentRepository.findByName(departmentUpdateDTO.getName()).isPresent() && !existingDepartment.getName().equals(departmentUpdateDTO.getName())) {
             throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS,
                     departmentUpdateDTO.getName()), ErrorCode.DATA_CONFLICT,
-                    Map.of("field", "name", "value", departmentUpdateDTO.getName()));
+                    Map.of(FIELD, NAME, VALUE, departmentUpdateDTO.getName()));
         }
 
         departmentMapper.updateEntity(departmentUpdateDTO, existingDepartment);
@@ -72,20 +74,18 @@ public class DepartmentService {
         return departmentMapper.toResponse(updatedDepartment);
     }
 
-    public DepartmentResponseDTO patchDepartment(UUID publicId, DepartmentUpdateDTO departmentUpdateDTO) {
+    public DepartmentResponseDTO patchDepartment(UUID publicId, DepartmentUpdateDTO dto) {
         Department existingDepartment = departmentRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId",
-                        publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE, PUBLIC_ID, publicId));
 
-        if (departmentUpdateDTO.getName() != null) {
-            if (departmentRepository.findByName(departmentUpdateDTO.getName()).isPresent() && !existingDepartment.getName().equals(departmentUpdateDTO.getName())) {
-                throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS,
-                        departmentUpdateDTO.getName()), ErrorCode.DATA_CONFLICT,
-                        Map.of("field", "name", "value", departmentUpdateDTO.getName()));
-            }
+        if (dto.getName() != null && departmentRepository.findByName(dto.getName()).isPresent() && !existingDepartment.getName().equals(dto.getName())) {
+            throw new ResourceConflictException(String.format(DEPARTMENT_ALREADY_EXISTS,
+                    dto.getName()), ErrorCode.DATA_CONFLICT,
+                    Map.of(FIELD, NAME, VALUE, dto.getName()));
         }
 
-        departmentMapper.patchEntity(departmentUpdateDTO, existingDepartment);
+
+        departmentMapper.patchEntity(dto, existingDepartment);
 
         Department updatedDepartment = departmentRepository.save(existingDepartment);
         return departmentMapper.toResponse(updatedDepartment);
@@ -93,13 +93,11 @@ public class DepartmentService {
 
     public DepartmentResponseDTO getDepartmentByPublicId(UUID publicId) {
         Department department = departmentRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Department.class.getSimpleName(), "publicId",
-                        publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE, PUBLIC_ID, publicId));
         return departmentMapper.toResponse(department);
     }
 
     public PageResponse<DepartmentResponseDTO> getAllDepartments(Pageable pageable) {
-        return PageResponse.from(departmentRepository.findAll(pageable),
-                departmentMapper::toResponse);
+        return PageResponse.from(departmentRepository.findAll(pageable), departmentMapper::toResponse);
     }
 }
