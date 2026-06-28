@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import '../styles/Profile.css';
+import '@/features/user-management/styles/Profile.css';
 import {useTranslation} from "react-i18next";
 import { Link } from 'react-router-dom';
-import { getCurrentUser } from '../services/UserManagementService';
-import type { UserResponseDTO } from '../../authentication/types/api.types';
+import { getCurrentUser } from '@/features/user-management/services/UserManagementService';
+import type { UserResponseDTO } from '@/features/authentication/types/api.types';
 
 const Profile: React.FC = () => {
     const {t} = useTranslation();
@@ -37,8 +37,8 @@ const Profile: React.FC = () => {
     };
 
     const getRoleDisplay = () => {
-        if (!user?.roles || user.roles.size === 0) return 'User';
-        return Array.from(user.roles).join(', ');
+        if (!user?.roles || user.roles.length === 0) return 'User';
+        return user.roles.join(', ');
     };
 
     if (loading) {

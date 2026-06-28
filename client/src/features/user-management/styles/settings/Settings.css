@@ -9,16 +9,17 @@
 }
 
 .settings-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #111827;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-ink);
   margin-bottom: 8px;
 }
 
 .settings-content {
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 @media (max-width: 640px) {

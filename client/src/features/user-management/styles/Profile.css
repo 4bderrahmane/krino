@@ -15,10 +15,11 @@
 }
 
 .profile-title {
+  font-family: var(--font-display);
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 8px;
-  color: #1f2937;
+  color: var(--color-ink);
   text-align: center;
 }
 
@@ -29,11 +30,11 @@
 }
 
 .profile-card {
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-line);
 }
 
 .profile-image-section {
@@ -42,34 +43,34 @@
   gap: 24px;
   margin-bottom: 32px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-line);
 }
 
 .profile-avatar {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-active));
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2rem;
   font-weight: 700;
-  color: white;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  color: var(--color-on-primary);
+  box-shadow: 0 4px 12px rgba(28, 107, 90, 0.30);
 }
 
 .profile-name h2 {
   margin: 0 0 8px 0;
   font-size: 1.75rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--color-ink);
 }
 
 .profile-role {
   display: inline-block;
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--color-surface-sunken);
+  color: var(--color-ink-soft);
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 0.875rem;
@@ -90,7 +91,7 @@
   display: flex;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--color-surface-sunken);
 }
 
 .info-row:last-of-type {
@@ -99,33 +100,33 @@
 
 .info-label {
   font-weight: 600;
-  color: #374151;
+  color: var(--color-ink-soft);
   margin-right: 6px;
   font-size: 0.95rem;
 }
 
 .info-value {
-  color: #1f2937;
+  color: var(--color-ink);
   font-size: 0.95rem;
 }
 
 .info-note {
   margin-top: 24px;
   padding: 16px;
-  background: #f8fafc;
+  background: var(--color-surface-sunken);
   border-radius: 8px;
-  border-left: 4px solid #2563eb;
+  border-left: 4px solid var(--color-primary);
 }
 
 .info-note p {
   margin: 0;
-  color: #64748b;
+  color: var(--color-ink-soft);
   font-size: 0.875rem;
   line-height: 1.5;
 }
 
 .settings-link {
-  color: #2563eb;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
 }
@@ -135,17 +136,17 @@
 }
 
 .activity-stats {
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-line);
 }
 
 .stats-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--color-ink);
   margin-bottom: 24px;
   text-align: center;
 }
@@ -153,7 +154,7 @@
 .stats-loading {
   text-align: center;
   padding: 40px;
-  color: #6b7280;
+  color: var(--color-ink-faint);
   font-size: 1rem;
 }
 
@@ -164,11 +165,11 @@
 }
 
 .stat-card {
-  background: #f8fafc;
+  background: var(--color-surface-sunken);
   border-radius: 12px;
   padding: 24px;
   text-align: center;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--color-line);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -176,22 +177,22 @@
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-lg);
 }
 
 .stat-card.upcoming {
-  border-color: #fbbf24;
-  background: linear-gradient(135deg, #fef3c7, #fef3c7);
+  border-color: var(--badge-amber-bg);
+  background: var(--badge-amber-bg);
 }
 
 .stat-card.completed {
-  border-color: #10b981;
-  background: linear-gradient(135deg, #d1fae5, #d1fae5);
+  border-color: var(--badge-green-bg);
+  background: var(--badge-green-bg);
 }
 
 .stat-card.pending {
-  border-color: #f59e0b;
-  background: linear-gradient(135deg, #fed7aa, #fed7aa);
+  border-color: var(--badge-blue-bg);
+  background: var(--badge-blue-bg);
 }
 
 .stat-icon {
@@ -203,14 +204,14 @@
 .stat-value {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--color-ink);
   margin-bottom: 8px;
   line-height: 1;
 }
 
 .stat-label {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--color-ink-faint);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -219,12 +220,12 @@
 .profile-empty {
   padding: 60px 24px;
   text-align: center;
-  color: #6b7280;
+  color: var(--color-ink-faint);
   font-size: 1.125rem;
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-line);
   max-width: 400px;
   margin: 40px auto;
 }

@@ -1,10 +1,10 @@
 import React, {useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigate} from 'react-router-dom';
-import './SettingsForms.css';
-import {deleteAccount} from "../../services/UserManagementService.ts";
-import {useAuth} from "../../../../shared/hooks/useAuth";
-import {useSuccessToast} from "../../../../shared/hooks/useSuccessToast";
+import '@/features/user-management/styles/settings/SettingsForm.css';
+import {deleteAccount} from "@/features/user-management/services/UserManagementService.ts";
+import {useAuth} from "@/shared/hooks/useAuth";
+import {useSuccessToast} from "@/shared/hooks/useSuccessToast";
 
 const DeleteAccount = () => {
     const {t} = useTranslation();

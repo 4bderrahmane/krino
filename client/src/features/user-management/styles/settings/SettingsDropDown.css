@@ -11,7 +11,7 @@
 
 .settings-nav-link {
     padding: 8px 16px;
-    color: #4b5563;
+    color: var(--color-ink-soft);
     text-decoration: none;
     border-radius: 6px;
     font-weight: 500;
@@ -21,14 +21,14 @@
 }
 
 .settings-nav-link:hover {
-    background-color: #f3f4f6;
-    color: #111827;
+    background-color: var(--color-surface-sunken);
+    color: var(--color-ink);
 }
 
 .settings-nav-link.active {
-    color: #2563eb;
+    color: var(--color-primary);
     font-weight: 600;
-    background-color: #eff6ff; /* A light blue background for the active link */
+    background-color: var(--color-primary-tint);
 }
 
 /* The ::after pseudo-element is now a vertical bar on the left */
@@ -39,18 +39,18 @@
     left: 0;
     width: 3px; /* Width of the vertical bar */
     height: 100%; /* Full height of the link */
-    background-color: #2563eb;
+    background-color: var(--color-primary);
     border-top-left-radius: 3px;
     border-bottom-left-radius: 3px;
 }
 
 .settings-nav-link-delete.active {
-    color: #dc2626;
-    background-color: #fef2f2; /* Light red background for delete */
+    color: var(--color-danger);
+    background-color: var(--color-danger-tint); /* Light red background for delete */
 }
 
 .settings-nav-link-delete.active::after {
-    background-color: #dc2626;
+    background-color: var(--color-danger);
 }
 
 @media (max-width: 640px) {

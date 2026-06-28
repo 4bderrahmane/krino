@@ -1,6 +1,6 @@
 .settings-card {
-    background-color: #ffffff;
-    border: 1px solid #e5e7eb;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line);
     border-radius: 8px;
     padding: 24px;
     max-width: 600px;
@@ -11,7 +11,7 @@
     font-weight: 600;
     margin-top: 0;
     margin-bottom: 20px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--color-surface-sunken);
     padding-bottom: 16px;
 }
 
@@ -33,14 +33,14 @@
     min-width: 140px;
     text-align: left;
     font-weight: 500;
-    color: #374151;
+    color: var(--color-ink-soft);
 }
 
 .info-value {
     flex: 1;
     width: 100%;
     padding: 8px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-line-strong);
     border-radius: 6px;
     font-size: 1rem;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -49,8 +49,8 @@
 
 .info-value:focus {
     outline: none;
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+    border-color: var(--color-primary);
+    box-shadow: var(--ring);
 }
 
 .form-footer {
@@ -72,7 +72,7 @@
     font-size: 0.9rem;
     cursor: pointer;
     transition: background-color 0.2s;
-    background-color: #4f46e5;
+    background-color: var(--color-primary);
     color: white;
 }
 
@@ -82,43 +82,43 @@
 }
 
 .settings-button:hover:not(:disabled) {
-    background-color: #4338ca;
+    background-color: var(--color-primary-hover);
 }
 
 .secondary-button {
-    background-color: #e5e7eb;
-    color: #1f2937;
+    background-color: var(--color-line);
+    color: var(--color-ink);
 }
 
 .secondary-button:hover:not(:disabled) {
-    background-color: #d1d5db;
+    background-color: var(--color-line-strong);
 }
 
 .danger-zone {
-    border-color: #ef4444;
+    border-color: var(--color-danger);
 }
 
 .danger-header {
-    color: #dc2626;
+    color: var(--color-danger);
 }
 
 .danger-button {
-    background-color: #dc2626;
+    background-color: var(--color-danger);
 }
 
 .danger-button:hover:not(:disabled) {
-    background-color: #b91c1c;
+    background-color: var(--color-danger-hover);
 }
 
 .settings-success {
     margin-top: 16px;
-    color: #16a34a;
+    color: var(--color-primary);
     text-align: left;
 }
 
 .settings-error {
     margin-top: 16px;
-    color: #dc2626;
+    color: var(--color-danger);
     text-align: left;
 }
 

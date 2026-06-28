@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { changePassword } from '../../services/UserManagementService';
-import './SettingsForms.css';
+import { changePassword } from '@/features/user-management/services/UserManagementService';
+import { useAuth } from '@/shared/hooks/useAuth';
+import '@/features/user-management/styles/settings/SettingsForm.css';
 
 const PasswordSettings = () => {
     const { t } = useTranslation();
+    const { refreshUser } = useAuth();
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: '',
         newPassword: '',
@@ -39,6 +41,8 @@ const PasswordSettings = () => {
             });
             setSuccess(t('settings.passwordChangedSuccess'));
             setPasswordForm({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+            // Clear the "must change password" flag locally so the reminder stops.
+            await refreshUser();
         } catch {
             setError(t('settings.passwordChangeFailed'));
         } finally {

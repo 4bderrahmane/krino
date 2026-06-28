@@ -1,6 +1,6 @@
 import {NavLink} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import '../../styles/settings/SettingsDropDown.css';
+import '@/features/user-management/styles/settings/SettingsDropDown.css';
 
 interface SettingsDropDownProps {
     onClose?: () => void;

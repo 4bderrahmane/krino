@@ -1,8 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
-import {getCurrentUser, updatePartialProfile, updateFullProfile} from '../../services/UserManagementService';
-import '../../styles/settings/SettingsForm.css';
-import {useSuccessToast} from "../../../../shared/hooks/useSuccessToast.ts";
+import {getCurrentUser, updatePartialProfile, updateFullProfile} from '@/features/user-management/services/UserManagementService';
+import '@/features/user-management/styles/settings/SettingsForm.css';
+import {useSuccessToast} from "@/shared/hooks/useSuccessToast.ts";
 
 const ProfileSettings = () => {
     const {t} = useTranslation();
