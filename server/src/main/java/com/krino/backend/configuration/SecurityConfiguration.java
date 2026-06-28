@@ -3,12 +3,14 @@ package com.krino.backend.configuration;
 import com.krino.backend.security.CustomAccessDeniedHandler;
 import com.krino.backend.security.CustomAuthenticationEntryPoint;
 import com.krino.backend.security.JwtCookieAuthenticationFilter;
+import com.krino.backend.security.RateLimitFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,7 +54,8 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    CorsConfigurationSource corsConfigurationSource,
-                                                   CookieCsrfTokenRepository csrfTokenRepository) throws Exception {
+                                                   CookieCsrfTokenRepository csrfTokenRepository,
+                                                   ObjectProvider<RateLimitFilter> rateLimitFilter) {
         http
                 .csrf(csrf -> csrf
                         .spa()
@@ -71,6 +74,11 @@ public class SecurityConfiguration {
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler)
                 );
+
+        // Throttle abuse-prone public endpoints before any CSRF/auth work is done — only
+        // present when rate limiting is enabled (see RateLimitConfiguration).
+        rateLimitFilter.ifAvailable(filter -> http.addFilterBefore(filter, CsrfFilter.class));
+
         return http.build();
     }
 
@@ -79,8 +87,9 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "X-Refresh-Token", "X-XSRF-TOKEN", "X-CSRF-TOKEN",
-                "Origin", "Content-Type", "Accept"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization", "X-Refresh-Token", "X-XSRF-TOKEN", "X-CSRF-TOKEN", "Origin", "Content-Type", "Accept")
+        );
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -112,8 +121,8 @@ public class SecurityConfiguration {
         protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response,
                                         @NonNull FilterChain filterChain) throws ServletException, IOException {
             CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-            if (csrfToken != null)
-                csrfToken.getToken();
+            if (csrfToken != null) csrfToken.getToken();
+
             filterChain.doFilter(request, response);
         }
     }
