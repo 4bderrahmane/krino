@@ -16,6 +16,7 @@ public enum ErrorCode {
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "token-expired"),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "access-denied"),
     ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "account-locked"),
+    ACCOUNT_NOT_APPROVED(HttpStatus.FORBIDDEN, "account-not-approved"),
     DATA_CONFLICT(HttpStatus.CONFLICT, "data-conflict"),
     OPERATION_NOT_ALLOWED(HttpStatus.CONFLICT, "operation-not-allowed"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "method-not-allowed"),
