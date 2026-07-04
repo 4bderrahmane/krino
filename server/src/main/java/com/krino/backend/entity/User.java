@@ -38,20 +38,10 @@ public class User extends AbstractPublicEntity {
 
     private boolean isApproved = false;
 
-    // True while the account is still on its admin-generated initial password
-    // (set at staff creation, cleared on the first password change). Drives the
-    // client's "change your password" reminder. Self-registered candidates, who
-    // choose their own password, start false.
-    //
-    // @ColumnDefault is required so Hibernate's ddl-auto adds this NOT NULL column
-    // to the already-populated users table with a DEFAULT, backfilling existing
-    // rows to false instead of failing with "column contains null values".
     @Column(nullable = false)
     @ColumnDefault("false")
     private boolean mustChangePassword = false;
 
-    // Base CV captured at candidate self-registration. Nullable: admin-created staff
-    // (HR / interviewers) have no CV. Per-application CVs live on Application instead.
     @Column(length = 512)
     private String resumeObjectKey;
 
@@ -82,7 +72,7 @@ public class User extends AbstractPublicEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
-    private Collection<RefreshToken> refreshTokens = new HashSet<>();
+    private transient Collection<RefreshToken> refreshTokens = new HashSet<>();
 
     public boolean hasPermission(Permission permission) {
         return roles.stream().anyMatch(role -> role.getPermissions().contains(permission));
@@ -115,5 +105,18 @@ public class User extends AbstractPublicEntity {
 
     public String getRolesAsString() {
         return String.join(", ", this.roles.stream().map(Enum::name).toList());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        Long id = getId();
+        return id != null && id.equals(((User) o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
