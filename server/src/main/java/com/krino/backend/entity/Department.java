@@ -28,10 +28,21 @@ public class Department extends AbstractPublicEntity {
     @JsonIgnore
     private Set<Job> jobs;
 
-    // Prevents silent lost updates from concurrent edits.
     @Version
     @Column(nullable = false)
     @Setter(AccessLevel.NONE)
     private long version;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Department)) return false;
+        Long id = getId();
+        return id != null && id.equals(((Department) o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
