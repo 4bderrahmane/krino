@@ -12,13 +12,6 @@ import org.hibernate.Hibernate;
 
 import java.util.UUID;
 
-/**
- * Base for entities exposed through the API by a stable, non-enumerable public
- * id. The internal {@code Long} key never leaves the server; clients reference
- * the {@code publicId} instead. Equality is by {@code publicId} (assigned at
- * construction), which is Hibernate-proxy safe and stable across the entity
- * lifecycle, unlike the generated id.
- */
 @Setter
 @Getter
 @SuperBuilder
