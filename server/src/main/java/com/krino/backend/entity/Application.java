@@ -50,17 +50,25 @@ public class Application extends AbstractPublicEntity {
 
     private LocalDateTime resumeUploadedAt;
 
-    // Domain event — when the candidate applied. Distinct from the base's
-    // createdDate audit column (which they coincide with today, but appliedAt is
-    // the business-meaningful timestamp exposed to clients).
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime appliedAt;
 
-    // Prevents silent lost updates from concurrent edits.
     @Version
     @Column(nullable = false)
     @Setter(AccessLevel.NONE)
     private long version;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Application)) return false;
+        Long id = getId();
+        return id != null && id.equals(((Application) o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
