@@ -14,6 +14,7 @@ public enum ErrorCode {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "unauthorized"),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "invalid-credentials"),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "token-expired"),
+    INVALID_TOKEN(HttpStatus.BAD_REQUEST, "invalid-token"),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "access-denied"),
     ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "account-locked"),
     ACCOUNT_NOT_APPROVED(HttpStatus.FORBIDDEN, "account-not-approved"),
