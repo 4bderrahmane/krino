@@ -42,6 +42,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return respond(ex, ex.getErrorCode(), ex.getClientDetail(), request, ex.getDetails());
     }
 
+    @ExceptionHandler(EmailDeliveryException.class)
+    public ResponseEntity<ProblemDetail> handleEmailDelivery(EmailDeliveryException ex, HttpServletRequest request) {
+        return respond(ex, ex.getErrorCode(), "Failed to send the email. Please try again later.", request, null);
+    }
+
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ProblemDetail> handleBaseException(BaseException ex, HttpServletRequest request) {
         return respond(ex, ex.getErrorCode(), ex.getClientDetail(), request, null);
@@ -66,14 +71,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ProblemDetail> handleIllegalArgument(IllegalArgumentException ex,
-                                                               HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
         return respond(ex, ErrorCode.VALIDATION_ERROR, ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ProblemDetail> handleConstraintViolation(ConstraintViolationException ex,
-                                                                   HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
         Map<String, List<String>> errors = new LinkedHashMap<>();
         ex.getConstraintViolations().forEach(violation ->
                 addValidationError(errors, violation.getPropertyPath().toString(), violation.getMessage())
@@ -83,14 +86,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(DataIntegrityViolationException ex,
-                                                                      HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
         return respond(ex, ErrorCode.DATA_CONFLICT, "Data integrity constraint violated.", request, null);
     }
 
     @ExceptionHandler(OptimisticLockingFailureException.class)
-    public ResponseEntity<ProblemDetail> handleOptimisticLocking(OptimisticLockingFailureException ex,
-                                                                 HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleOptimisticLocking(OptimisticLockingFailureException ex, HttpServletRequest request) {
         return respond(ex, ErrorCode.DATA_CONFLICT, "Concurrent modification detected. Retry the request.", request,
                 null);
     }
@@ -172,7 +173,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(statusCode).headers(headers).body(problemDetail);
     }
 
-    // Single chokepoint for our own handlers: logs exactly once, then builds the response.
     private ResponseEntity<ProblemDetail> respond(
             Exception ex,
             ErrorCode errorCode,
