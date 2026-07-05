@@ -17,11 +17,11 @@ import java.time.LocalTime;
 })
 public class Slot extends AbstractPublicEntity {
 
-    // The interviewer whose availability this slot represents.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interviewer_id", nullable = false)
     private User interviewer;
 
+    @Setter(AccessLevel.NONE)
     @Column(name = "is_available", nullable = false)
     private boolean available = true;
 
@@ -29,7 +29,6 @@ public class Slot extends AbstractPublicEntity {
     private LocalTime startTime;
     private LocalTime endTime;
 
-    // Prevents silent lost updates from concurrent edits.
     @Version
     @Column(nullable = false)
     @Setter(AccessLevel.NONE)
@@ -44,10 +43,36 @@ public class Slot extends AbstractPublicEntity {
         this.available = (interview == null);
     }
 
-    // Derived from start/end so the two can never disagree; not a column.
     public Integer getDurationInMinutes() {
-        if (startTime == null || endTime == null)
-            return null;
+        if (startTime == null || endTime == null) return null;
         return (int) Duration.between(startTime, endTime).toMinutes();
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void validateInvariants() {
+        boolean anySet = interviewDate != null || startTime != null || endTime != null;
+        boolean allSet = interviewDate != null && startTime != null && endTime != null;
+        if (anySet && !allSet)
+            throw new IllegalStateException("A slot must have its date, start time and end time set together, or none at all");
+
+        if (startTime != null && endTime != null && !endTime.isAfter(startTime))
+            throw new IllegalStateException("Slot end time must be after its start time");
+
+        if (available != (interview == null))
+            throw new IllegalStateException("A slot is available exactly when no interview is booked into it");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Slot)) return false;
+        Long id = getId();
+        return id != null && id.equals(((Slot) o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

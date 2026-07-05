@@ -54,7 +54,6 @@ public class Interview extends AbstractPublicEntity {
     @Column(length = 512)
     private String meetingUrl;
 
-    // Prevents silent lost updates from concurrent edits.
     @Version
     @Column(nullable = false)
     @Setter(AccessLevel.NONE)
@@ -79,5 +78,18 @@ public class Interview extends AbstractPublicEntity {
 
     public Job getJob() {
         return application != null ? application.getJob() : null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Interview)) return false;
+        Long id = getId();
+        return id != null && id.equals(((Interview) o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
