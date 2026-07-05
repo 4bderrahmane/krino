@@ -17,9 +17,26 @@ spring:
       max-file-size: "${APP_STORAGE_MAX_CV_SIZE:5MB}"
       # the added MB if for request headers and other metadata, and it's more than enough unless they're sending a dinosaur!
       max-request-size: "${APP_STORAGE_MAX_REQUEST_SIZE:6MB}"
+#  mail:
+#    host: "${MAIL_HOST}"
+#    port: "${MAIL_PORT:587}"
+#    username: "${MAIL_USERNAME:resend}"
+#    password: "${MAIL_PASSWORD}"
 
 jwt:
   secret: "${JWT_SECRET}"
+
+# Actuator: expose only the health endpoint over HTTP, and never reveal component
+# details/probes — the endpoint is public, so it must return at most {"status":"UP"}.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
 
 app:
   refresh-token:
@@ -49,3 +66,13 @@ app:
     secret-key: "${APP_STORAGE_SECRET_KEY:minioadmin}"
     bucket: "${APP_STORAGE_BUCKET:krino-cvs}"
     max-cv-size: "${APP_STORAGE_MAX_CV_SIZE:5MB}"
+
+  mail:
+    from: "${APP_MAIL_FROM}"
+    from-name: "${APP_MAIL_FROM_NAME}"
+  # Public base URL of the frontend, used to build links in emails (login, password reset).
+  # No trailing slash. Prod overrides this via APP_FRONTEND_URL.
+  frontend:
+    url: "${APP_FRONTEND_URL:http://localhost:5000}"
+resend:
+  api-key: "${RESEND_API_KEY}"

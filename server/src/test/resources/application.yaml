@@ -1,5 +1,4 @@
-# Test profile properties - use in-memory H2 to avoid needing local MySQL
-# during unit tests.
+# Test profile properties - use in-memory H2 to avoid needing local MySQL ring unit tests.
 spring:
   datasource:
     url: "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
@@ -24,23 +23,28 @@ spring:
 
 jwt:
   # Alternative test secrets:
-  # secret: "xBZYq6Xv7SzsIm28327qtCwQZwIWiCnN9IhuYEHVkpSua16kIC2nG3XozxZYKTaGQ4k47Gjf+jKmRut/YSadVzzyX798IBbe/G9at5K3IKq7l3BWJDm3c6nxEm6yT7aeT51WAg=="
-  # secret: "V29uZGVyZnVsU2VjcmV0S2V5Rm9ySldUQXV0aGVudGljYXRpb25Jc05lZWRlZEhlcmU="
   secret: "R0EyTHQgIJ8SJYeyEMYwB71zXSEVhLkOqnhauG8lARJ4U8EE80NAnTuVqcd0pjFRNxmy640jmK+PgMHekuhiUebO1U="
 
+resend:
+  api-key: "test-resend-api-key"
+
 app:
-  # JWT issuer / access-token lifetime.
   jwt:
     issuer: krino-test
     access-token-expiration: 15m
 
-  # CORS origins for tests.
   cors:
-    allowed-origins: "http://localhost:5173"
+    allowed-origins: "http://localhost:5000"
 
-  # Disable rate limiting by default so the shared application context is not
-  # throttled across tests; the dedicated rate-limit tests re-enable it with
-  # their own properties.
+  frontend:
+    url: "http://localhost:5000"
+
+  # Dummy mail config so the Resend/mail beans wire up. Sends are @Async and never actually
+  # reach Resend in tests, so the key is a placeholder.
+  mail:
+    from: "no-reply@krino.test"
+    from-name: "Krino Test"
+
   ratelimit:
     enabled: false
 
@@ -48,7 +52,6 @@ app:
   cookies:
     secure: false
 
-  # Admin bootstrap account used by AdminInitializer.
   admin:
     email: admin@test.local
     password: Test-Admin-Password-123
