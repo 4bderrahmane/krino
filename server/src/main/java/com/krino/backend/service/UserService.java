@@ -19,6 +19,7 @@ import com.krino.backend.repository.InterviewRepository;
 import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
+import com.krino.backend.security.PasswordGenerator;
 import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.SecurityUtilities;
 import jakarta.transaction.Transactional;
@@ -29,8 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.InputStream;
-import java.time.Clock;
-import java.time.Year;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,6 +46,8 @@ public class UserService {
     private static final String ADMIN = "ADMIN";
     private static final String HR_MANAGER = "HR_MANAGER";
     private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
+
+    private final EmailService emailService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
@@ -55,7 +56,7 @@ public class UserService {
     private final InterviewRepository interviewRepository;
     private final SlotRepository slotRepository;
     private final CvStorageService cvStorageService;
-    private final Clock clock;
+    private final PasswordGenerator passwordGenerator;
 
     public List<User> getAllInterviewers() {
         return userRepository.findByRolesContaining(UserRole.INTERVIEWER);
@@ -65,11 +66,6 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    /**
-     * Admin-only creation of a staff account (HR manager or interviewer). The account is
-     * approved immediately and seeded with a generated password derived from the name; the
-     * cleartext password is returned once so the admin can pass it to the new staff member.
-     */
     public StaffCreationResponseDTO createStaff(StaffCreateDTO request) {
         if (request.getRole() != UserRole.HR_MANAGER && request.getRole() != UserRole.INTERVIEWER) {
             throw new IllegalArgumentException("Staff role must be HR_MANAGER or INTERVIEWER.");
@@ -85,32 +81,20 @@ public class UserService {
         String firstName = request.getFirstName().trim();
         String lastName = request.getLastName().trim();
         String phoneNumber = request.getPhoneNumber() == null ? null : request.getPhoneNumber().trim();
-        String initialPassword = generateInitialPassword(firstName, lastName);
+        String initialPassword = passwordGenerator.generate();
 
         User user = new User(normalizedEmail, passwordEncoder.encode(initialPassword), firstName, lastName, phoneNumber);
         user.addRole(request.getRole());
         user.setApproved(true);
-        // Force a password change on first sign-in: the account is on a generated,
-        // guessable default until the staff member sets their own.
         user.setMustChangePassword(true);
 
         User savedUser = userRepository.save(user);
+
+        emailService.sendInitialPassword(savedUser.getEmail(), savedUser.getFirstName(), initialPassword);
+
         return new StaffCreationResponseDTO(userMapper.toResponse(savedUser), initialPassword);
     }
 
-    // Default password, e.g. "John.Doe2025". Staff change it after first sign-in. Names are
-    // already constrained to >= 2 chars, so this always clears the 8-character minimum.
-    private String generateInitialPassword(String firstName, String lastName) {
-        return capitalize(firstName) + "." + capitalize(lastName) + Year.now(clock).getValue();
-    }
-
-    private static String capitalize(String value) {
-        String cleaned = value.trim().replaceAll("\\s+", "");
-        if (cleaned.isEmpty()) {
-            return cleaned;
-        }
-        return Character.toUpperCase(cleaned.charAt(0)) + cleaned.substring(1).toLowerCase();
-    }
 
     public User addRoleToUser(Long userId, UserRole role) {
         User user = userRepository.findById(userId)

@@ -12,6 +12,8 @@ import com.krino.backend.exception.IncorrectPasswordException;
 import com.krino.backend.exception.InvalidCredentialsException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
+import com.krino.backend.security.PasswordGenerator;
+import java.security.SecureRandom;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,9 +22,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,21 +33,24 @@ import static org.mockito.Mockito.*;
 
 class UserServiceTest
 {
-    private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-01-15T10:30:00Z"), ZoneOffset.UTC);
-
+    private EmailService emailService;
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
     private UserMapper userMapper;
     private UserService userService;
+    private PasswordGenerator passwordGenerator;
 
     @BeforeEach
     void setUp()
     {
+        emailService = mock(EmailService.class);
         userRepository = mock(UserRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         userMapper = mock(UserMapper.class);
-        userService = new UserService(userRepository, passwordEncoder, userMapper, null, null, null, null, null,
-                FIXED_CLOCK);
+        // A plain SecureRandom keeps the unit test off the blocking /dev/random source.
+        passwordGenerator = new PasswordGenerator(new SecureRandom());
+        userService = new UserService(emailService, userRepository, passwordEncoder, userMapper, null, null, null,
+                null, null, passwordGenerator);
     }
 
     @AfterEach
@@ -58,7 +60,7 @@ class UserServiceTest
     }
 
     @Test
-    void createStaff_generatesNameYearPasswordAndApprovesAccount()
+    void createStaff_generatesRandomPasswordApprovesAccountAndEmailsCredentials()
     {
         StaffCreateDTO request = new StaffCreateDTO(" john ", " doe ", "John@TEST.Local", "123456789",
                 UserRole.HR_MANAGER);
@@ -69,14 +71,24 @@ class UserServiceTest
 
         StaffCreationResponseDTO response = userService.createStaff(request);
 
-        String expectedPassword = "John.Doe2026";
-        assertThat(response.getInitialPassword()).isEqualTo(expectedPassword);
-        verify(passwordEncoder).encode(expectedPassword);
+        String generatedPassword = response.getInitialPassword();
+        // No longer a predictable name.name+year value: it's a 16-char CSPRNG password with no
+        // ambiguous characters or whitespace.
+        assertThat(generatedPassword).hasSize(16);
+        assertThat(generatedPassword).doesNotContainAnyWhitespaces();
+        // PasswordGenerator draws from letters, digits 2-9 and the symbol set !@#$%^&*.
+        assertThat(generatedPassword).matches("[A-Za-z2-9!@#$%^&*]+");
+        assertThat(generatedPassword).doesNotContain("0", "O", "1", "l", "I");
+
+        // The exact generated password is what gets hashed and emailed to the new staff member.
+        verify(passwordEncoder).encode(generatedPassword);
+        verify(emailService).sendInitialPassword("john@test.local", "john", generatedPassword);
         verify(userRepository).save(argThat(user ->
                 user.getEmail().equals("john@test.local")
                         && user.getFirstName().equals("john")
                         && user.getLastName().equals("doe")
                         && user.isApproved()
+                        && user.isMustChangePassword()
                         && user.getRoles().contains(UserRole.HR_MANAGER)));
     }
 
