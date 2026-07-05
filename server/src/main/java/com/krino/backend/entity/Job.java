@@ -148,7 +148,7 @@ public class Job extends AbstractPublicEntity {
     private long version;
 
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
-    private transient Set<JobSkill> skills = new LinkedHashSet<>();
+    private Set<JobSkill> skills = new LinkedHashSet<>();
 
     public Job(String rCode, String s, Department d, String t, EmploymentType eType, ContractType cType, RemotePolicy rPolicy) {
         referenceCode = requireText(rCode, "referenceCode");
