@@ -1,6 +1,7 @@
 package com.krino.backend.controller;
 
 import com.krino.backend.dto.common.PageResponse;
+import com.krino.backend.dto.user.ApprovalUpdateDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.dto.user.UserUpdatePasswordDTO;
@@ -53,8 +54,9 @@ public class UserController {
 
     @PatchMapping("/{publicId}/approval")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
-    public ResponseEntity<Void> approveUser(@PathVariable UUID publicId) {
-        userService.approveUser(publicId);
+    public ResponseEntity<Void> setApproval(@PathVariable UUID publicId,
+                                            @Valid @RequestBody ApprovalUpdateDTO request) {
+        userService.setApproval(publicId, request.getApproved());
         return ResponseEntity.noContent().build();
     }
 

@@ -26,7 +26,6 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -69,7 +68,7 @@ class AuthenticationControllerIntegrationTest {
 
     @Test
     void loginWithApprovedUserSetsHttpOnlyAuthCookies() throws Exception {
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        createUser(true);
 
         MvcResult result = login(CANDIDATE_EMAIL, RAW_PASSWORD)
                 .andExpect(status().isOk())
@@ -109,7 +108,7 @@ class AuthenticationControllerIntegrationTest {
 
     @Test
     void loginWithCsrfCookieAndHeaderSucceeds() throws Exception {
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        createUser(true);
         CsrfExchange csrf = fetchCsrfToken();
 
         MvcResult result = mockMvc.perform(post("/api/auth/login")
@@ -131,7 +130,7 @@ class AuthenticationControllerIntegrationTest {
 
     @Test
     void mutatingAuthRequestWithoutCsrfTokenReturnsForbidden() throws Exception {
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        createUser(true);
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -146,7 +145,7 @@ class AuthenticationControllerIntegrationTest {
 
     @Test
     void loginWithUppercaseEmailAuthenticatesNormalizedAccount() throws Exception {
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        createUser(true);
 
         MvcResult result = login(CANDIDATE_EMAIL.toUpperCase(), RAW_PASSWORD)
                 .andExpect(status().isOk())
@@ -158,14 +157,16 @@ class AuthenticationControllerIntegrationTest {
     }
 
     @Test
-    void loginWithUnapprovedUserReturnsUnauthorizedWithoutCookies() throws Exception {
-        createUser(CANDIDATE_EMAIL, false, UserRole.CANDIDATE);
+    void loginWithUnapprovedUserReturnsForbiddenWithoutCookies() throws Exception {
+        createUser(false);
 
         MvcResult result = login(CANDIDATE_EMAIL, RAW_PASSWORD)
-                .andExpect(status().isUnauthorized())
+                .andExpect(status().isForbidden())
                 .andReturn();
 
-        assertThat(result.getResponse().getContentAsString()).contains("\"errorCode\":\"INVALID_CREDENTIALS\"");
+        // The credentials are valid; the account just isn't approved — so the user
+        // gets a distinct ACCOUNT_NOT_APPROVED rather than a misleading INVALID_CREDENTIALS.
+        assertThat(result.getResponse().getContentAsString()).contains("\"errorCode\":\"ACCOUNT_NOT_APPROVED\"");
         assertThat(setCookieHeaders(result)).isEmpty();
     }
 
@@ -196,13 +197,13 @@ class AuthenticationControllerIntegrationTest {
                 "\"resumeFilename\":\"cv.pdf\"");
         User savedUser = userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow();
         assertThat(savedUser.getRoles()).contains(UserRole.CANDIDATE);
-        assertThat(savedUser.isApproved()).isFalse();
+        assertThat(savedUser.isApproved()).isTrue();
         assertThat(savedUser.getResumeObjectKey()).isEqualTo("users/key/resume/cv.pdf");
     }
 
     @Test
     void loginWithInvalidPasswordReturnsUnauthorizedWithoutCookies() throws Exception {
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        createUser(true);
 
         MvcResult result = login(CANDIDATE_EMAIL, "wrong-password")
                 .andExpect(status().isUnauthorized())
@@ -229,8 +230,8 @@ class AuthenticationControllerIntegrationTest {
 
     @Test
     void accessTokenCookieAuthenticatesMeEndpoint() throws Exception {
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
-        Cookie accessCookie = loginAndGetCookie(CANDIDATE_EMAIL, RAW_PASSWORD, "access_token");
+        createUser(true);
+        Cookie accessCookie = loginAndGetCookie();
 
         MvcResult result = mockMvc.perform(get("/api/users/me").cookie(accessCookie))
                 .andExpect(status().isOk())
@@ -244,8 +245,8 @@ class AuthenticationControllerIntegrationTest {
 
     @Test
     void candidateAccessTokenCannotReadAllUsers() throws Exception {
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
-        Cookie accessCookie = loginAndGetCookie(CANDIDATE_EMAIL, RAW_PASSWORD, "access_token");
+        createUser(true);
+        Cookie accessCookie = loginAndGetCookie();
 
         MvcResult result = mockMvc.perform(get("/api/users").cookie(accessCookie))
                 .andExpect(status().isForbidden())
@@ -259,7 +260,7 @@ class AuthenticationControllerIntegrationTest {
 
     @Test
     void refreshRotatesRefreshTokenAndRejectsReusedToken() throws Exception {
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        createUser(true);
         MvcResult loginResult = login(CANDIDATE_EMAIL, RAW_PASSWORD)
                 .andExpect(status().isOk())
                 .andReturn();
@@ -298,7 +299,7 @@ class AuthenticationControllerIntegrationTest {
 
     @Test
     void logoutRevokesRefreshTokenAndClearsAuthenticationCookies() throws Exception {
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        createUser(true);
         MvcResult loginResult = login(CANDIDATE_EMAIL, RAW_PASSWORD)
                 .andExpect(status().isOk())
                 .andReturn();
@@ -322,18 +323,18 @@ class AuthenticationControllerIntegrationTest {
                 .contains("Max-Age=0"));
     }
 
-    private User createUser(String email, boolean approved, UserRole... roles) {
+    private void createUser(boolean approved) {
         User user = User.builder()
-                .email(email)
+                .email(AuthenticationControllerIntegrationTest.CANDIDATE_EMAIL)
                 .password(passwordEncoder.encode(RAW_PASSWORD))
                 .firstName("Test")
                 .lastName("User")
                 .phoneNumber("123456789")
                 .isApproved(approved)
-                .roles(Set.copyOf(Arrays.asList(roles)))
+                .roles(Set.copyOf(List.of(UserRole.CANDIDATE)))
                 .build();
 
-        return userRepository.save(user);
+        userRepository.save(user);
     }
 
     private ResultActions login(String email, String password) throws Exception {
@@ -349,12 +350,12 @@ class AuthenticationControllerIntegrationTest {
                 .content(body));
     }
 
-    private Cookie loginAndGetCookie(String email, String password, String cookieName) throws Exception {
-        MvcResult loginResult = login(email, password)
+    private Cookie loginAndGetCookie() throws Exception {
+        MvcResult loginResult = login(AuthenticationControllerIntegrationTest.CANDIDATE_EMAIL, AuthenticationControllerIntegrationTest.RAW_PASSWORD)
                 .andExpect(status().isOk())
                 .andReturn();
 
-        return cookie(loginResult, cookieName);
+        return cookie(loginResult, "access_token");
     }
 
     private List<String> setCookieHeaders(MvcResult result) {

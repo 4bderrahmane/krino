@@ -237,12 +237,14 @@ public class UserService {
         userRepository.delete(userToDelete);
     }
 
-    public void approveUser(UUID publicId) {
+    public void setApproval(UUID publicId, boolean approved) {
         SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
         User user = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
 
-        user.setApproved(true);
+        user.setApproved(approved);
+
+        if (!approved) refreshTokenRepository.deleteAllByUserId(user.getId());
     }
 
     public PageResponse<UserResponseDTO> getNonApprovedUsers(Pageable pageable) {

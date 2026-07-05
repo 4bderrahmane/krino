@@ -76,11 +76,39 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
         User pending = createUser(CANDIDATE_EMAIL, false, UserRole.CANDIDATE);
         Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
 
-        mockMvc.perform(withCsrf(patch("/api/users/" + pending.getPublicId() + "/approval")).cookie(accessCookie))
+        mockMvc.perform(withCsrf(patch("/api/users/" + pending.getPublicId() + "/approval"))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "approved": true
+                                }
+                                """))
                 .andExpect(status().isNoContent());
 
         assertThat(userRepository.findByEmail(CANDIDATE_EMAIL)).get()
                 .extracting(User::isApproved).isEqualTo(true);
+    }
+
+    @Test
+    void adminRevokesApproval() throws Exception
+    {
+        createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
+        User approved = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
+
+        mockMvc.perform(withCsrf(patch("/api/users/" + approved.getPublicId() + "/approval"))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "approved": false
+                                }
+                                """))
+                .andExpect(status().isNoContent());
+
+        assertThat(userRepository.findByEmail(CANDIDATE_EMAIL)).get()
+                .extracting(User::isApproved).isEqualTo(false);
     }
 
     @Test

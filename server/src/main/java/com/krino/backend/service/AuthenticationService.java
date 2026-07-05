@@ -9,6 +9,7 @@ import com.krino.backend.entity.User;
 import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.entity.RefreshToken;
+import com.krino.backend.exception.AccountNotApprovedException;
 import com.krino.backend.exception.InvalidCredentialsException;
 import com.krino.backend.exception.InvalidRefreshTokenException;
 import com.krino.backend.exception.ResourceConflictException;
@@ -23,6 +24,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -67,22 +69,24 @@ public class AuthenticationService {
         User user = userMapper.toEntity(request, normalizedEmail, passwordEncoder.encode(request.getPassword()));
         user.addRole(UserRole.CANDIDATE);
 
-        // Persist first so Hibernate's @UuidGenerator populates publicId, which keys the
-        // CV object. The base CV is mandatory for self-registering candidates: a storage
-        // failure throws and rolls back this transaction, so no user row is left behind.
         User savedUser = userRepository.save(user);
 
         CvStorageService.StoredResume storedResume = cvStorageService.uploadUserResume(savedUser.getPublicId(), resume);
-        savedUser.setResumeObjectKey(storedResume.objectKey());
-        savedUser.setResumeOriginalFilename(storedResume.originalFilename());
-        savedUser.setResumeContentType(storedResume.contentType());
-        savedUser.setResumeSizeBytes(storedResume.sizeBytes());
-        savedUser.setResumeUploadedAt(storedResume.uploadedAt());
+        applyResume(savedUser, storedResume);
+        savedUser.setApproved(true);
 
         UserResponseDTO userResponse = userMapper.toResponse(savedUser);
 
         log.info("User registered successfully with email: {}", normalizedEmail);
         return new RegistrationResponseDTO(userResponse, "User registered successfully.");
+    }
+
+    private void applyResume(User user, CvStorageService.StoredResume resume) {
+        user.setResumeObjectKey(resume.objectKey());
+        user.setResumeOriginalFilename(resume.originalFilename());
+        user.setResumeContentType(resume.contentType());
+        user.setResumeSizeBytes(resume.sizeBytes());
+        user.setResumeUploadedAt(resume.uploadedAt());
     }
 
     @Transactional
@@ -120,6 +124,9 @@ public class AuthenticationService {
                 throw new InvalidCredentialsException("Authentication failed");
             }
 
+        } catch (DisabledException _) {
+            log.warn("Authentication blocked: account deactivated for email: {}", email);
+            throw new AccountNotApprovedException("Your account has been deactivated. Please contact an administrator.");
         } catch (AuthenticationException _) {
             log.warn("Authentication failed for email: {}", email);
             throw new InvalidCredentialsException("Invalid email or password");
