@@ -19,19 +19,18 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Set;
 
-/**
- * Throttles the abuse-prone public authentication endpoints per caller. CSRF and logout are
- * intentionally excluded: the SPA fetches a CSRF token before every state-changing call, so
- * throttling it would break normal usage. On exceed it emits the same RFC 9457 problem
- * document as the rest of the API plus a {@code Retry-After} header.
- */
 @RequiredArgsConstructor
 @Slf4j
 public class RateLimitFilter extends OncePerRequestFilter {
-    private static final Set<String> RATE_LIMITED_PATHS = Set.of(
+    private static final Set<String> RATE_LIMITED_POST_PATHS = Set.of(
             "/api/auth/login",
             "/api/auth/register",
-            "/api/auth/refresh"
+            "/api/auth/refresh",
+            "/api/auth/forgot-password",
+            "/api/auth/reset-password"
+    );
+    private static final Set<String> RATE_LIMITED_GET_PATHS = Set.of(
+            "/actuator/health"
     );
 
     private final RateLimiter limiter;
@@ -60,7 +59,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-        return !HttpMethod.POST.matches(request.getMethod()) || !RATE_LIMITED_PATHS.contains(request.getRequestURI());
+        return !isRateLimited(request.getMethod(), request.getRequestURI());
+    }
+
+    private static boolean isRateLimited(String method, String path) {
+        return (HttpMethod.POST.matches(method) && RATE_LIMITED_POST_PATHS.contains(path))
+                || (HttpMethod.GET.matches(method) && RATE_LIMITED_GET_PATHS.contains(path));
     }
 
     private void writeRateLimitedResponse(HttpServletRequest request, HttpServletResponse response,
