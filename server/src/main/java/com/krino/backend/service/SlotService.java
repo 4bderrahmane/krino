@@ -42,10 +42,6 @@ public class SlotService {
         return slotMapper.toResponse(savedSlot);
     }
 
-    /**
-     * The slot belongs to the user given in the request (HR booking on behalf of an
-     * interviewer), or to the authenticated user when no interviewer is specified.
-     */
     private User resolveInterviewer(UUID interviewerPublicId) {
         CustomUserDetails currentUser = SecurityUtilities.requireCurrentCustomUser();
         if (interviewerPublicId != null) {
@@ -53,8 +49,7 @@ public class SlotService {
                 SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
             }
             return userRepository.findByPublicId(interviewerPublicId)
-                    .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID,
-                            interviewerPublicId));
+                    .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, interviewerPublicId));
         }
 
         return userRepository.findById(currentUser.getId())

@@ -53,7 +53,7 @@ public class SlotController {
 
     @PatchMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_UPDATE_SLOT')")
-    public ResponseEntity<SlotResponseDTO> patchSlot(@PathVariable UUID publicId, @RequestBody SlotUpdateDTO slotUpdateDTO) {
+    public ResponseEntity<SlotResponseDTO> patchSlot(@PathVariable UUID publicId, @Valid @RequestBody SlotUpdateDTO slotUpdateDTO) {
         SlotResponseDTO patchedSlot = slotService.patchSlot(publicId, slotUpdateDTO);
         return ResponseEntity.ok(patchedSlot);
     }

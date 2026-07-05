@@ -14,6 +14,7 @@ import java.time.Month;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -140,6 +141,51 @@ class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
                 .andExpect(status().isForbidden());
 
         assertThat(slotRepository.count()).isZero();
+    }
+
+    @Test
+    void creatingSlotWithEndBeforeStartReturnsBadRequest() throws Exception
+    {
+        createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
+        User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
+
+        mockMvc.perform(withCsrf(post("/api/slots"))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "interviewerId": "%s",
+                                  "interviewDate": "2099-01-01",
+                                  "startTime": "10:00:00",
+                                  "endTime": "09:00:00"
+                                }
+                                """.formatted(interviewer.getPublicId())))
+                .andExpect(status().isBadRequest());
+
+        assertThat(slotRepository.count()).isZero();
+    }
+
+    @Test
+    void persistingSlotWithInvertedWindowIsRejectedByEntityInvariant()
+    {
+        User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Slot slot = slotFor(interviewer);
+        slot.setEndTime(LocalTime.of(8, 0)); // earlier than the 09:00 start
+
+        assertThatThrownBy(() -> slotRepository.saveAndFlush(slot))
+                .hasStackTraceContaining("after its start time");
+    }
+
+    @Test
+    void persistingSlotWithHalfFilledWindowIsRejectedByEntityInvariant()
+    {
+        User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Slot slot = slotFor(interviewer);
+        slot.setEndTime(null); // date + start set, end missing
+
+        assertThatThrownBy(() -> slotRepository.saveAndFlush(slot))
+                .hasStackTraceContaining("set together");
     }
 
     private Slot slotFor(User interviewer)
