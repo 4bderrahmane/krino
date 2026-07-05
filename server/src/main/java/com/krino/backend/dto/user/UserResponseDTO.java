@@ -21,6 +21,6 @@ public class UserResponseDTO {
     private Set<UserRole> roles;
     private String resumeFilename;
     private LocalDateTime resumeUploadedAt;
-    // True while the user is still on the admin-generated initial password.
     private boolean mustChangePassword;
+    private boolean approved;
 }

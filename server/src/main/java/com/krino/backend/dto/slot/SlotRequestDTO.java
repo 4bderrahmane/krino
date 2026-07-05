@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -25,4 +26,10 @@ public class SlotRequestDTO {
 
     @NotNull(message = "End time cannot be null")
     private LocalTime endTime;
+
+    // Cross-field rule: a window has to move forward. Null parts are left to @NotNull above.
+    @AssertTrue(message = "End time must be after start time")
+    public boolean isEndAfterStart() {
+        return startTime == null || endTime == null || endTime.isAfter(startTime);
+    }
 }
