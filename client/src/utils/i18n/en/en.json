@@ -36,9 +36,43 @@
       "cvType": "Your CV must be a PDF file.",
       "cvSize": "Your CV must be 5MB or smaller."
     },
+    "passwordReset": {
+      "forgotTitle": "Forgot your password?",
+      "forgotSubtitle": "Enter your email and we'll send you a link to reset it.",
+      "sendLink": "Send reset link",
+      "sentTitle": "Check your inbox",
+      "sentMessage": "If an account exists for that email, we've sent a link to reset your password. The link expires in 30 minutes.",
+      "backToLogin": "Back to login",
+      "resetTitle": "Set a new password",
+      "resetSubtitle": "Choose a new password for your account.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "resetButton": "Reset password",
+      "successTitle": "Password updated",
+      "successMessage": "Your password has been reset. Redirecting you to sign in…",
+      "goToLogin": "Go to login",
+      "invalidLinkTitle": "Link invalid or expired",
+      "invalidLinkMessage": "This password reset link is invalid or has expired. Request a new one to try again.",
+      "requestNewLink": "Request a new link"
+    },
+    "verifyEmail": {
+      "title": "Verify your email address",
+      "subtitle": "Click the button below to confirm this email address and activate your account.",
+      "verifyButton": "Verify email",
+      "successTitle": "Email verified",
+      "successMessage": "Your email address is confirmed. Redirecting you to sign in…",
+      "goToLogin": "Go to login",
+      "invalidLinkTitle": "Link invalid or expired",
+      "invalidLinkMessage": "This verification link is invalid or has expired. Enter your email and we'll send you a new one.",
+      "resendButton": "Resend verification email",
+      "resendSentTitle": "Check your inbox",
+      "resendSentMessage": "If an unverified account exists for that email, we've sent a new verification link. It expires in 24 hours.",
+      "backToLogin": "Back to login"
+    },
     "success": {
       "loginSuccess": "Successfully logged in! Welcome back.",
       "registrationSuccess": "Account created successfully! Please log in with your new credentials.",
+      "registrationVerifyEmail": "Account created! Check your inbox to verify your email before signing in.",
       "logoutSuccess": "You have been logged out successfully."
     }
   },

@@ -6,8 +6,11 @@
     "DATA_CONFLICT": "That conflicts with existing data. Please review your input and try again.",
     "UNAUTHORIZED": "Your session has expired. Please log in again.",
     "TOKEN_EXPIRED": "Your session has expired. Please log in again.",
+    "INVALID_TOKEN": "This link is invalid or has expired.",
     "ACCESS_DENIED": "You don't have permission to perform this action.",
     "ACCOUNT_LOCKED": "Your account is locked. Please try again later or contact support.",
+    "ACCOUNT_NOT_APPROVED": "Your account has been deactivated. Please contact an administrator.",
+    "EMAIL_NOT_VERIFIED": "Your email address hasn't been verified yet. Check your inbox for the verification link.",
     "RESOURCE_NOT_FOUND": "We couldn't find what you were looking for.",
     "OPERATION_NOT_ALLOWED": "This action isn't allowed right now.",
     "METHOD_NOT_ALLOWED": "This action isn't supported.",
@@ -30,6 +33,13 @@
     },
     "changePassword": {
       "INVALID_CREDENTIALS": "Your current password is incorrect."
+    },
+    "resetPassword": {
+      "INVALID_TOKEN": "This password reset link is invalid or has expired.",
+      "VALIDATION_ERROR": "Please choose a password with at least 8 characters."
+    },
+    "verifyEmail": {
+      "INVALID_TOKEN": "This verification link is invalid or has expired."
     }
   }
 }

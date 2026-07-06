@@ -7,6 +7,9 @@ import RootRedirect from '@/shared/components/RootRedirect';
 import LoadingSpinner from "@/shared/components/LoadingSpinner.tsx";
 
 const RegistrationForm = lazy(() => import("@/features/authentication/components/RegistrationForm"));
+const ForgotPasswordForm = lazy(() => import("@/features/authentication/components/ForgotPasswordForm"));
+const ResetPasswordForm = lazy(() => import("@/features/authentication/components/ResetPasswordForm"));
+const VerifyEmailPage = lazy(() => import("@/features/authentication/components/VerifyEmailPage"));
 const Dashboard = lazy(() => import("@/shared/components/Dashboard"));
 const Layout = lazy(() => import("@/shared/components/Layout"));
 const NotFoundPage = lazy(() => import("@/shared/components/NotFoundPage"));
@@ -39,6 +42,18 @@ const router = createBrowserRouter([
     {
         path: '/register',
         element: withSuspense(<RegistrationForm/>),
+    },
+    {
+        path: '/forgot-password',
+        element: withSuspense(<ForgotPasswordForm/>),
+    },
+    {
+        path: '/reset-password',
+        element: withSuspense(<ResetPasswordForm/>),
+    },
+    {
+        path: '/verify-email',
+        element: withSuspense(<VerifyEmailPage/>),
     },
     {
         path: "/",

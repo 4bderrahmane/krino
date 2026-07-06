@@ -36,9 +36,43 @@
       "cvType": "Votre CV doit être un fichier PDF.",
       "cvSize": "Votre CV doit faire 5 Mo ou moins."
     },
+    "passwordReset": {
+      "forgotTitle": "Mot de passe oublié ?",
+      "forgotSubtitle": "Saisissez votre e-mail et nous vous enverrons un lien pour le réinitialiser.",
+      "sendLink": "Envoyer le lien",
+      "sentTitle": "Vérifiez votre boîte mail",
+      "sentMessage": "Si un compte existe pour cet e-mail, nous avons envoyé un lien pour réinitialiser votre mot de passe. Le lien expire dans 30 minutes.",
+      "backToLogin": "Retour à la connexion",
+      "resetTitle": "Définir un nouveau mot de passe",
+      "resetSubtitle": "Choisissez un nouveau mot de passe pour votre compte.",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le nouveau mot de passe",
+      "resetButton": "Réinitialiser le mot de passe",
+      "successTitle": "Mot de passe mis à jour",
+      "successMessage": "Votre mot de passe a été réinitialisé. Redirection vers la connexion…",
+      "goToLogin": "Aller à la connexion",
+      "invalidLinkTitle": "Lien invalide ou expiré",
+      "invalidLinkMessage": "Ce lien de réinitialisation est invalide ou a expiré. Demandez-en un nouveau pour réessayer.",
+      "requestNewLink": "Demander un nouveau lien"
+    },
+    "verifyEmail": {
+      "title": "Vérifiez votre adresse e-mail",
+      "subtitle": "Cliquez sur le bouton ci-dessous pour confirmer cette adresse e-mail et activer votre compte.",
+      "verifyButton": "Vérifier l'e-mail",
+      "successTitle": "E-mail vérifié",
+      "successMessage": "Votre adresse e-mail est confirmée. Redirection vers la connexion…",
+      "goToLogin": "Aller à la connexion",
+      "invalidLinkTitle": "Lien invalide ou expiré",
+      "invalidLinkMessage": "Ce lien de vérification est invalide ou a expiré. Saisissez votre e-mail et nous vous en enverrons un nouveau.",
+      "resendButton": "Renvoyer l'e-mail de vérification",
+      "resendSentTitle": "Vérifiez votre boîte mail",
+      "resendSentMessage": "Si un compte non vérifié existe pour cet e-mail, nous avons envoyé un nouveau lien de vérification. Il expire dans 24 heures.",
+      "backToLogin": "Retour à la connexion"
+    },
     "success": {
       "loginSuccess": "Connexion réussie ! Bon retour.",
       "registrationSuccess": "Compte créé avec succès ! Veuillez vous connecter avec vos nouveaux identifiants.",
+      "registrationVerifyEmail": "Compte créé ! Consultez votre boîte mail pour vérifier votre e-mail avant de vous connecter.",
       "logoutSuccess": "Vous avez été déconnecté avec succès."
     }
   },

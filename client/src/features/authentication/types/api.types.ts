@@ -36,6 +36,11 @@ export interface UserResponseDTO {
     // True while the user is still on the admin-generated initial password
     // (staff accounts). Drives the "change your password" reminder.
     mustChangePassword?: boolean;
+    // Whether the account is approved (enabled). Drives the admin approval toggle.
+    approved?: boolean;
+    // Whether the user has proven ownership of their email address. Login is
+    // blocked server-side until this is true.
+    emailVerified?: boolean;
 }
 
 export interface ApiResponse<T> {
@@ -62,6 +67,16 @@ export interface RegistrationComponentProps {
 export interface AuthResponse {
     user: UserResponseDTO;
     message?: string;
+}
+
+export interface ForgotPasswordDTO {
+    email: string;
+}
+
+export interface ResetPasswordDTO {
+    token: string;
+    newPassword: string;
+    confirmNewPassword: string;
 }
 
 /** RFC 9457 problem detail (application/problem+json) with our extensions. */

@@ -160,6 +160,28 @@
     border-color: var(--color-danger);
 }
 
+/* Phone field with fixed +212- country-code prefix */
+.phone-field {
+    position: relative;
+}
+
+.phone-prefix {
+    position: absolute;
+    top: 50%;
+    left: 1.25rem;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    color: var(--color-ink);
+    font-size: 1rem;
+    font-family: var(--font-sans);
+    pointer-events: none;
+}
+
+.phone-field .phone-input {
+    padding-left: 4.5rem;
+}
+
 /* Password field with show/hide toggle */
 .password-field {
     position: relative;

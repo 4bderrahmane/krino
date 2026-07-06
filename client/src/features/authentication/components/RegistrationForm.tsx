@@ -76,6 +76,14 @@ const RegistrationForm: React.FC = () => {
         clearError(name as FieldName);
     };
 
+    // The backend stores the local 9-digit number (the +212 country code is fixed),
+    // so we keep only digits in state and cap the length at 9.
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const digits = e.target.value.replace(/\D/g, '').slice(0, 9);
+        setCredentials((prev) => ({...prev, phoneNumber: digits}));
+        clearError('phoneNumber');
+    };
+
     const handleConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setConfirmPassword(e.target.value);
         clearError('confirmPassword');
@@ -132,7 +140,7 @@ const RegistrationForm: React.FC = () => {
         try {
             await register({...credentials, email: credentials.email.trim()}, resume);
 
-            showSuccessToast(t('auth.success.registrationSuccess'));
+            showSuccessToast(t('auth.success.registrationVerifyEmail'));
 
             await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -199,16 +207,21 @@ const RegistrationForm: React.FC = () => {
                             {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
                         </div>
                         <div className="form-group">
-                            <input
-                                id="phoneNumber"
-                                name="phoneNumber"
-                                type="tel"
-                                value={credentials.phoneNumber}
-                                onChange={handleChange}
-                                className="form-input"
-                                placeholder={t('auth.phoneNumber')}
-                                aria-invalid={!!fieldErrors.phoneNumber}
-                            />
+                            <div className="phone-field">
+                                <span className="phone-prefix" aria-hidden="true">+212-</span>
+                                <input
+                                    id="phoneNumber"
+                                    name="phoneNumber"
+                                    type="tel"
+                                    inputMode="numeric"
+                                    maxLength={9}
+                                    value={credentials.phoneNumber}
+                                    onChange={handlePhoneChange}
+                                    className="form-input phone-input"
+                                    placeholder="612345678"
+                                    aria-invalid={!!fieldErrors.phoneNumber}
+                                />
+                            </div>
                             {fieldErrors.phoneNumber && <span className="field-error">{fieldErrors.phoneNumber}</span>}
                         </div>
                     </div>

@@ -3,8 +3,8 @@ import {useTranslation} from 'react-i18next';
 import {useNavigate} from 'react-router-dom';
 import type {UserLoginDTO} from '@/features/authentication/types/api.types';
 import '@/features/authentication/styles/LoginForm.css';
-import {login} from "@/features/authentication/services/AuthenticationService.ts";
-import {resolveServerError} from "@/shared/services/errors.ts";
+import {login, resendVerificationEmail} from "@/features/authentication/services/AuthenticationService.ts";
+import {getServerErrorCode, resolveServerError} from "@/shared/services/errors.ts";
 import {Link} from "react-router-dom";
 import LanguageSwitcher from "@/shared/components/LanguageSwitcher.tsx";
 import {useAuth} from "@/shared/hooks/useAuth.ts";
@@ -22,6 +22,9 @@ const LoginForm: React.FC = () => {
 
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    // Set when login is blocked because the email isn't verified yet; offers a resend action.
+    const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+    const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle');
 
     // Clear the (already localized) error when the user switches language so we
     // never show a message left over in the previous language.
@@ -37,6 +40,21 @@ const LoginForm: React.FC = () => {
         }));
         if (errorMessage) {
             setErrorMessage(null);
+        }
+        setUnverifiedEmail(null);
+        setResendState('idle');
+    };
+
+    const handleResendVerification = async () => {
+        if (!unverifiedEmail || resendState === 'sending') return;
+        setResendState('sending');
+        try {
+            await resendVerificationEmail(unverifiedEmail);
+            setResendState('sent');
+        } catch (err: unknown) {
+            console.error('Resending the verification email failed:', err);
+            setResendState('idle');
+            setErrorMessage(resolveServerError(t, err, {context: 'verifyEmail'}));
         }
     };
 
@@ -54,13 +72,18 @@ const LoginForm: React.FC = () => {
         } catch (err: unknown) {
             console.error('Login failed:', err);
             setErrorMessage(resolveServerError(t, err, {context: 'login'}));
+            // Correct credentials but unverified email: surface a one-click resend.
+            if (getServerErrorCode(err) === 'EMAIL_NOT_VERIFIED') {
+                setUnverifiedEmail(credentials.email.trim());
+                setResendState('idle');
+            }
         } finally {
             setLoading(false);
         }
     };
 
     const handleForgotPassword = () => {
-        alert('Forgot Password clicked');
+        navigate('/forgot-password');
     };
 
     return (
@@ -114,6 +137,25 @@ const LoginForm: React.FC = () => {
                     </div>
 
                     {errorMessage && <div className="error-message">{errorMessage}</div>}
+
+                    {unverifiedEmail && (
+                        resendState === 'sent' ? (
+                            <p className="resend-verification-confirmation" role="status">
+                                {t('auth.verifyEmail.resendSentMessage')}
+                            </p>
+                        ) : (
+                            <button
+                                type="button"
+                                className="forgot-password-link resend-verification-button"
+                                onClick={handleResendVerification}
+                                disabled={resendState === 'sending'}
+                            >
+                                {resendState === 'sending'
+                                    ? t('app.loading')
+                                    : t('auth.verifyEmail.resendButton')}
+                            </button>
+                        )
+                    )}
 
                     <button type="submit" disabled={loading} className="login-button">
                         {loading ? (

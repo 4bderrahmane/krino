@@ -7,7 +7,9 @@ import type {
     UserResponseDTO,
     BackendErrorResponse,
     EnhancedError,
-    AuthResponse
+    AuthResponse,
+    ForgotPasswordDTO,
+    ResetPasswordDTO
 } from "@/features/authentication/types/api.types";
 
 const AUTH_ENDPOINTS = {
@@ -15,6 +17,10 @@ const AUTH_ENDPOINTS = {
     REGISTER: '/auth/register',
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
+    FORGOT_PASSWORD: '/auth/forgot-password',
+    RESET_PASSWORD: '/auth/reset-password',
+    VERIFY_EMAIL: '/auth/verify-email',
+    RESEND_VERIFICATION: '/auth/resend-verification',
     ME: '/users/me'
 } as const;
 
@@ -64,6 +70,66 @@ export const register = async (userData: UserRegistrationDTO, resume: File): Pro
             throw enhanceError('Registration failed', error);
         }
         console.error("An unexpected error occurred during registration:", error);
+        throw error;
+    }
+};
+
+// Starts the forgot-password flow. The API always returns 204 (whether or not the email is
+// registered), so this resolves for any valid request and never reveals if an account exists.
+export const requestPasswordReset = async (email: string): Promise<void> => {
+    try {
+        const payload: ForgotPasswordDTO = {email};
+        await api.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, payload);
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Password reset request failed:", error.response?.data || error.message);
+            throw enhanceError('Password reset request failed', error);
+        }
+        console.error("An unexpected error occurred during password reset request:", error);
+        throw error;
+    }
+};
+
+// Completes the flow with the emailed token and the new password.
+export const resetPassword = async (payload: ResetPasswordDTO): Promise<void> => {
+    try {
+        await api.post(AUTH_ENDPOINTS.RESET_PASSWORD, payload);
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Password reset failed:", error.response?.data || error.message);
+            throw enhanceError('Password reset failed', error);
+        }
+        console.error("An unexpected error occurred during password reset:", error);
+        throw error;
+    }
+};
+
+// Confirms ownership of the registration email with the single-use token from the
+// verification link. A bad/expired/used token surfaces as INVALID_TOKEN.
+export const verifyEmail = async (token: string): Promise<void> => {
+    try {
+        await api.post(AUTH_ENDPOINTS.VERIFY_EMAIL, {token});
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Email verification failed:", error.response?.data || error.message);
+            throw enhanceError('Email verification failed', error);
+        }
+        console.error("An unexpected error occurred during email verification:", error);
+        throw error;
+    }
+};
+
+// Asks for a fresh verification link. The API always returns 204 (whether or not the
+// email maps to an unverified account), so this never reveals if an account exists.
+export const resendVerificationEmail = async (email: string): Promise<void> => {
+    try {
+        await api.post(AUTH_ENDPOINTS.RESEND_VERIFICATION, {email});
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Resending the verification email failed:", error.response?.data || error.message);
+            throw enhanceError('Resending the verification email failed', error);
+        }
+        console.error("An unexpected error occurred while resending the verification email:", error);
         throw error;
     }
 };

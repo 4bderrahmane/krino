@@ -6,8 +6,11 @@
     "DATA_CONFLICT": "Cela entre en conflit avec des données existantes. Veuillez vérifier vos informations et réessayer.",
     "UNAUTHORIZED": "Votre session a expiré. Veuillez vous reconnecter.",
     "TOKEN_EXPIRED": "Votre session a expiré. Veuillez vous reconnecter.",
+    "INVALID_TOKEN": "Ce lien est invalide ou a expiré.",
     "ACCESS_DENIED": "Vous n'avez pas l'autorisation d'effectuer cette action.",
     "ACCOUNT_LOCKED": "Votre compte est verrouillé. Veuillez réessayer plus tard ou contacter le support.",
+    "ACCOUNT_NOT_APPROVED": "Votre compte a été désactivé. Veuillez contacter un administrateur.",
+    "EMAIL_NOT_VERIFIED": "Votre adresse e-mail n'a pas encore été vérifiée. Consultez votre boîte mail pour trouver le lien de vérification.",
     "RESOURCE_NOT_FOUND": "Nous n'avons pas trouvé ce que vous cherchiez.",
     "OPERATION_NOT_ALLOWED": "Cette action n'est pas autorisée pour le moment.",
     "METHOD_NOT_ALLOWED": "Cette action n'est pas prise en charge.",
@@ -30,6 +33,13 @@
     },
     "changePassword": {
       "INVALID_CREDENTIALS": "Votre mot de passe actuel est incorrect."
+    },
+    "resetPassword": {
+      "INVALID_TOKEN": "Ce lien de réinitialisation est invalide ou a expiré.",
+      "VALIDATION_ERROR": "Veuillez choisir un mot de passe d'au moins 8 caractères."
+    },
+    "verifyEmail": {
+      "INVALID_TOKEN": "Ce lien de vérification est invalide ou a expiré."
     }
   }
 }
