@@ -7,6 +7,7 @@ import com.resend.services.emails.model.CreateEmailResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -16,7 +17,9 @@ import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.CreateEmailOptions;
 import org.thymeleaf.context.Context;
 
+// Real email delivery; swapped for LoggingEmailService when app.mail.log-only=true (dev).
 @Service
+@ConditionalOnProperty(name = "app.mail.log-only", havingValue = "false", matchIfMissing = true)
 @RequiredArgsConstructor
 @Slf4j
 public class ResendEmailService implements EmailService {

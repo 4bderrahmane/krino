@@ -14,7 +14,18 @@ app:
     hmac-secret: "${APP_REFRESH_TOKEN_HMAC_SECRET:${JWT_SECRET}}"
   jwt:
     issuer: "${APP_JWT_ISSUER:krino-dev}"
+  # Dev default: log email content (verification/reset links, initial passwords) to the
+  # console instead of sending through Resend, so fake test addresses can complete the
+  # flows. Set APP_MAIL_LOG_ONLY=false to send real email in dev.
+  mail:
+    log-only: "${APP_MAIL_LOG_ONLY:true}"
+    from: "${APP_MAIL_FROM:dev@krino.local}"
+    from-name: "${APP_MAIL_FROM_NAME:Krino Dev}"
   cors:
     allowed-origins: "${APP_CORS_ALLOWED_ORIGINS:http://localhost:5000,http://localhost:5173,http://127.0.0.1:5000,http://127.0.0.1:5173}"
   cookies:
     secure: "${APP_COOKIES_SECURE:false}"
+
+# Unused while app.mail.log-only is true (the Resend client bean is not created).
+resend:
+  api-key: "${RESEND_API_KEY:}"

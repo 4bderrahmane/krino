@@ -40,6 +40,7 @@ public class ProductionConfigurationValidator implements ApplicationRunner {
         requireNonBlank("app.storage.bucket", errors);
         requireNonBlank("app.storage.max-cv-size", errors);
         rejectDefaultStorageCredentials(errors);
+        rejectLogOnlyMail(errors);
 
         if (!errors.isEmpty()) {
             throw new IllegalStateException("Unsafe production configuration:\n - " + String.join("\n - ", errors));
@@ -71,6 +72,14 @@ public class ProductionConfigurationValidator implements ApplicationRunner {
         String refreshSecret = environment.getProperty("app.refresh-token.hmac-secret");
         if (StringUtils.hasText(jwtSecret) && jwtSecret.equals(refreshSecret)) {
             errors.add("JWT and refresh-token HMAC secrets must be different in production");
+        }
+    }
+
+    // Log-only mail prints verification links and initial passwords into the logs and never
+    // delivers anything — a dev convenience that must not reach production.
+    private void rejectLogOnlyMail(List<String> errors) {
+        if (environment.getProperty("app.mail.log-only", Boolean.class, false)) {
+            errors.add("app.mail.log-only must not be enabled in production");
         }
     }
 

@@ -21,7 +21,8 @@ class ProductionConfigurationValidatorTest {
                 .withProperty("spring.jpa.hibernate.ddl-auto", "update")
                 .withProperty("app.refresh-token.hmac-secret", "jwt-secret-value")
                 .withProperty("app.cors.allowed-origins", "http://localhost:5173,*")
-                .withProperty("app.storage.access-key", "minioadmin");
+                .withProperty("app.storage.access-key", "minioadmin")
+                .withProperty("app.mail.log-only", "true");
 
         ProductionConfigurationValidator validator = new ProductionConfigurationValidator(environment);
 
@@ -33,7 +34,8 @@ class ProductionConfigurationValidatorTest {
                 .hasMessageContaining("JWT and refresh-token HMAC secrets must be different")
                 .hasMessageContaining("must not include local development origins")
                 .hasMessageContaining("must not include wildcard origins")
-                .hasMessageContaining("MinIO storage credentials must not use default minioadmin values");
+                .hasMessageContaining("MinIO storage credentials must not use default minioadmin values")
+                .hasMessageContaining("app.mail.log-only must not be enabled in production");
     }
 
     private MockEnvironment safeEnvironment() {
