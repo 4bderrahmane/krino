@@ -5,6 +5,7 @@ import com.krino.backend.dto.slot.SlotRequestDTO;
 import com.krino.backend.dto.slot.SlotResponseDTO;
 import com.krino.backend.dto.slot.SlotUpdateDTO;
 import com.krino.backend.service.SlotService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.UUID;
 
+@Tag(name = "Slots")
 @RestController
 @RequestMapping("/api/slots")
 @RequiredArgsConstructor

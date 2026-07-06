@@ -10,6 +10,7 @@ import com.krino.backend.dto.user.StaffCreationResponseDTO;
 import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.service.ApplicationService;
 import com.krino.backend.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -31,6 +32,7 @@ import java.util.UUID;
 
 import static com.krino.backend.controller.ApplicationController.getResourceResponseEntity;
 
+@Tag(name = "Users")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor

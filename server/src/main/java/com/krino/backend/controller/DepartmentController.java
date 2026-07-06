@@ -6,6 +6,7 @@ import com.krino.backend.dto.department.DepartmentResponseDTO;
 import com.krino.backend.dto.department.DepartmentUpdateDTO;
 import com.krino.backend.service.DepartmentService;
 import com.krino.backend.validation.ValidationGroups;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ import java.net.URI;
 import java.util.UUID;
 
 @RequiredArgsConstructor
+@Tag(name = "Departments")
 @RestController
 @RequestMapping("/api/departments")
 public class DepartmentController {

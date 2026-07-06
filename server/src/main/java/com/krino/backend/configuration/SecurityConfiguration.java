@@ -50,6 +50,11 @@ public class SecurityConfiguration {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/auth/**",
             "/actuator/health",
+            // OpenAPI spec + Swagger UI — springdoc is disabled by default in prod
+            // (see application-prod.yaml), so these resolve to 404 there.
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
     };
 
     @Bean

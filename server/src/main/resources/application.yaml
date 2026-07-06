@@ -38,6 +38,19 @@ management:
       show-details: never
       show-components: never
 
+# OpenAPI spec at /v3/api-docs, Swagger UI at /swagger-ui.html.
+# Enabled by default for dev; prod turns it off (see application-prod.yaml).
+springdoc:
+  api-docs:
+    enabled: "${SPRINGDOC_ENABLED:true}"
+  swagger-ui:
+    enabled: "${SPRINGDOC_ENABLED:true}"
+    operations-sorter: alpha
+    tags-sorter: alpha
+    # Send the XSRF-TOKEN cookie value as X-XSRF-TOKEN on "try it out" requests.
+    csrf:
+      enabled: true
+
 app:
   refresh-token:
     hmac-secret: "${APP_REFRESH_TOKEN_HMAC_SECRET}"

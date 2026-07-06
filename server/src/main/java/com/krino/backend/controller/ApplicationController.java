@@ -5,6 +5,7 @@ import com.krino.backend.dto.application.ApplicationResponseDTO;
 import com.krino.backend.dto.application.ApplicationUpdateDTO;
 import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.service.ApplicationService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
@@ -24,6 +25,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+@Tag(name = "Applications")
 @RestController
 @RequestMapping("/api/applications")
 @RequiredArgsConstructor

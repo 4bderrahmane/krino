@@ -7,6 +7,7 @@ import com.krino.backend.dto.job.JobResponseDTO;
 import com.krino.backend.dto.job.JobUpdateDTO;
 import com.krino.backend.service.JobService;
 import com.krino.backend.validation.ValidationGroups;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.UUID;
 
+@Tag(name = "Jobs")
 @RestController
 @RequestMapping("/api/jobs")
 @RequiredArgsConstructor

@@ -9,3 +9,10 @@ app:
 
 server:
   forward-headers-strategy: framework
+
+# API docs stay off in production unless explicitly enabled via SPRINGDOC_ENABLED=true.
+springdoc:
+  api-docs:
+    enabled: "${SPRINGDOC_ENABLED:false}"
+  swagger-ui:
+    enabled: "${SPRINGDOC_ENABLED:false}"
