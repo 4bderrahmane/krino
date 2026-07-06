@@ -1,10 +1,17 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {useInterviews, type InterviewScope} from '@/features/interviews/hooks/useInterviews.ts';
-import type {InterviewSchedule} from '@/features/interviews/types/interview.types.ts';
+import {
+    useDeleteInterview,
+    useInterviews,
+    type InterviewScope,
+} from '@/features/interviews/hooks/useInterviews.ts';
+import type {Interview, InterviewSchedule} from '@/features/interviews/types/interview.types.ts';
 import InterviewStatusBadge from './InterviewStatusBadge.tsx';
+import InterviewForm from './InterviewForm.tsx';
 import LoadingSpinner from '@/shared/components/LoadingSpinner.tsx';
 import {usePermissions} from '@/shared/hooks/usePermissions';
+import {useSuccessToast} from '@/shared/hooks/useSuccessToast';
+import {resolveServerError} from '@/shared/services/errors';
 import '@/features/interviews/styles/Interviews.css';
 
 const formatSchedule = (schedule: InterviewSchedule | null, locale: string): string => {
@@ -26,11 +33,18 @@ const formatSchedule = (schedule: InterviewSchedule | null, locale: string): str
 const InterviewsPage: React.FC = () => {
     const {t, i18n} = useTranslation();
 
-    // Staff (ADMIN / HR_MANAGER) see every interview; everyone else sees their own.
+    // Staff (ADMIN / HR_MANAGER) see every interview and can manage them; everyone
+    // else sees only their own, read-only.
     const {isStaff} = usePermissions();
     const scope: InterviewScope = isStaff ? 'all' : 'mine';
+    const {showSuccessToast} = useSuccessToast();
 
     const {data, isLoading, isError, refetch} = useInterviews(scope);
+    const deleteInterview = useDeleteInterview();
+
+    const [showCreate, setShowCreate] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
 
     if (isLoading) {
         return <LoadingSpinner/>;
@@ -51,6 +65,18 @@ const InterviewsPage: React.FC = () => {
 
     const interviews = data?.interviews ?? [];
     const total = data?.page.totalElements ?? interviews.length;
+    const editing = editingId ? interviews.find((i) => i.id === editingId) ?? null : null;
+
+    const handleDelete = async (interview: Interview) => {
+        try {
+            await deleteInterview.mutateAsync(interview.id);
+            showSuccessToast(t('interviews.form.deleteSuccess'));
+            setConfirmingDeleteId(null);
+        } catch (err: unknown) {
+            console.error('delete interview failed:', err);
+            showSuccessToast(resolveServerError(t, err));
+        }
+    };
 
     return (
         <div className="interviews-container">
@@ -60,6 +86,24 @@ const InterviewsPage: React.FC = () => {
                 </h1>
                 <p className="interviews-subtitle">{t('interviews.count', {count: total})}</p>
             </header>
+
+            {isStaff && (
+                <div className="interviews-toolbar">
+                    {editing ? (
+                        <InterviewForm interview={editing} onClose={() => setEditingId(null)}/>
+                    ) : showCreate ? (
+                        <InterviewForm onClose={() => setShowCreate(false)}/>
+                    ) : (
+                        <button
+                            type="button"
+                            className="interviews-create-toggle"
+                            onClick={() => setShowCreate(true)}
+                        >
+                            + {t('interviews.form.schedule')}
+                        </button>
+                    )}
+                </div>
+            )}
 
             {interviews.length === 0 ? (
                 <div className="interviews-state interviews-empty">
@@ -76,6 +120,7 @@ const InterviewsPage: React.FC = () => {
                                 <th>{t('interviews.columns.when')}</th>
                                 <th>{t('interviews.columns.status')}</th>
                                 <th>{t('interviews.columns.mode')}</th>
+                                {isStaff && <th>{t('common.actions')}</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -114,6 +159,50 @@ const InterviewsPage: React.FC = () => {
                                             t('interviews.inPerson')
                                         )}
                                     </td>
+                                    {isStaff && (
+                                        <td>
+                                            {confirmingDeleteId === interview.id ? (
+                                                <div className="interview-row-actions">
+                                                    <span className="cell-muted">{t('interviews.form.deleteConfirm')}</span>
+                                                    <button
+                                                        type="button"
+                                                        className="interview-action interview-action-danger"
+                                                        disabled={deleteInterview.isPending}
+                                                        onClick={() => handleDelete(interview)}
+                                                    >
+                                                        {t('common.yes')}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="interview-action"
+                                                        onClick={() => setConfirmingDeleteId(null)}
+                                                    >
+                                                        {t('common.no')}
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="interview-row-actions">
+                                                    <button
+                                                        type="button"
+                                                        className="interview-action"
+                                                        onClick={() => {
+                                                            setShowCreate(false);
+                                                            setEditingId(interview.id);
+                                                        }}
+                                                    >
+                                                        {t('common.edit')}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="interview-action interview-action-danger"
+                                                        onClick={() => setConfirmingDeleteId(interview.id)}
+                                                    >
+                                                        {t('common.delete')}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>

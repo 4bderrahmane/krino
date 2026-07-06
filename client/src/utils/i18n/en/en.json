@@ -506,6 +506,39 @@
       "COMPLETED": "Completed",
       "CANCELLED": "Cancelled",
       "NO_SHOW": "No show"
+    },
+    "recommendation": {
+      "STRONG_YES": "Strong yes",
+      "YES": "Yes",
+      "NO": "No",
+      "STRONG_NO": "Strong no"
+    },
+    "form": {
+      "schedule": "Schedule interview",
+      "createTitle": "Schedule an interview",
+      "editTitle": "Edit interview",
+      "application": "Application",
+      "applicationPlaceholder": "Select an application",
+      "slot": "Slot",
+      "slotPlaceholder": "Select an available slot",
+      "noSlots": "No available slots. Create one in Availability first.",
+      "recommendation": "Recommendation",
+      "recommendationPlaceholder": "Select a recommendation",
+      "isOnline": "This interview is online",
+      "meetingUrl": "Meeting link",
+      "notes": "Notes",
+      "notesPlaceholder": "Optional notes about this interview",
+      "createSubmit": "Schedule",
+      "editSubmit": "Save changes",
+      "createSuccess": "Interview scheduled.",
+      "editSuccess": "Interview updated.",
+      "deleteConfirm": "Cancel this interview?",
+      "deleteSuccess": "Interview removed.",
+      "errors": {
+        "applicationRequired": "Please choose an application.",
+        "slotRequired": "Please choose a slot.",
+        "recommendationRequired": "A recommendation is required to complete an interview."
+      }
     }
   },
   "profile": {

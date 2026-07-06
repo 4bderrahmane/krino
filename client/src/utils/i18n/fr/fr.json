@@ -506,6 +506,39 @@
       "COMPLETED": "Terminé",
       "CANCELLED": "Annulé",
       "NO_SHOW": "Absent"
+    },
+    "recommendation": {
+      "STRONG_YES": "Oui, fortement",
+      "YES": "Oui",
+      "NO": "Non",
+      "STRONG_NO": "Non, fortement"
+    },
+    "form": {
+      "schedule": "Planifier un entretien",
+      "createTitle": "Planifier un entretien",
+      "editTitle": "Modifier l'entretien",
+      "application": "Candidature",
+      "applicationPlaceholder": "Sélectionnez une candidature",
+      "slot": "Créneau",
+      "slotPlaceholder": "Sélectionnez un créneau disponible",
+      "noSlots": "Aucun créneau disponible. Créez-en un dans Disponibilité d'abord.",
+      "recommendation": "Recommandation",
+      "recommendationPlaceholder": "Sélectionnez une recommandation",
+      "isOnline": "Cet entretien est en ligne",
+      "meetingUrl": "Lien de réunion",
+      "notes": "Notes",
+      "notesPlaceholder": "Notes facultatives sur cet entretien",
+      "createSubmit": "Planifier",
+      "editSubmit": "Enregistrer les modifications",
+      "createSuccess": "Entretien planifié.",
+      "editSuccess": "Entretien mis à jour.",
+      "deleteConfirm": "Annuler cet entretien ?",
+      "deleteSuccess": "Entretien supprimé.",
+      "errors": {
+        "applicationRequired": "Veuillez choisir une candidature.",
+        "slotRequired": "Veuillez choisir un créneau.",
+        "recommendationRequired": "Une recommandation est requise pour terminer un entretien."
+      }
     }
   },
   "profile": {
