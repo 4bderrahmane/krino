@@ -41,6 +41,13 @@ public class ResendEmailService implements EmailService {
                         "loginUrl", frontendUrl + "/login"));
     }
 
+    @Override
+    @Async("mailExecutor")
+    public void sendEmailVerification(String to, String firstName, String verificationLink) {
+        send(to, "Verify your Krino email address", "mail/verify-email",
+                Map.of("firstName", firstName, "verificationLink", verificationLink));
+    }
+
     private void send(String to, String subject, String template, Map<String, Object> model) {
         var ctx = new Context();
         ctx.setVariables(model);

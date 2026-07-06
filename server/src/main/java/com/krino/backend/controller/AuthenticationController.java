@@ -3,10 +3,13 @@ package com.krino.backend.controller;
 import com.krino.backend.dto.authentication.AuthenticationResponseDTO;
 import com.krino.backend.dto.authentication.ForgotPasswordRequestDTO;
 import com.krino.backend.dto.authentication.RegistrationResponseDTO;
+import com.krino.backend.dto.authentication.ResendVerificationRequestDTO;
 import com.krino.backend.dto.authentication.ResetPasswordRequestDTO;
+import com.krino.backend.dto.authentication.VerifyEmailRequestDTO;
 import com.krino.backend.dto.user.UserLoginDTO;
 import com.krino.backend.dto.user.UserRegistrationDTO;
 import com.krino.backend.service.AuthenticationService;
+import com.krino.backend.service.EmailVerificationService;
 import com.krino.backend.service.PasswordResetService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +36,7 @@ import java.net.URI;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final PasswordResetService passwordResetService;
+    private final EmailVerificationService emailVerificationService;
 
     @PostMapping(path = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<RegistrationResponseDTO> register(@Valid @RequestPart("data") UserRegistrationDTO request, @RequestPart("resume") MultipartFile resume) {
@@ -76,6 +80,20 @@ public class AuthenticationController {
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO request) {
         passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequestDTO request) {
+        emailVerificationService.verifyEmail(request.getToken());
+        return ResponseEntity.noContent().build();
+    }
+
+    // Always returns 204 regardless of whether the email is registered or already verified,
+    // so it can't be used to enumerate accounts.
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Void> resendVerification(@Valid @RequestBody ResendVerificationRequestDTO request) {
+        emailVerificationService.resendVerification(request.getEmail());
         return ResponseEntity.noContent().build();
     }
 }

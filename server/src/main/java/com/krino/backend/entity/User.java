@@ -38,6 +38,13 @@ public class User extends AbstractPublicEntity {
 
     private boolean isApproved = false;
 
+    // Proven ownership of the email address (via the verification link, or implicitly for
+    // staff/admin accounts whose initial password is delivered by email). Login is refused
+    // until this is true; is_approved stays the separate admin activation toggle.
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private boolean emailVerified = false;
+
     @Column(nullable = false)
     @ColumnDefault("false")
     private boolean mustChangePassword = false;

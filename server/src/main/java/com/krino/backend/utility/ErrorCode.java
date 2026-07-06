@@ -18,6 +18,7 @@ public enum ErrorCode {
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "access-denied"),
     ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "account-locked"),
     ACCOUNT_NOT_APPROVED(HttpStatus.FORBIDDEN, "account-not-approved"),
+    EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN, "email-not-verified"),
     DATA_CONFLICT(HttpStatus.CONFLICT, "data-conflict"),
     OPERATION_NOT_ALLOWED(HttpStatus.CONFLICT, "operation-not-allowed"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "method-not-allowed"),

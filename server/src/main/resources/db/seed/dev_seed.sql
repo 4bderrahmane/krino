@@ -47,20 +47,20 @@ ON CONFLICT (name) DO NOTHING;
 -- Password for every account below is "Password123!" (BCrypt, cost 12).
 INSERT INTO users (
     public_id, email, password, first_name, last_name, phone_number,
-    is_approved, must_change_password
+    is_approved, email_verified, must_change_password
 )
 VALUES
     -- Staff (approved, can log in immediately)
-    (gen_random_uuid(), 'admin@krino.dev',             '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Nadia',   'Cherkaoui',  '+212600000001', TRUE,  FALSE),
-    (gen_random_uuid(), 'sofia.bennani@krino.dev',     '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Sofia',   'Bennani',    '+212600000002', TRUE,  FALSE),
-    (gen_random_uuid(), 'youssef.alami@krino.dev',     '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Youssef', 'Alami',      '+212600000003', TRUE,  FALSE),
-    (gen_random_uuid(), 'karim.idrissi@krino.dev',     '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Karim',   'Idrissi',    '+212600000004', TRUE,  FALSE),
-    (gen_random_uuid(), 'yasmine.elfassi@krino.dev',   '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Yasmine', 'El Fassi',   '+212600000005', TRUE,  FALSE),
+    (gen_random_uuid(), 'admin@krino.dev',             '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Nadia',   'Cherkaoui',  '+212600000001', TRUE,  TRUE, FALSE),
+    (gen_random_uuid(), 'sofia.bennani@krino.dev',     '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Sofia',   'Bennani',    '+212600000002', TRUE,  TRUE, FALSE),
+    (gen_random_uuid(), 'youssef.alami@krino.dev',     '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Youssef', 'Alami',      '+212600000003', TRUE,  TRUE, FALSE),
+    (gen_random_uuid(), 'karim.idrissi@krino.dev',     '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Karim',   'Idrissi',    '+212600000004', TRUE,  TRUE, FALSE),
+    (gen_random_uuid(), 'yasmine.elfassi@krino.dev',   '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Yasmine', 'El Fassi',   '+212600000005', TRUE,  TRUE, FALSE),
     -- Candidates
-    (gen_random_uuid(), 'amine.tazi@example.com',      '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Amine',   'Tazi',       '+212611000006', TRUE,  FALSE),
-    (gen_random_uuid(), 'salma.bourkadi@example.com',  '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Salma',   'Bourkadi',   '+212611000007', TRUE,  FALSE),
-    (gen_random_uuid(), 'omar.benjelloun@example.com', '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Omar',    'Benjelloun', '+212611000008', FALSE, FALSE),
-    (gen_random_uuid(), 'lina.haddad@example.com',     '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Lina',    'Haddad',     '+212611000009', TRUE,  FALSE)
+    (gen_random_uuid(), 'amine.tazi@example.com',      '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Amine',   'Tazi',       '+212611000006', TRUE,  TRUE, FALSE),
+    (gen_random_uuid(), 'salma.bourkadi@example.com',  '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Salma',   'Bourkadi',   '+212611000007', TRUE,  TRUE, FALSE),
+    (gen_random_uuid(), 'omar.benjelloun@example.com', '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Omar',    'Benjelloun', '+212611000008', FALSE, TRUE, FALSE),
+    (gen_random_uuid(), 'lina.haddad@example.com',     '$2b$12$VbteJqK9AivEE7WvZAHPfeTfoLRjDZ0snAazpoyFgfQ2Kv/nSKoY.', 'Lina',    'Haddad',     '+212611000009', TRUE,  TRUE, FALSE)
 ON CONFLICT (email) DO NOTHING;
 
 -- Roles (a user can hold several; Youssef is both HR_MANAGER and INTERVIEWER).

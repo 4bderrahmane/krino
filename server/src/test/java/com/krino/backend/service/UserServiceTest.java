@@ -34,6 +34,7 @@ import static org.mockito.Mockito.*;
 class UserServiceTest
 {
     private EmailService emailService;
+    private EmailVerificationService emailVerificationService;
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
     private UserMapper userMapper;
@@ -44,13 +45,14 @@ class UserServiceTest
     void setUp()
     {
         emailService = mock(EmailService.class);
+        emailVerificationService = mock(EmailVerificationService.class);
         userRepository = mock(UserRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         userMapper = mock(UserMapper.class);
         // A plain SecureRandom keeps the unit test off the blocking /dev/random source.
         passwordGenerator = new PasswordGenerator(new SecureRandom());
-        userService = new UserService(emailService, userRepository, passwordEncoder, userMapper, null, null, null,
-                null, null, passwordGenerator);
+        userService = new UserService(emailService, emailVerificationService, userRepository, passwordEncoder,
+                userMapper, null, null, null, null, null, passwordGenerator);
     }
 
     @AfterEach
@@ -225,6 +227,89 @@ class UserServiceTest
 
         assertThat(user.getEmail()).isEqualTo("new@test.local");
         verify(userRepository).findByEmail("new@test.local");
+    }
+
+    @Test
+    void updateUserPartially_emailChange_resetsVerificationAndSendsNewLink()
+    {
+        UUID publicId = UUID.randomUUID();
+        User user = new User();
+        user.setPublicId(publicId);
+        user.setEmail("old@test.local");
+        user.setEmailVerified(true);
+        authenticateAs(publicId, UserRole.CANDIDATE);
+
+        UserUpdateDTO dto = new UserUpdateDTO();
+        dto.setEmail("new@test.local");
+
+        when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("new@test.local")).thenReturn(Optional.empty());
+        when(userRepository.save(user)).thenReturn(user);
+        when(userMapper.toResponse(user)).thenReturn(new UserResponseDTO());
+        doAnswer(invocation ->
+        {
+            User target = invocation.getArgument(2);
+            target.setEmail(invocation.getArgument(1));
+            return null;
+        }).when(userMapper).patchEntity(dto, "new@test.local", user);
+
+        userService.updateUserPartially(publicId, dto);
+
+        // The new address is unproven: verified status is dropped and a link goes out to it.
+        assertThat(user.isEmailVerified()).isFalse();
+        verify(emailVerificationService).sendVerificationEmail(user);
+    }
+
+    @Test
+    void updateUserPartially_unchangedEmail_keepsVerifiedStatus()
+    {
+        UUID publicId = UUID.randomUUID();
+        User user = new User();
+        user.setPublicId(publicId);
+        user.setEmail("old@test.local");
+        user.setEmailVerified(true);
+        authenticateAs(publicId, UserRole.CANDIDATE);
+
+        UserUpdateDTO dto = new UserUpdateDTO();
+        dto.setEmail("Old@TEST.Local");
+
+        when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+        when(userMapper.toResponse(user)).thenReturn(new UserResponseDTO());
+
+        userService.updateUserPartially(publicId, dto);
+
+        assertThat(user.isEmailVerified()).isTrue();
+        verify(emailVerificationService, never()).sendVerificationEmail(any(User.class));
+    }
+
+    @Test
+    void updateUserFully_emailChange_resetsVerificationAndSendsNewLink()
+    {
+        UUID publicId = UUID.randomUUID();
+        User user = new User();
+        user.setPublicId(publicId);
+        user.setEmail("old@test.local");
+        user.setEmailVerified(true);
+        authenticateAs(publicId, UserRole.CANDIDATE);
+
+        UserUpdateDTO dto = new UserUpdateDTO("Test", "User", "New@TEST.Local", "123456789");
+
+        when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("new@test.local")).thenReturn(Optional.empty());
+        when(userRepository.save(user)).thenReturn(user);
+        when(userMapper.toResponse(user)).thenReturn(new UserResponseDTO());
+        doAnswer(invocation ->
+        {
+            User target = invocation.getArgument(2);
+            target.setEmail(invocation.getArgument(1));
+            return null;
+        }).when(userMapper).updateEntity(dto, "new@test.local", user);
+
+        userService.updateUserFully(publicId, dto);
+
+        assertThat(user.isEmailVerified()).isFalse();
+        verify(emailVerificationService).sendVerificationEmail(user);
     }
 
     private void authenticateAs(UUID publicId, UserRole role)

@@ -1,16 +1,22 @@
 package com.krino.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.krino.backend.configuration.StorageProperties;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
+import com.krino.backend.repository.EmailVerificationTokenRepository;
 import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.repository.UserRepository;
-import com.krino.backend.service.CvStorageService;
+import com.krino.backend.service.EmailService;
+import com.krino.backend.support.AbstractIntegrationTest;
+import io.minio.MinioClient;
+import io.minio.StatObjectArgs;
+import io.minio.StatObjectResponse;
+import org.mockito.ArgumentCaptor;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -24,38 +30,42 @@ import org.springframework.test.web.servlet.request.AbstractMockHttpServletReque
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.time.LocalDateTime;
-import java.time.Month;
 import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @RequiredArgsConstructor
-class AuthenticationControllerIntegrationTest {
+class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
     private static final String RAW_PASSWORD = "Password123!";
     private static final String CANDIDATE_EMAIL = "candidate@test.local";
+    private static final byte[] PDF_BYTES = "%PDF-1.7\ncontent".getBytes();
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final WebApplicationContext webApplicationContext;
+    // Registration uploads the candidate's base CV; these let the tests check the object
+    // really landed in the Testcontainers MinIO bucket.
+    private final MinioClient minioClient;
+    private final StorageProperties storageProperties;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private MockMvc mockMvc;
 
-    // Registration uploads the candidate's base CV to object storage; stub it so the
-    // integration test does not require a running MinIO.
+    // Mocked so tests can capture the verification link (and with it the raw token)
+    // instead of sending real email through Resend.
     @MockitoBean
-    private CvStorageService cvStorageService;
+    private EmailService emailService;
 
     @BeforeEach
     void setUp() {
@@ -63,6 +73,7 @@ class AuthenticationControllerIntegrationTest {
                 .apply(springSecurity())
                 .build();
         refreshTokenRepository.deleteAll();
+        emailVerificationTokenRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -172,10 +183,6 @@ class AuthenticationControllerIntegrationTest {
 
     @Test
     void registerNormalizesEmailAndCreatesCandidate() throws Exception {
-        when(cvStorageService.uploadUserResume(any(), any())).thenReturn(
-                new CvStorageService.StoredResume("users/key/resume/cv.pdf", "cv.pdf", "application/pdf", 1024L,
-                        LocalDateTime.of(2026, Month.JANUARY, 15, 10, 30)));
-
         MockMultipartFile data = new MockMultipartFile("data", "", MediaType.APPLICATION_JSON_VALUE, """
                 {
                   "firstName": " Test ",
@@ -185,8 +192,7 @@ class AuthenticationControllerIntegrationTest {
                   "phoneNumber": "123456789"
                 }
                 """.formatted(RAW_PASSWORD).getBytes());
-        MockMultipartFile resume = new MockMultipartFile("resume", "cv.pdf", "application/pdf",
-                "%PDF-1.7\ncontent".getBytes());
+        MockMultipartFile resume = new MockMultipartFile("resume", "cv.pdf", "application/pdf", PDF_BYTES);
 
         MvcResult result = mockMvc.perform(withCsrf(multipart("/api/auth/register").file(data).file(resume)))
                 .andExpect(status().isCreated())
@@ -198,7 +204,117 @@ class AuthenticationControllerIntegrationTest {
         User savedUser = userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow();
         assertThat(savedUser.getRoles()).contains(UserRole.CANDIDATE);
         assertThat(savedUser.isApproved()).isTrue();
-        assertThat(savedUser.getResumeObjectKey()).isEqualTo("users/key/resume/cv.pdf");
+        // The account exists but stays unverified until the emailed link is used.
+        assertThat(savedUser.isEmailVerified()).isFalse();
+        assertThat(savedUser.getResumeObjectKey())
+                .startsWith("users/" + savedUser.getPublicId() + "/resume/")
+                .endsWith(".pdf");
+        // The CV was genuinely written to object storage, not just recorded on the user row.
+        StatObjectResponse storedObject = minioClient.statObject(StatObjectArgs.builder()
+                .bucket(storageProperties.getBucket())
+                .object(savedUser.getResumeObjectKey())
+                .build());
+        assertThat(storedObject.size()).isEqualTo(PDF_BYTES.length);
+        verify(emailService).sendEmailVerification(eq(CANDIDATE_EMAIL), any(), any());
+    }
+
+    @Test
+    void registerThenLoginIsBlockedUntilEmailIsVerified() throws Exception {
+        registerCandidate();
+
+        MvcResult blockedLogin = login(CANDIDATE_EMAIL, RAW_PASSWORD)
+                .andExpect(status().isForbidden())
+                .andReturn();
+        assertThat(blockedLogin.getResponse().getContentAsString())
+                .contains("\"errorCode\":\"EMAIL_NOT_VERIFIED\"");
+        assertThat(setCookieHeaders(blockedLogin)).isEmpty();
+
+        mockMvc.perform(withCsrf(post("/api/auth/verify-email"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"" + capturedVerificationToken() + "\"}"))
+                .andExpect(status().isNoContent());
+
+        assertThat(userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow().isEmailVerified()).isTrue();
+        login(CANDIDATE_EMAIL, RAW_PASSWORD).andExpect(status().isOk());
+    }
+
+    @Test
+    void verifyEmailTokenIsSingleUse() throws Exception {
+        registerCandidate();
+        String token = capturedVerificationToken();
+
+        mockMvc.perform(withCsrf(post("/api/auth/verify-email"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"" + token + "\"}"))
+                .andExpect(status().isNoContent());
+
+        MvcResult reused = mockMvc.perform(withCsrf(post("/api/auth/verify-email"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"" + token + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+        assertThat(reused.getResponse().getContentAsString()).contains("\"errorCode\":\"INVALID_TOKEN\"");
+    }
+
+    @Test
+    void verifyEmailWithUnknownTokenReturnsBadRequest() throws Exception {
+        MvcResult result = mockMvc.perform(withCsrf(post("/api/auth/verify-email"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"not-a-real-token\"}"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsString()).contains("\"errorCode\":\"INVALID_TOKEN\"");
+    }
+
+    @Test
+    void resendVerificationAlwaysReturnsNoContentAndOnlyEmailsUnverifiedAccounts() throws Exception {
+        // Unknown email: 204, nothing sent — the endpoint must not leak which emails exist.
+        mockMvc.perform(withCsrf(post("/api/auth/resend-verification"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\": \"nobody@test.local\"}"))
+                .andExpect(status().isNoContent());
+        verify(emailService, org.mockito.Mockito.never()).sendEmailVerification(any(), any(), any());
+
+        // Unverified account: 204 and a fresh link goes out.
+        registerCandidate();
+        mockMvc.perform(withCsrf(post("/api/auth/resend-verification"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\": \"" + CANDIDATE_EMAIL + "\"}"))
+                .andExpect(status().isNoContent());
+        verify(emailService, org.mockito.Mockito.times(2)).sendEmailVerification(eq(CANDIDATE_EMAIL), any(), any());
+
+        // A resend invalidates earlier tokens: the newest link works, single-use as always.
+        mockMvc.perform(withCsrf(post("/api/auth/verify-email"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"" + capturedVerificationToken() + "\"}"))
+                .andExpect(status().isNoContent());
+        assertThat(userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow().isEmailVerified()).isTrue();
+    }
+
+    private void registerCandidate() throws Exception {
+        MockMultipartFile data = new MockMultipartFile("data", "", MediaType.APPLICATION_JSON_VALUE, """
+                {
+                  "firstName": "Test",
+                  "lastName": "User",
+                  "email": "%s",
+                  "password": "%s",
+                  "phoneNumber": "123456789"
+                }
+                """.formatted(CANDIDATE_EMAIL, RAW_PASSWORD).getBytes());
+        MockMultipartFile resume = new MockMultipartFile("resume", "cv.pdf", "application/pdf", PDF_BYTES);
+
+        mockMvc.perform(withCsrf(multipart("/api/auth/register").file(data).file(resume)))
+                .andExpect(status().isCreated());
+    }
+
+    /** Pulls the raw token out of the most recently emailed verification link. */
+    private String capturedVerificationToken() {
+        ArgumentCaptor<String> linkCaptor = ArgumentCaptor.forClass(String.class);
+        verify(emailService, org.mockito.Mockito.atLeastOnce())
+                .sendEmailVerification(eq(CANDIDATE_EMAIL), any(), linkCaptor.capture());
+        String link = linkCaptor.getValue();
+        return link.substring(link.indexOf("token=") + "token=".length());
     }
 
     @Test
@@ -278,10 +394,37 @@ class AuthenticationControllerIntegrationTest {
         assertThat(setCookieHeaders(refreshResult)).anySatisfy(cookie -> assertThat(cookie)
                 .startsWith("refresh_token=")
                 .contains("Path=/api/auth"));
+        Cookie rotatedRefreshCookie = cookie(refreshResult, "refresh_token");
 
         mockMvc.perform(withCsrf(post("/api/auth/refresh"))
                         .cookie(originalRefreshCookie))
                 .andExpect(status().isUnauthorized());
+
+        // Replaying a consumed token is treated as theft after rotation: the whole session
+        // family is revoked, so even the legitimate successor token is dead.
+        assertThat(refreshTokenRepository.findAll()).allSatisfy(token -> assertThat(token.isRevoked()).isTrue());
+        mockMvc.perform(withCsrf(post("/api/auth/refresh"))
+                        .cookie(rotatedRefreshCookie))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refreshWithUnknownTokenDoesNotRevokeActiveSessions() throws Exception {
+        createUser(true);
+        MvcResult loginResult = login(CANDIDATE_EMAIL, RAW_PASSWORD)
+                .andExpect(status().isOk())
+                .andReturn();
+        Cookie validRefreshCookie = cookie(loginResult, "refresh_token");
+
+        // A token that never existed is not a reuse signal — just a plain rejection...
+        mockMvc.perform(withCsrf(post("/api/auth/refresh"))
+                        .cookie(new Cookie("refresh_token", "never-issued-token-value")))
+                .andExpect(status().isUnauthorized());
+
+        // ...so the real session must survive it.
+        mockMvc.perform(withCsrf(post("/api/auth/refresh"))
+                        .cookie(validRefreshCookie))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -331,6 +474,7 @@ class AuthenticationControllerIntegrationTest {
                 .lastName("User")
                 .phoneNumber("123456789")
                 .isApproved(approved)
+                .emailVerified(true)
                 .roles(Set.copyOf(List.of(UserRole.CANDIDATE)))
                 .build();
 

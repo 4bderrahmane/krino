@@ -5,9 +5,11 @@ import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.repository.ApplicationRepository;
 import com.krino.backend.repository.DepartmentRepository;
+import com.krino.backend.repository.EmailVerificationTokenRepository;
 import com.krino.backend.repository.InterviewRepository;
 import com.krino.backend.repository.JobSkillRepository;
 import com.krino.backend.repository.JobRepository;
+import com.krino.backend.repository.PasswordResetTokenRepository;
 import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.repository.SkillRepository;
 import com.krino.backend.repository.SlotRepository;
@@ -50,6 +52,10 @@ abstract class AbstractControllerIntegrationTest extends AbstractIntegrationTest
     @Autowired
     protected RefreshTokenRepository refreshTokenRepository;
     @Autowired
+    protected PasswordResetTokenRepository passwordResetTokenRepository;
+    @Autowired
+    protected EmailVerificationTokenRepository emailVerificationTokenRepository;
+    @Autowired
     protected DepartmentRepository departmentRepository;
     @Autowired
     protected JobRepository jobRepository;
@@ -82,6 +88,8 @@ abstract class AbstractControllerIntegrationTest extends AbstractIntegrationTest
         // issues direct DELETE statements without loading entities, which sidesteps the
         // bidirectional Slot<->Interview relationship tripping Hibernate's flush ordering.
         refreshTokenRepository.deleteAllInBatch();
+        passwordResetTokenRepository.deleteAllInBatch();
+        emailVerificationTokenRepository.deleteAllInBatch();
         interviewRepository.deleteAllInBatch();
         applicationRepository.deleteAllInBatch();
         jobSkillRepository.deleteAllInBatch();
@@ -101,6 +109,7 @@ abstract class AbstractControllerIntegrationTest extends AbstractIntegrationTest
                 .lastName("User")
                 .phoneNumber("123456789")
                 .isApproved(approved)
+                .emailVerified(true)
                 .roles(Set.of(roles))
                 .build();
 

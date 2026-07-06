@@ -30,6 +30,7 @@ public interface UserMapper {
     @Mapping(target = "phoneNumber", expression = "java(request.getPhoneNumber() == null ? null : request" +
             ".getPhoneNumber().trim())")
     @Mapping(target = "approved", ignore = true)
+    @Mapping(target = "emailVerified", ignore = true)
     @Mapping(target = "mustChangePassword", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
@@ -49,6 +50,7 @@ public interface UserMapper {
     @Mapping(target = "email", source = "email")
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "approved", ignore = true)
+    @Mapping(target = "emailVerified", ignore = true)
     @Mapping(target = "mustChangePassword", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
@@ -69,6 +71,7 @@ public interface UserMapper {
     @Mapping(target = "email", source = "email")
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "approved", ignore = true)
+    @Mapping(target = "emailVerified", ignore = true)
     @Mapping(target = "mustChangePassword", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "createdBy", ignore = true)

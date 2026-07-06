@@ -6,6 +6,7 @@ import com.krino.backend.dto.user.UserRegistrationDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
+import com.krino.backend.exception.EmailNotVerifiedException;
 import com.krino.backend.exception.InvalidRefreshTokenException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
@@ -33,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,6 +48,7 @@ class AuthenticationServiceTest
     private UserMapper userMapper;
     private CookieUtilities cookieUtilities;
     private CvStorageService cvStorageService;
+    private EmailVerificationService emailVerificationService;
     private AuthenticationService authenticationService;
 
     @BeforeEach
@@ -59,6 +62,7 @@ class AuthenticationServiceTest
         userMapper = mock(UserMapper.class);
         cookieUtilities = mock(CookieUtilities.class);
         cvStorageService = mock(CvStorageService.class);
+        emailVerificationService = mock(EmailVerificationService.class);
 
         authenticationService = new AuthenticationService(
                 userRepository,
@@ -68,7 +72,8 @@ class AuthenticationServiceTest
                 authenticationManager,
                 userMapper,
                 cookieUtilities,
-                cvStorageService
+                cvStorageService,
+                emailVerificationService
         );
     }
 
@@ -114,6 +119,34 @@ class AuthenticationServiceTest
                         && user.getLastName().equals("User")
                         && user.getRoles().contains(UserRole.CANDIDATE)
         ));
+        // Registration must kick off the verification email; the account stays unverified.
+        verify(emailVerificationService).sendVerificationEmail(any(User.class));
+    }
+
+    @Test
+    void loginWithUnverifiedEmailIsRejectedAfterSuccessfulAuthentication()
+    {
+        User user = approvedCandidate();
+        user.setEmailVerified(false);
+        Authentication authenticated = new UsernamePasswordAuthenticationToken(
+                "candidate@test.local",
+                null,
+                List.of()
+        );
+        UserLoginDTO request = new UserLoginDTO("candidate@test.local", "Password123!");
+        MockHttpServletRequest httpRequest = new MockHttpServletRequest();
+        HttpServletResponse httpResponse = new MockHttpServletResponse();
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authenticated);
+        when(userRepository.findByEmail("candidate@test.local")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> authenticationService.login(request, httpResponse, httpRequest))
+                .isInstanceOf(EmailNotVerifiedException.class);
+
+        // No session material may be issued for an unverified account.
+        verify(refreshTokenService, never()).generateAndSaveRefreshToken(any(), any(), any());
+        verify(cookieUtilities, never()).setCookies(any(), any(), any());
     }
 
     @Test
@@ -173,6 +206,7 @@ class AuthenticationServiceTest
         user.setFirstName("Test");
         user.setLastName("User");
         user.setApproved(true);
+        user.setEmailVerified(true);
         user.setRoles(Set.of(UserRole.CANDIDATE));
         return user;
     }

@@ -27,7 +27,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
             "/api/auth/register",
             "/api/auth/refresh",
             "/api/auth/forgot-password",
-            "/api/auth/reset-password"
+            "/api/auth/reset-password",
+            "/api/auth/verify-email",
+            "/api/auth/resend-verification"
     );
     private static final Set<String> RATE_LIMITED_GET_PATHS = Set.of(
             "/actuator/health"

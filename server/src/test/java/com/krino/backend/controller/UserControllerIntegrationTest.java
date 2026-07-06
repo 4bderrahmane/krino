@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
@@ -143,6 +144,44 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
 
         assertThat(userRepository.findByEmail(CANDIDATE_EMAIL)).get()
                 .extracting(User::getFirstName).isEqualTo("Updated");
+    }
+
+    @Test
+    void changingEmailResetsVerificationAndBlocksNextLogin() throws Exception
+    {
+        String newEmail = "new-address@test.local";
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+
+        mockMvc.perform(withCsrf(patch("/api/users/me"))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "%s"
+                                }
+                                """.formatted(newEmail)))
+                .andExpect(status().isOk());
+
+        // The new address is unproven until its emailed link is used.
+        User updated = userRepository.findByEmail(newEmail).orElseThrow();
+        assertThat(updated.isEmailVerified()).isFalse();
+        assertThat(emailVerificationTokenRepository.count()).isEqualTo(1L);
+
+        // The session issued before the change is grandfathered...
+        mockMvc.perform(get("/api/users/me").cookie(accessCookie))
+                .andExpect(status().isOk());
+
+        // ...but a fresh password login is refused until the new address is verified.
+        mockMvc.perform(withCsrf(post("/api/auth/login"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "%s",
+                                  "password": "%s"
+                                }
+                                """.formatted(newEmail, RAW_PASSWORD)))
+                .andExpect(status().isForbidden());
     }
 
     @Test

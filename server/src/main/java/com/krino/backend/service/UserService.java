@@ -48,6 +48,7 @@ public class UserService {
     private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
 
     private final EmailService emailService;
+    private final EmailVerificationService emailVerificationService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
@@ -86,6 +87,9 @@ public class UserService {
         User user = new User(normalizedEmail, passwordEncoder.encode(initialPassword), firstName, lastName, phoneNumber);
         user.addRole(request.getRole());
         user.setApproved(true);
+        // Receiving the emailed initial password already proves inbox ownership, so staff
+        // accounts skip the explicit verification link.
+        user.setEmailVerified(true);
         user.setMustChangePassword(true);
 
         User savedUser = userRepository.save(user);
@@ -145,9 +149,11 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
 
         String normalizedEmail = null;
+        boolean emailChanged = false;
         if (userUpdateDTO.getEmail() != null) {
             normalizedEmail = normalizeEmail(userUpdateDTO.getEmail());
-            if (!normalizedEmail.equals(currentUser.getEmail())) {
+            emailChanged = !normalizedEmail.equals(currentUser.getEmail());
+            if (emailChanged) {
                 String emailToValidate = normalizedEmail;
                 userRepository.findByEmail(emailToValidate)
                         .filter(user -> !user.getPublicId().equals(publicId))
@@ -161,6 +167,9 @@ public class UserService {
         }
 
         userMapper.patchEntity(userUpdateDTO, normalizedEmail, currentUser);
+        if (emailChanged) {
+            requireVerificationOfNewEmail(currentUser);
+        }
 
         User updatedPartially = userRepository.save(currentUser);
         return userMapper.toResponse(updatedPartially);
@@ -178,8 +187,9 @@ public class UserService {
         }
 
         String normalizedEmail = normalizeEmail(userUpdateDTO.getEmail());
+        boolean emailChanged = !normalizedEmail.equals(existingUser.getEmail());
 
-        if (!normalizedEmail.equals(existingUser.getEmail())) {
+        if (emailChanged) {
             userRepository.findByEmail(normalizedEmail)
                     .filter(user -> !user.getPublicId().equals(publicId))
                     .ifPresent(user ->
@@ -191,6 +201,9 @@ public class UserService {
         }
 
         userMapper.updateEntity(userUpdateDTO, normalizedEmail, existingUser);
+        if (emailChanged) {
+            requireVerificationOfNewEmail(existingUser);
+        }
 
         User updatedUser = userRepository.save(existingUser);
         return userMapper.toResponse(updatedUser);
@@ -257,6 +270,18 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
         return new CustomUserDetails(user);
+    }
+
+    /**
+     * A changed email address is as unproven as at registration: drop the verified flag and
+     * send a fresh verification link to the new address. Sessions issued before the change
+     * keep working (token refresh does not re-check the flag), but the next password login is
+     * blocked until the link is used — so a mistyped address can still be corrected from the
+     * surviving session instead of locking the account out.
+     */
+    private void requireVerificationOfNewEmail(User user) {
+        user.setEmailVerified(false);
+        emailVerificationService.sendVerificationEmail(user);
     }
 
     private static String normalizeEmail(String email) {

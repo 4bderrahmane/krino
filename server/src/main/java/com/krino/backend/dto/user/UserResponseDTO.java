@@ -23,4 +23,5 @@ public class UserResponseDTO {
     private LocalDateTime resumeUploadedAt;
     private boolean mustChangePassword;
     private boolean approved;
+    private boolean emailVerified;
 }

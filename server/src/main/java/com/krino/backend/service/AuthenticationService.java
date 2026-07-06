@@ -10,6 +10,7 @@ import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.entity.RefreshToken;
 import com.krino.backend.exception.AccountNotApprovedException;
+import com.krino.backend.exception.EmailNotVerifiedException;
 import com.krino.backend.exception.InvalidCredentialsException;
 import com.krino.backend.exception.InvalidRefreshTokenException;
 import com.krino.backend.exception.ResourceConflictException;
@@ -49,6 +50,7 @@ public class AuthenticationService {
     private final UserMapper userMapper;
     private final CookieUtilities cookieUtilities;
     private final CvStorageService cvStorageService;
+    private final EmailVerificationService emailVerificationService;
 
     @Transactional
     public RegistrationResponseDTO register(@NonNull final UserRegistrationDTO request, @NonNull final MultipartFile resume) {
@@ -75,10 +77,14 @@ public class AuthenticationService {
         applyResume(savedUser, storedResume);
         savedUser.setApproved(true);
 
+        // The account exists but cannot log in until the emailed verification link is used.
+        emailVerificationService.sendVerificationEmail(savedUser);
+
         UserResponseDTO userResponse = userMapper.toResponse(savedUser);
 
         log.info("User registered successfully with email: {}", normalizedEmail);
-        return new RegistrationResponseDTO(userResponse, "User registered successfully.");
+        return new RegistrationResponseDTO(userResponse,
+                "User registered successfully. Please check your email to verify your account.");
     }
 
     private void applyResume(User user, CvStorageService.StoredResume resume) {
@@ -100,6 +106,13 @@ public class AuthenticationService {
         User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new UsernameNotFoundException(String.format("User not found with email: %s",
                         normalizedEmail)));
+
+        // Checked only after the password was proven correct, so this reveals nothing to
+        // someone probing foreign accounts; it lets the client offer a resend action.
+        if (!user.isEmailVerified()) {
+            log.warn("Login blocked: email not verified for user {}", user.getId());
+            throw new EmailNotVerifiedException("Please verify your email address before signing in.");
+        }
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
         UserResponseDTO userResponse = userMapper.toResponse(user);
