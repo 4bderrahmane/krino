@@ -50,6 +50,8 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
     @Query("SELECT rt FROM RefreshToken rt WHERE rt.consumed = false AND rt.revoked = false AND rt.expiresAt > :now")
     List<RefreshToken> findAllValidTokens(@Param("now") Instant now);
 
+    Optional<RefreshToken> findByTokenHash(byte[] tokenHash);
+
     List<RefreshToken> findByUserId(Long userId);
 
     List<RefreshToken> findByRevokedAndExpiresAtBefore(boolean revoked, Instant expiryDate);

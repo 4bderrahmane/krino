@@ -94,7 +94,7 @@ public class SecurityConfiguration {
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(
-                "Authorization", "X-Refresh-Token", "X-XSRF-TOKEN", "X-CSRF-TOKEN", "Origin", "Content-Type", "Accept")
+                "Authorization", "X-XSRF-TOKEN", "X-CSRF-TOKEN", "Origin", "Content-Type", "Accept")
         );
         configuration.setAllowCredentials(true);
 

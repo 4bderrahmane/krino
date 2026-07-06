@@ -140,7 +140,7 @@ public class AuthenticationService {
 
 
         RefreshToken token = refreshTokenService.findValidRefreshTokenForUpdate(providedRefreshToken)
-                .orElseThrow(() -> new InvalidRefreshTokenException("Invalid or expired refresh token"));
+                .orElseThrow(() -> rejectInvalidRefreshToken(providedRefreshToken, request));
 
         User user = token.getUser();
         if (user == null)
@@ -170,6 +170,28 @@ public class AuthenticationService {
                 .expiresIn(jwtService.getAccessTokenExpiryInSeconds())
                 .user(userResponse)
                 .build();
+    }
+
+    /**
+     * A refresh token that exists but was already consumed is the signature of replay after
+     * rotation: either the legitimate client or a thief now holds the successor, and there is
+     * no way to tell which party is asking. The whole session family is therefore revoked
+     * (in its own transaction, so it survives this request's rollback) and everyone has to
+     * log in again. The response stays identical to the token-never-existed case so a
+     * probing attacker can't distinguish the two.
+     */
+    private InvalidRefreshTokenException rejectInvalidRefreshToken(String providedRefreshToken,
+                                                                   HttpServletRequest request) {
+        refreshTokenService.findRefreshTokenAnyState(providedRefreshToken)
+                .filter(token -> token.isConsumed() && token.getUser() != null)
+                .ifPresent(replayed -> {
+                    Long userId = replayed.getUser().getId();
+                    log.warn("SECURITY: refresh token reuse detected for user {} (ip: {}, device: {}); revoking all"
+                            + " sessions", userId, extractIpAddress(request), extractDeviceInfo(request));
+                    refreshTokenService.handleCompromisedToken(userId);
+                });
+
+        return new InvalidRefreshTokenException("Invalid or expired refresh token");
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {

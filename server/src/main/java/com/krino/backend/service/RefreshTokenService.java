@@ -5,6 +5,7 @@ import com.krino.backend.entity.User;
 import com.krino.backend.mapper.RefreshTokenMapper;
 import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.security.TokenHasher;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -82,6 +83,18 @@ public class RefreshTokenService {
         return refreshTokenRepository.findValidTokenByHashForUpdate(tokenHasher.hmac(token), Instant.now());
     }
 
+    /**
+     * Looks a token up regardless of consumed/revoked/expired state, so callers can tell a
+     * replayed (already-consumed) token apart from one that never existed at all.
+     */
+    public Optional<RefreshToken> findRefreshTokenAnyState(String token) {
+        if (token == null || token.isBlank()) {
+            return Optional.empty();
+        }
+
+        return refreshTokenRepository.findByTokenHash(tokenHasher.hmac(token));
+    }
+
     public void cleanupExpiredAndRevokedTokens() {
         refreshTokenRepository.deleteExpiredAndRevokedTokens(Instant.now());
     }
@@ -94,6 +107,12 @@ public class RefreshTokenService {
         return refreshTokenRepository.countActiveTokensByUser(userId, Instant.now());
     }
 
+    /**
+     * Response to refresh-token reuse: revoke every session in the user's family. Runs in
+     * its own transaction because the caller rejects the request by throwing right after —
+     * a rollback of the surrounding transaction must not undo the revocation.
+     */
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     public void handleCompromisedToken(Long userId) {
         revokeAllTokensForUser(userId);
     }
