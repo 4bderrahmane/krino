@@ -4,12 +4,14 @@ import com.krino.backend.entity.RefreshToken;
 import com.krino.backend.entity.User;
 import com.krino.backend.mapper.RefreshTokenMapper;
 import com.krino.backend.repository.RefreshTokenRepository;
+import com.krino.backend.security.TokenHasher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,10 +30,12 @@ class RefreshTokenServiceTest
     void setUp()
     {
         refreshTokenRepository = mock(RefreshTokenRepository.class);
+        // A plain SecureRandom keeps the unit test off the blocking /dev/random source.
+        TokenHasher tokenHasher = new TokenHasher(new SecureRandom());
+        ReflectionTestUtils.setField(tokenHasher, "hmacSecret", "0123456789abcdef0123456789abcdef");
+        ReflectionTestUtils.invokeMethod(tokenHasher, "init");
         refreshTokenService = new RefreshTokenService(refreshTokenRepository,
-                Mappers.getMapper(RefreshTokenMapper.class));
-        ReflectionTestUtils.setField(refreshTokenService, "hmacSecret", "0123456789abcdef0123456789abcdef");
-        refreshTokenService.init();
+                Mappers.getMapper(RefreshTokenMapper.class), tokenHasher);
     }
 
     @Test
