@@ -8,6 +8,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -67,6 +68,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ProblemDetail> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
                                                             HttpServletRequest request) {
         String detail = "Invalid value for parameter '" + ex.getName() + "'.";
+        return respond(ex, ErrorCode.VALIDATION_ERROR, detail, request, null);
+    }
+
+    // Thrown by Spring Data when a ?sort= (or derived-query) property does not exist on the
+    // entity — a client input problem, not a server fault, so answer 400 instead of 500.
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ProblemDetail> handlePropertyReference(PropertyReferenceException ex,
+                                                                 HttpServletRequest request) {
+        String detail = "Unknown property '" + ex.getPropertyName() + "' in sort or query parameter.";
         return respond(ex, ErrorCode.VALIDATION_ERROR, detail, request, null);
     }
 
