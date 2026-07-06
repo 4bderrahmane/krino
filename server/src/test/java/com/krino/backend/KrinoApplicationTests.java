@@ -1,10 +1,9 @@
 package com.krino.backend;
 
+import com.krino.backend.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class KrinoApplicationTests {
+class KrinoApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	void contextLoads() {

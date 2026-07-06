@@ -12,10 +12,10 @@ import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.repository.SkillRepository;
 import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
+import com.krino.backend.support.AbstractIntegrationTest;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,12 +33,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Base for full-stack controller tests: boots the application, wires a security-aware
+ * Base for full-stack controller tests: boots the application against Testcontainers
+ * PostgreSQL + MinIO (see {@link AbstractIntegrationTest}), wires a security-aware
  * {@link MockMvc}, and provides user-creation, login and CSRF helpers. A clean database is
  * guaranteed before every test by wiping all tables in foreign-key-safe order.
  */
-@SpringBootTest
-abstract class AbstractControllerIntegrationTest
+abstract class AbstractControllerIntegrationTest extends AbstractIntegrationTest
 {
     protected static final String RAW_PASSWORD = "Password123!";
     protected static final String ADMIN_EMAIL = "admin@test.local";

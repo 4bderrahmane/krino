@@ -1,25 +1,20 @@
-# Test profile properties - use in-memory H2 to avoid needing local MySQL ring unit tests.
+# Test profile properties. The datasource URL/credentials and the MinIO endpoint/credentials
+# are registered at runtime by AbstractIntegrationTest, which starts PostgreSQL and MinIO in
+# Testcontainers — the suite runs against the same stack that ships.
 spring:
-  datasource:
-    url: "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
-    username: sa
-    password: ""
-    driver-class-name: org.h2.Driver
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
 
-  # Let Hibernate create and drop the schema for tests.
+  # Schema management mirrors production: Flyway runs the real migrations and Hibernate
+  # only validates the entity mapping against the migrated schema.
   flyway:
-    enabled: false
+    enabled: true
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
 
 jwt:
   # Alternative test secrets:
@@ -56,6 +51,8 @@ app:
     email: admin@test.local
     password: Test-Admin-Password-123
 
+  # Endpoint and credentials are overridden per run by AbstractIntegrationTest with the
+  # Testcontainers MinIO coordinates; the bucket is created on demand by CvStorageService.
   storage:
     endpoint: "http://localhost:9000"
     access-key: minioadmin
