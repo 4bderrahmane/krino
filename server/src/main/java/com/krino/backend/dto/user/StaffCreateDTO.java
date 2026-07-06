@@ -4,6 +4,7 @@ import com.krino.backend.entity.enums.UserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -25,7 +26,7 @@ public class StaffCreateDTO {
     @Email(message = "Email should be a valid email format")
     private String email;
 
-    @Size(min = 9, max = 9, message = "Phone number must be 9 digits")
+    @Pattern(regexp = "\\d{9}", message = "Phone number must be exactly 9 digits")
     private String phoneNumber;
 
     @NotNull(message = "Role cannot be null")

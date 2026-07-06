@@ -4,6 +4,7 @@ import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.interview.InterviewRequestDTO;
 import com.krino.backend.dto.interview.InterviewResponseDTO;
 import com.krino.backend.service.InterviewService;
+import com.krino.backend.validation.ValidationGroups;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -26,7 +28,8 @@ public class InterviewController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('CAN_CREATE_INTERVIEW')")
-    public ResponseEntity<InterviewResponseDTO> createInterview(@Valid @RequestBody InterviewRequestDTO interviewRequestDTO) {
+    public ResponseEntity<InterviewResponseDTO> createInterview(@Validated(ValidationGroups.FullUpdate.class)
+                                                                @RequestBody InterviewRequestDTO interviewRequestDTO) {
         InterviewResponseDTO createdInterview = interviewService.createInterview(interviewRequestDTO);
         return ResponseEntity.created(URI.create("/api/interviews/" + createdInterview.getId())).body(createdInterview);
     }
@@ -57,7 +60,8 @@ public class InterviewController {
     @PutMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_UPDATE_INTERVIEW')")
     public ResponseEntity<InterviewResponseDTO> updateInterview(@PathVariable UUID publicId,
-                                                                @Valid @RequestBody InterviewRequestDTO interviewRequestDTO) {
+                                                                @Validated(ValidationGroups.FullUpdate.class)
+                                                                @RequestBody InterviewRequestDTO interviewRequestDTO) {
         InterviewResponseDTO updatedInterview = interviewService.updateInterview(publicId, interviewRequestDTO);
         return ResponseEntity.ok(updatedInterview);
     }
@@ -65,7 +69,7 @@ public class InterviewController {
     @PatchMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_UPDATE_INTERVIEW')")
     public ResponseEntity<InterviewResponseDTO> patchInterview(@PathVariable UUID publicId,
-                                                               @RequestBody InterviewRequestDTO interviewRequestDTO) {
+                                                               @Valid @RequestBody InterviewRequestDTO interviewRequestDTO) {
         InterviewResponseDTO patchedInterview = interviewService.patchInterview(publicId, interviewRequestDTO);
         return ResponseEntity.ok(patchedInterview);
     }

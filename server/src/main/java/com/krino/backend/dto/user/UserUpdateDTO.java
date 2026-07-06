@@ -1,6 +1,7 @@
 package com.krino.backend.dto.user;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -19,6 +20,6 @@ public class UserUpdateDTO {
     @Email
     private String email;
 
-    @Size(min = 9, max = 9)
+    @Pattern(regexp = "\\d{9}", message = "Phone number must be exactly 9 digits")
     private String phoneNumber;
 }

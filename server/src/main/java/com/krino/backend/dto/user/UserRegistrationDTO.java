@@ -25,6 +25,7 @@ public class UserRegistrationDTO {
     @Size(min = 8, max = 255, message = "Password must be at least 8 characters long")
     private String password;
 
-    @Size(min = 9, max = 9, message = "Phone number must be 9 digits")
+    @NotBlank(message = "Phone number cannot be blank")
+    @Pattern(regexp = "\\d{9}", message = "Phone number must be exactly 9 digits")
     private String phoneNumber;
 }

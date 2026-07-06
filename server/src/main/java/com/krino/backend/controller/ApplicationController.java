@@ -75,7 +75,7 @@ public class ApplicationController {
     @PatchMapping("/{publicId}")
     @PreAuthorize("hasAuthority('CAN_UPDATE_APPLICATION')")
     public ResponseEntity<ApplicationResponseDTO> patchApplication(@PathVariable UUID publicId,
-                                                                   @RequestBody ApplicationUpdateDTO applicationUpdateDTO) {
+                                                                   @Valid @RequestBody ApplicationUpdateDTO applicationUpdateDTO) {
         ApplicationResponseDTO patchedApplication = applicationService.patchApplication(publicId, applicationUpdateDTO);
         return ResponseEntity.ok(patchedApplication);
     }
