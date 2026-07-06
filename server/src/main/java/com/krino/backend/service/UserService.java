@@ -2,7 +2,6 @@ package com.krino.backend.service;
 
 import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.user.StaffCreateDTO;
-import com.krino.backend.dto.user.StaffCreationResponseDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.dto.user.UserUpdatePasswordDTO;
@@ -67,7 +66,7 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    public StaffCreationResponseDTO createStaff(StaffCreateDTO request) {
+    public UserResponseDTO createStaff(StaffCreateDTO request) {
         if (request.getRole() != UserRole.HR_MANAGER && request.getRole() != UserRole.INTERVIEWER) {
             throw new IllegalArgumentException("Staff role must be HR_MANAGER or INTERVIEWER.");
         }
@@ -94,9 +93,11 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
+        // The initial password reaches the new staff member by email only; it is never
+        // returned over the API.
         emailService.sendInitialPassword(savedUser.getEmail(), savedUser.getFirstName(), initialPassword);
 
-        return new StaffCreationResponseDTO(userMapper.toResponse(savedUser), initialPassword);
+        return userMapper.toResponse(savedUser);
     }
 
 

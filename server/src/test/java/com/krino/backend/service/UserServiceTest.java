@@ -1,7 +1,6 @@
 package com.krino.backend.service;
 
 import com.krino.backend.dto.user.StaffCreateDTO;
-import com.krino.backend.dto.user.StaffCreationResponseDTO;
 import com.krino.backend.dto.user.UserUpdatePasswordDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.dto.user.UserUpdateDTO;
@@ -28,7 +27,10 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.ArgumentCaptor;
+
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class UserServiceTest
@@ -71,9 +73,14 @@ class UserServiceTest
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(userMapper.toResponse(any(User.class))).thenReturn(new UserResponseDTO());
 
-        StaffCreationResponseDTO response = userService.createStaff(request);
+        UserResponseDTO response = userService.createStaff(request);
+        assertThat(response).isNotNull();
 
-        String generatedPassword = response.getInitialPassword();
+        // The password is delivered by email only, never in the API response, so capture the
+        // generated value from the email send.
+        ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
+        verify(emailService).sendInitialPassword(eq("john@test.local"), eq("john"), passwordCaptor.capture());
+        String generatedPassword = passwordCaptor.getValue();
         // No longer a predictable name.name+year value: it's a 16-char CSPRNG password with no
         // ambiguous characters or whitespace.
         assertThat(generatedPassword).hasSize(16);
@@ -82,9 +89,8 @@ class UserServiceTest
         assertThat(generatedPassword).matches("[A-Za-z2-9!@#$%^&*]+");
         assertThat(generatedPassword).doesNotContain("0", "O", "1", "l", "I");
 
-        // The exact generated password is what gets hashed and emailed to the new staff member.
+        // The exact generated password is what gets hashed for the new staff member.
         verify(passwordEncoder).encode(generatedPassword);
-        verify(emailService).sendInitialPassword("john@test.local", "john", generatedPassword);
         verify(userRepository).save(argThat(user ->
                 user.getEmail().equals("john@test.local")
                         && user.getFirstName().equals("john")

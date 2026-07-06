@@ -6,7 +6,6 @@ import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.dto.user.UserUpdatePasswordDTO;
 import com.krino.backend.dto.user.StaffCreateDTO;
-import com.krino.backend.dto.user.StaffCreationResponseDTO;
 import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.service.ApplicationService;
 import com.krino.backend.service.UserService;
@@ -49,9 +48,9 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StaffCreationResponseDTO> createStaff(@Valid @RequestBody StaffCreateDTO request) {
-        StaffCreationResponseDTO created = userService.createStaff(request);
-        return ResponseEntity.created(URI.create("/api/users/" + created.getUser().getId())).body(created);
+    public ResponseEntity<UserResponseDTO> createStaff(@Valid @RequestBody StaffCreateDTO request) {
+        UserResponseDTO created = userService.createStaff(request);
+        return ResponseEntity.created(URI.create("/api/users/" + created.getId())).body(created);
     }
 
     @PatchMapping("/{publicId}/approval")
