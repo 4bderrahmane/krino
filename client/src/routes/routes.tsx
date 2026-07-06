@@ -19,6 +19,7 @@ const PasswordSettings = lazy(() => import( "@/features/user-management/componen
 const DeleteAccount = lazy(() => import("@/features/user-management/components/settings/DeleteAccount.tsx"));
 const OffersPage = lazy(() => import("@/features/offers/components/OffersPage.tsx"));
 const CreateOfferPage = lazy(() => import("@/features/offers/components/CreateOfferPage.tsx"));
+const EditOfferPage = lazy(() => import("@/features/offers/components/EditOfferPage.tsx"));
 const ApplicationsPage = lazy(() => import("@/features/applications/components/ApplicationsPage.tsx"));
 const ApplicationDetailPage = lazy(() => import("@/features/applications/components/ApplicationDetailPage.tsx"));
 const OfferDetailPage = lazy(() => import("@/features/offers/components/OfferDetailPage.tsx"));
@@ -82,6 +83,10 @@ const router = createBrowserRouter([
             {
                 path: "offers/:id",
                 element: withSuspense(<OfferDetailPage/>),
+            },
+            {
+                path: "offers/:id/edit",
+                element: withSuspense(<EditOfferPage/>),
             },
             {
                 path: "applications",

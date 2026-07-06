@@ -12,6 +12,7 @@ import {
     uploadApplicationResume,
 } from '@/features/applications/services/ApplicationService.ts';
 import LoadingSpinner from '@/shared/components/LoadingSpinner.tsx';
+import OfferManagePanel from '@/features/offers/components/OfferManagePanel.tsx';
 import {formatDate, formatNumber} from '@/features/offers/utils/offerFormat.ts';
 import {validateCvFile, type CvFileError} from '@/shared/utils/cvFile.ts';
 import '@/features/offers/styles/Offers.css';
@@ -33,7 +34,7 @@ const OfferDetailPage: React.FC = () => {
 
     const {data: offer, isLoading, isError, refetch} = useOffer(id);
 
-    const {isCandidate} = usePermissions();
+    const {isCandidate, isStaff} = usePermissions();
     const baseCvName = user?.resumeFilename ?? null;
 
     const [cvChoice, setCvChoice] = useState<CvChoice>(baseCvName ? 'base' : 'new');
@@ -147,6 +148,8 @@ const OfferDetailPage: React.FC = () => {
                     <span className="offer-department">{offer.department.name}</span>
                     <h1 className="offer-detail-title">{offer.title}</h1>
                 </header>
+
+                {isStaff && <OfferManagePanel offer={offer}/>}
 
                 <section className="offer-detail-section">
                     <h2 className="offer-detail-heading">{t('offers.detail.overview')}</h2>

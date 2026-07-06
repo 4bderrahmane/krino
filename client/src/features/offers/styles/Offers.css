@@ -532,3 +532,97 @@
         font-size: 1.6rem;
     }
 }
+
+/* ------------------------------------------------------------------ */
+/* Staff lifecycle controls (OfferManagePanel)                         */
+/* ------------------------------------------------------------------ */
+.offer-manage {
+    background: var(--color-surface-sunken);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+}
+
+.offer-manage-status {
+    color: var(--color-ink-soft);
+    font-size: 0.95rem;
+    margin: 4px 0 14px;
+}
+
+.offer-manage-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.offer-manage-button {
+    height: 38px;
+    padding: 0 18px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.offer-manage-button:hover:not(:disabled) {
+    background: var(--color-surface-sunken);
+    border-color: var(--color-primary);
+}
+
+.offer-manage-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.offer-manage-primary {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border-color: var(--color-primary);
+}
+
+.offer-manage-primary:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+    color: var(--color-on-primary);
+}
+
+.offer-manage-danger {
+    color: var(--color-danger);
+}
+
+.offer-manage-danger:hover:not(:disabled) {
+    background: var(--color-danger-tint);
+    border-color: var(--color-danger);
+}
+
+.offer-manage-confirm {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.offer-manage-confirm-label {
+    font-size: 0.9rem;
+    color: var(--color-ink-soft);
+}
+
+.offer-manage-close-form {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-line);
+    max-width: 320px;
+}
+
+.offer-manage-close-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}

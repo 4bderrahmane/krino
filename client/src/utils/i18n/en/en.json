@@ -356,6 +356,30 @@
         "salaryRange": "Maximum salary cannot be lower than the minimum.",
         "openPositions": "There must be at least one open position."
       }
+    },
+    "edit": {
+      "title": "Edit offer",
+      "subtitle": "Update this posting. Some advanced fields stay as they were.",
+      "submit": "Save changes",
+      "success": "Offer updated successfully!"
+    },
+    "manage": {
+      "heading": "Manage offer",
+      "publish": "Publish",
+      "resume": "Resume",
+      "pause": "Pause",
+      "edit": "Edit",
+      "close": "Close",
+      "closeReason": "Closing reason",
+      "confirmClose": "Confirm close",
+      "archive": "Archive",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this offer permanently?",
+      "publishSuccess": "Offer published.",
+      "pauseSuccess": "Offer paused.",
+      "closeSuccess": "Offer closed.",
+      "archiveSuccess": "Offer archived.",
+      "deleteSuccess": "Offer deleted."
     }
   },
   "departments": {

@@ -356,6 +356,30 @@
         "salaryRange": "Le salaire maximum ne peut pas être inférieur au minimum.",
         "openPositions": "Il doit y avoir au moins un poste à pourvoir."
       }
+    },
+    "edit": {
+      "title": "Modifier l'offre",
+      "subtitle": "Mettez à jour cette annonce. Certains champs avancés restent inchangés.",
+      "submit": "Enregistrer les modifications",
+      "success": "Offre mise à jour avec succès !"
+    },
+    "manage": {
+      "heading": "Gérer l'offre",
+      "publish": "Publier",
+      "resume": "Reprendre",
+      "pause": "Mettre en pause",
+      "edit": "Modifier",
+      "close": "Clôturer",
+      "closeReason": "Motif de clôture",
+      "confirmClose": "Confirmer la clôture",
+      "archive": "Archiver",
+      "delete": "Supprimer",
+      "deleteConfirm": "Supprimer définitivement cette offre ?",
+      "publishSuccess": "Offre publiée.",
+      "pauseSuccess": "Offre mise en pause.",
+      "closeSuccess": "Offre clôturée.",
+      "archiveSuccess": "Offre archivée.",
+      "deleteSuccess": "Offre supprimée."
     }
   },
   "departments": {

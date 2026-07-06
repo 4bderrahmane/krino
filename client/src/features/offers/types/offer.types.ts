@@ -156,6 +156,15 @@ export interface CreateOfferInput {
     skills: CreateOfferSkill[];
 }
 
+// Input for editing an existing offer. The read model (`Offer`) does not surface
+// plannedStartDate, minimumExperienceYears or salaryNegotiable, so the edit form
+// can't show them — and a PATCH (which preserves omitted fields) is used so they
+// are left untouched rather than wiped. Hence these three are absent here.
+export type EditOfferInput = Omit<
+    CreateOfferInput,
+    'plannedStartDate' | 'minimumExperienceYears' | 'salaryNegotiable'
+>;
+
 export interface OfferPageMeta {
     number: number;
     size: number;

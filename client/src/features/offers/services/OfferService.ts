@@ -2,6 +2,7 @@ import api from '@/shared/services/api.ts';
 import type {
     ContractType,
     CreateOfferInput,
+    EditOfferInput,
     EmploymentType,
     ExperienceLevel,
     MoroccanCity,
@@ -159,4 +160,87 @@ const toJobCreateDTO = (input: CreateOfferInput): JobCreateDTO => ({
 export const createOffer = async (input: CreateOfferInput): Promise<Offer> => {
     const {data} = await api.post<JobResponseDTO>(OFFERS_ENDPOINT, toJobCreateDTO(input));
     return toOffer(data);
+};
+
+// Mirrors JobUpdateDTO for a PATCH. Deliberately omits plannedStartDate,
+// minimumExperienceYears and salaryNegotiable: the read model can't show them, so
+// leaving them out lets the backend's applyPatch preserve their stored values
+// (a PUT would null them instead).
+interface JobPatchDTO {
+    departmentName: string;
+    title: string;
+    description?: string | null;
+    applicationDeadline: string;
+    salaryMin?: number | null;
+    salaryMax?: number | null;
+    salaryCurrency?: SalaryCurrency | null;
+    salaryPeriod?: SalaryPeriod | null;
+    salaryVisible: boolean;
+    city?: MoroccanCity | null;
+    remotePolicy: RemotePolicy;
+    experienceLevel?: ExperienceLevel | null;
+    openPositions: number;
+    employmentType: EmploymentType;
+    contractType: ContractType;
+    skills: {name: string; importance: SkillImportance}[];
+}
+
+const toJobPatchDTO = (input: EditOfferInput): JobPatchDTO => ({
+    departmentName: input.department,
+    title: input.title,
+    description: input.description,
+    applicationDeadline: input.applyingDeadline,
+    salaryMin: input.salaryMin,
+    salaryMax: input.salaryMax,
+    salaryCurrency: input.salaryCurrency,
+    salaryPeriod: input.salaryPeriod,
+    salaryVisible: input.salaryVisible,
+    city: input.location,
+    remotePolicy: input.remotePolicy,
+    experienceLevel: input.experienceLevel,
+    openPositions: input.openPositions,
+    employmentType: input.employmentType,
+    contractType: input.contractType,
+    skills: input.skills.map((s) => ({name: s.name, importance: s.importance})),
+});
+
+// PATCH /api/jobs/{id} — edits the visible fields while the backend preserves the
+// ones we never sent (see JobPatchDTO). Requires CAN_UPDATE_JOB (ADMIN, HR_MANAGER).
+export const updateOffer = async (id: string, input: EditOfferInput): Promise<Offer> => {
+    const {data} = await api.patch<JobResponseDTO>(`${OFFERS_ENDPOINT}/${id}`, toJobPatchDTO(input));
+    return toOffer(data);
+};
+
+// ---------------------------------------------------------------------------
+// Lifecycle transitions. Each is a POST with no/minimal body; the backend
+// enforces the state machine (see Job entity) and returns the updated offer.
+// All require CAN_UPDATE_JOB (ADMIN, HR_MANAGER).
+// ---------------------------------------------------------------------------
+
+// The terminal statuses a posting can be closed into (JobCloseRequestDTO).
+export type CloseStatus = Extract<OfferStatus, 'CLOSED' | 'FILLED' | 'CANCELLED'>;
+
+export const publishOffer = async (id: string): Promise<Offer> => {
+    const {data} = await api.post<JobResponseDTO>(`${OFFERS_ENDPOINT}/${id}/publish`);
+    return toOffer(data);
+};
+
+export const pauseOffer = async (id: string): Promise<Offer> => {
+    const {data} = await api.post<JobResponseDTO>(`${OFFERS_ENDPOINT}/${id}/pause`);
+    return toOffer(data);
+};
+
+export const closeOffer = async (id: string, status: CloseStatus): Promise<Offer> => {
+    const {data} = await api.post<JobResponseDTO>(`${OFFERS_ENDPOINT}/${id}/close`, {status});
+    return toOffer(data);
+};
+
+export const archiveOffer = async (id: string): Promise<Offer> => {
+    const {data} = await api.post<JobResponseDTO>(`${OFFERS_ENDPOINT}/${id}/archive`);
+    return toOffer(data);
+};
+
+// DELETE /api/jobs/{id} — requires CAN_DELETE_JOB (ADMIN, HR_MANAGER).
+export const deleteOffer = async (id: string): Promise<void> => {
+    await api.delete(`${OFFERS_ENDPOINT}/${id}`);
 };
