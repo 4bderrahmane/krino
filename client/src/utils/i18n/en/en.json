@@ -122,17 +122,15 @@
     "applications": "Applications",
     "interviews": "Interviews",
     "departments": "Departments",
+    "users": "Users",
     "staff": "Staff"
   },
   "admin": {
     "title": "Create Staff Account",
-    "subtitle": "Create HR managers and interviewers. They sign in with the generated password and change it later.",
+    "subtitle": "Create HR managers and interviewers. They receive their initial password by email and change it later.",
     "submit": "Create account",
     "created": "{{name}}'s account was created.",
-    "initialPassword": "Initial password",
-    "copy": "Copy",
-    "copied": "Copied",
-    "passwordHint": "Share this password with the new staff member. They can change it from their settings after signing in.",
+    "passwordHint": "An email with their initial password has been sent to the new staff member. They can change it from their settings after signing in.",
     "fields": {
       "firstName": "First name",
       "lastName": "Last name",
@@ -141,14 +139,32 @@
       "role": "Role"
     },
     "roles": {
+      "ADMIN": "Administrator",
       "HR_MANAGER": "HR Manager",
-      "INTERVIEWER": "Interviewer"
+      "INTERVIEWER": "Interviewer",
+      "CANDIDATE": "Candidate"
     },
     "validation": {
       "firstName": "First name must be between 2 and 50 characters.",
       "lastName": "Last name must be between 2 and 50 characters.",
       "email": "Please enter a valid email address.",
       "phone": "Phone number must be exactly 9 digits."
+    },
+    "users": {
+      "title": "User management",
+      "subtitle": "Approve new accounts or revoke access.",
+      "loadError": "Failed to load users. Please try again.",
+      "empty": "There are no users yet.",
+      "noPending": "No accounts are awaiting approval.",
+      "pendingOnly": "Pending only ({{count}})",
+      "approved": "Approved",
+      "notApproved": "Not approved",
+      "approve": "Approve",
+      "revoke": "Revoke",
+      "revokeConfirm": "Revoke access?",
+      "approveSuccess": "Account approved.",
+      "revokeSuccess": "Access revoked.",
+      "you": "You"
     }
   },
   "offers": {

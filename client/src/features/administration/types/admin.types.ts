@@ -1,4 +1,4 @@
-import type {Role, UserResponseDTO} from '@/features/authentication/types/api.types';
+import type {Role} from '@/features/authentication/types/api.types';
 
 export type StaffRole = Extract<Role, 'HR_MANAGER' | 'INTERVIEWER'>;
 
@@ -10,7 +10,12 @@ export interface StaffCreateRequest {
     role: StaffRole;
 }
 
-export interface StaffCreationResponse {
-    user: UserResponseDTO;
-    initialPassword: string; // Generated default password, returned once so the admin can pass it to the new member.
+// A user as shown in staff-facing pickers/directories (e.g. choosing an
+// interviewer when creating an availability slot).
+export interface DirectoryUser {
+    id: string;
+    fullName: string;
+    email: string;
+    roles: Role[];
+    approved: boolean;
 }

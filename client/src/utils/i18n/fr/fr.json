@@ -122,17 +122,15 @@
     "applications": "Candidatures",
     "interviews": "Entretiens",
     "departments": "Départements",
+    "users": "Utilisateurs",
     "staff": "Personnel"
   },
   "admin": {
     "title": "Créer un compte du personnel",
-    "subtitle": "Créez des responsables RH et des recruteurs. Ils se connectent avec le mot de passe généré et le modifient ensuite.",
+    "subtitle": "Créez des responsables RH et des recruteurs. Ils reçoivent leur mot de passe initial par e-mail et le modifient ensuite.",
     "submit": "Créer le compte",
     "created": "Le compte de {{name}} a été créé.",
-    "initialPassword": "Mot de passe initial",
-    "copy": "Copier",
-    "copied": "Copié",
-    "passwordHint": "Communiquez ce mot de passe au nouveau membre. Il pourra le modifier depuis ses paramètres après connexion.",
+    "passwordHint": "Un e-mail contenant son mot de passe initial a été envoyé au nouveau membre. Il pourra le modifier depuis ses paramètres après connexion.",
     "fields": {
       "firstName": "Prénom",
       "lastName": "Nom de famille",
@@ -141,14 +139,32 @@
       "role": "Rôle"
     },
     "roles": {
+      "ADMIN": "Administrateur",
       "HR_MANAGER": "Responsable RH",
-      "INTERVIEWER": "Recruteur"
+      "INTERVIEWER": "Recruteur",
+      "CANDIDATE": "Candidat"
     },
     "validation": {
       "firstName": "Le prénom doit comporter entre 2 et 50 caractères.",
       "lastName": "Le nom doit comporter entre 2 et 50 caractères.",
       "email": "Veuillez saisir une adresse e-mail valide.",
       "phone": "Le numéro de téléphone doit comporter exactement 9 chiffres."
+    },
+    "users": {
+      "title": "Gestion des utilisateurs",
+      "subtitle": "Approuvez les nouveaux comptes ou révoquez l'accès.",
+      "loadError": "Échec du chargement des utilisateurs. Veuillez réessayer.",
+      "empty": "Il n'y a pas encore d'utilisateurs.",
+      "noPending": "Aucun compte en attente d'approbation.",
+      "pendingOnly": "En attente uniquement ({{count}})",
+      "approved": "Approuvé",
+      "notApproved": "Non approuvé",
+      "approve": "Approuver",
+      "revoke": "Révoquer",
+      "revokeConfirm": "Révoquer l'accès ?",
+      "approveSuccess": "Compte approuvé.",
+      "revokeSuccess": "Accès révoqué.",
+      "you": "Vous"
     }
   },
   "offers": {

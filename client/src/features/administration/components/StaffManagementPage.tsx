@@ -4,7 +4,8 @@ import {Navigate} from 'react-router-dom';
 import {usePermissions} from '@/shared/hooks/usePermissions';
 import {resolveServerError} from '@/shared/services/errors';
 import {createStaff} from '@/features/administration/services/AdminService.ts';
-import type {StaffCreateRequest, StaffCreationResponse, StaffRole} from '@/features/administration/types/admin.types.ts';
+import type {StaffCreateRequest, StaffRole} from '@/features/administration/types/admin.types.ts';
+import type {UserResponseDTO} from '@/features/authentication/types/api.types';
 import '@/features/administration/styles/Administration.css';
 
 // Mirror the backend constraints (StaffCreateDTO).
@@ -32,8 +33,7 @@ const StaffManagementPage: React.FC = () => {
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [created, setCreated] = useState<StaffCreationResponse | null>(null);
-    const [copied, setCopied] = useState(false);
+    const [created, setCreated] = useState<UserResponseDTO | null>(null);
 
     // Non-admins never reach the endpoint anyway (403), but redirect for a clean UX.
     if (!isAdmin) {
@@ -91,23 +91,11 @@ const StaffManagementPage: React.FC = () => {
             const result = await createStaff(payload);
             setCreated(result);
             setForm(emptyForm);
-            setCopied(false);
         } catch (err: unknown) {
             console.error('staff creation failed:', err);
             setErrorMessage(resolveServerError(t, err, {context: 'register'}));
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleCopyPassword = async () => {
-        if (!created) return;
-        try {
-            await navigator.clipboard.writeText(created.initialPassword);
-            setCopied(true);
-        } catch {
-            // Clipboard may be unavailable (e.g. non-secure context); the password is shown anyway.
-            setCopied(false);
         }
     };
 
@@ -122,19 +110,12 @@ const StaffManagementPage: React.FC = () => {
                 <div className="admin-credentials" role="status">
                     <p className="admin-credentials-title">
                         {t('admin.created', {
-                            name: `${created.user.firstName} ${created.user.lastName}`,
+                            name: `${created.firstName} ${created.lastName}`,
                         })}
                     </p>
                     <div className="admin-credentials-row">
                         <span className="admin-credentials-label">{t('admin.fields.email')}</span>
-                        <span className="admin-credentials-value">{created.user.email}</span>
-                    </div>
-                    <div className="admin-credentials-row">
-                        <span className="admin-credentials-label">{t('admin.initialPassword')}</span>
-                        <code className="admin-credentials-password">{created.initialPassword}</code>
-                        <button type="button" className="admin-copy-button" onClick={handleCopyPassword}>
-                            {copied ? t('admin.copied') : t('admin.copy')}
-                        </button>
+                        <span className="admin-credentials-value">{created.email}</span>
                     </div>
                     <p className="admin-credentials-hint">{t('admin.passwordHint')}</p>
                 </div>

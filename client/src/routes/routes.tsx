@@ -27,6 +27,7 @@ const InterviewsPage = lazy(() => import("@/features/interviews/components/Inter
 const DepartmentsPage = lazy(() => import("@/features/departments/components/DepartmentsPage.tsx"));
 const SlotsPage = lazy(() => import("@/features/slots/components/SlotsPage.tsx"));
 const StaffManagementPage = lazy(() => import("@/features/administration/components/StaffManagementPage.tsx"));
+const UserManagementPage = lazy(() => import("@/features/administration/components/UserManagementPage.tsx"));
 
 const withSuspense = (element: JSX.Element) => (
     <Suspense fallback={<LoadingSpinner/>}>{element}</Suspense>
@@ -112,6 +113,10 @@ const router = createBrowserRouter([
             {
                 path: "admin/staff",
                 element: withSuspense(<StaffManagementPage/>),
+            },
+            {
+                path: "admin/users",
+                element: withSuspense(<UserManagementPage/>),
             },
             {
                 path: "settings",

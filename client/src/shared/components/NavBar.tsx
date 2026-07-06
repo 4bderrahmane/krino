@@ -96,6 +96,13 @@ const NavBar: React.FC = () => {
                             </Link>
                         </li>
                     )}
+                    {isStaff && (
+                        <li className={isCurrentPage('/admin/users') ? 'active' : ''}>
+                            <Link to="/admin/users">
+                                {t('nav.users')}
+                            </Link>
+                        </li>
+                    )}
                     {isAdmin && (
                         <li className={isCurrentPage('/admin/staff') ? 'active' : ''}>
                             <Link to="/admin/staff">
