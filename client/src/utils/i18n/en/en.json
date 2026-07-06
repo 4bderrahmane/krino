@@ -405,6 +405,44 @@
       }
     }
   },
+  "slots": {
+    "title": "Availability",
+    "count_one": "{{count}} slot",
+    "count_other": "{{count}} slots",
+    "empty": "There are no availability slots yet.",
+    "loadError": "Failed to load availability. Please try again.",
+    "pagination": "Pagination",
+    "pageIndicator": "Page {{current}} of {{total}}",
+    "available": "Available",
+    "booked": "Booked",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "create": {
+      "newSlot": "New slot",
+      "title": "Create an availability slot",
+      "interviewer": "Interviewer",
+      "interviewerPlaceholder": "Select an interviewer",
+      "date": "Date",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "submit": "Create slot",
+      "success": "Slot created successfully!",
+      "errors": {
+        "interviewerRequired": "Please choose an interviewer.",
+        "windowRequired": "A date, start time and end time are required.",
+        "endAfterStart": "The end time must be after the start time."
+      }
+    },
+    "edit": {
+      "title": "Edit availability slot",
+      "submit": "Save changes",
+      "success": "Slot updated successfully!"
+    },
+    "delete": {
+      "confirm": "Delete this slot?",
+      "success": "Slot deleted."
+    }
+  },
   "applications": {
     "title": "Applications",
     "myTitle": "My Applications",

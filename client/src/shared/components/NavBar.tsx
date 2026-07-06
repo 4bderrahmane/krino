@@ -51,7 +51,7 @@ const NavBar: React.FC = () => {
         return location.pathname === path;
     };
 
-    const {isAdmin} = usePermissions();
+    const {isAdmin, isStaff} = usePermissions();
 
     const displayName = user?.firstName || 'User';
 
@@ -89,6 +89,13 @@ const NavBar: React.FC = () => {
                             {t('nav.departments')}
                         </Link>
                     </li>
+                    {isStaff && (
+                        <li className={isCurrentPage('/slots') ? 'active' : ''}>
+                            <Link to="/slots">
+                                {t('nav.availability')}
+                            </Link>
+                        </li>
+                    )}
                     {isAdmin && (
                         <li className={isCurrentPage('/admin/staff') ? 'active' : ''}>
                             <Link to="/admin/staff">

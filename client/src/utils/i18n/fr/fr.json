@@ -405,6 +405,44 @@
       }
     }
   },
+  "slots": {
+    "title": "Disponibilité",
+    "count_one": "{{count}} créneau",
+    "count_other": "{{count}} créneaux",
+    "empty": "Il n'y a pas encore de créneaux de disponibilité.",
+    "loadError": "Échec du chargement des disponibilités. Veuillez réessayer.",
+    "pagination": "Pagination",
+    "pageIndicator": "Page {{current}} sur {{total}}",
+    "available": "Disponible",
+    "booked": "Réservé",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "create": {
+      "newSlot": "Nouveau créneau",
+      "title": "Créer un créneau de disponibilité",
+      "interviewer": "Recruteur",
+      "interviewerPlaceholder": "Sélectionnez un recruteur",
+      "date": "Date",
+      "startTime": "Heure de début",
+      "endTime": "Heure de fin",
+      "submit": "Créer le créneau",
+      "success": "Créneau créé avec succès !",
+      "errors": {
+        "interviewerRequired": "Veuillez choisir un recruteur.",
+        "windowRequired": "Une date, une heure de début et une heure de fin sont obligatoires.",
+        "endAfterStart": "L'heure de fin doit être postérieure à l'heure de début."
+      }
+    },
+    "edit": {
+      "title": "Modifier le créneau de disponibilité",
+      "submit": "Enregistrer les modifications",
+      "success": "Créneau mis à jour avec succès !"
+    },
+    "delete": {
+      "confirm": "Supprimer ce créneau ?",
+      "success": "Créneau supprimé."
+    }
+  },
   "applications": {
     "title": "Candidatures",
     "myTitle": "Mes candidatures",

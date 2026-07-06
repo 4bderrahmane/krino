@@ -25,6 +25,7 @@ const ApplicationDetailPage = lazy(() => import("@/features/applications/compone
 const OfferDetailPage = lazy(() => import("@/features/offers/components/OfferDetailPage.tsx"));
 const InterviewsPage = lazy(() => import("@/features/interviews/components/InterviewsPage.tsx"));
 const DepartmentsPage = lazy(() => import("@/features/departments/components/DepartmentsPage.tsx"));
+const SlotsPage = lazy(() => import("@/features/slots/components/SlotsPage.tsx"));
 const StaffManagementPage = lazy(() => import("@/features/administration/components/StaffManagementPage.tsx"));
 
 const withSuspense = (element: JSX.Element) => (
@@ -103,6 +104,10 @@ const router = createBrowserRouter([
             {
                 path: "departments",
                 element: withSuspense(<DepartmentsPage/>),
+            },
+            {
+                path: "slots",
+                element: withSuspense(<SlotsPage/>),
             },
             {
                 path: "admin/staff",
