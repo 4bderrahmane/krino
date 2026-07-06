@@ -72,22 +72,24 @@ public class JwtService {
                 .compact();
     }
 
+    // Rejected tokens are expected traffic (expired sessions, malformed cookies), so they log
+    // at debug; a bad signature or a foreign algorithm is a possible attack signal, so warn.
     public boolean validateToken(String token) {
         try {
             parseAndValidateClaims(token);
             return true;
         } catch (SignatureException ex) {
-            log.error("Invalid JWT signature: {}", ex.getMessage());
-        } catch (MalformedJwtException ex) {
-            log.error("Invalid JWT token: {}", ex.getMessage());
-        } catch (ExpiredJwtException ex) {
-            log.error("Expired JWT token: {}", ex.getMessage());
+            log.warn("Invalid JWT signature: {}", ex.getMessage());
         } catch (UnsupportedJwtException ex) {
-            log.error("Unsupported JWT token: {}", ex.getMessage());
+            log.warn("Unsupported JWT token: {}", ex.getMessage());
+        } catch (MalformedJwtException ex) {
+            log.debug("Invalid JWT token: {}", ex.getMessage());
+        } catch (ExpiredJwtException ex) {
+            log.debug("Expired JWT token: {}", ex.getMessage());
         } catch (JwtException ex) {
-            log.error("Invalid JWT claims: {}", ex.getMessage());
+            log.debug("Invalid JWT claims: {}", ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            log.error("JWT claims string is empty: {}", ex.getMessage());
+            log.debug("JWT claims string is empty: {}", ex.getMessage());
         }
         return false;
     }
@@ -96,7 +98,7 @@ public class JwtService {
         try {
             return parseAndValidateClaims(token);
         } catch (Exception e) {
-            log.error("Could not parse claims from token: {}", e.getMessage());
+            log.debug("Could not parse claims from token: {}", e.getMessage());
             throw new JwtException("Invalid token", e);
         }
     }
