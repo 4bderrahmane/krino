@@ -36,6 +36,31 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
     }
 
     @Test
+    void adminSortsUsersByWhitelistedProperty() throws Exception
+    {
+        createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
+        createUser(CANDIDATE_EMAIL, false, UserRole.CANDIDATE);
+        Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
+
+        // isApproved is a boolean column on the whitelist: proves the allowed name
+        // actually resolves against the persistence metamodel, not just past the guard.
+        mockMvc.perform(get("/api/users").param("sort", "isApproved,desc").cookie(accessCookie))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void rejectsSortByPropertyOutsideTheWhitelist() throws Exception
+    {
+        createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
+        Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
+
+        // password is a real column but not sortable: the whitelist must reject it with a
+        // 400 before it ever reaches the query.
+        mockMvc.perform(get("/api/users").param("sort", "password,asc").cookie(accessCookie))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void adminReadsUserByPublicId() throws Exception
     {
         createUser(ADMIN_EMAIL, true, UserRole.ADMIN);

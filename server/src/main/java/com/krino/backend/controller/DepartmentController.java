@@ -5,6 +5,7 @@ import com.krino.backend.dto.department.DepartmentCreateDTO;
 import com.krino.backend.dto.department.DepartmentResponseDTO;
 import com.krino.backend.dto.department.DepartmentUpdateDTO;
 import com.krino.backend.service.DepartmentService;
+import com.krino.backend.utility.SortWhitelist;
 import com.krino.backend.validation.ValidationGroups;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,6 +26,9 @@ import java.util.UUID;
 @RequestMapping("/api/departments")
 public class DepartmentController {
     private final DepartmentService departmentService;
+
+    private static final SortWhitelist SORT_WHITELIST = SortWhitelist.of(
+            "id", "name", "createdDate", "lastModifiedDate");
 
     @PostMapping
     @PreAuthorize("hasAuthority('CAN_CREATE_DEPARTMENT')")
@@ -67,7 +71,7 @@ public class DepartmentController {
     @GetMapping
     @PreAuthorize("hasAuthority('CAN_READ_DEPARTMENT')")
     public ResponseEntity<PageResponse<DepartmentResponseDTO>> getAllDepartments(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        PageResponse<DepartmentResponseDTO> departments = departmentService.getAllDepartments(pageable);
+        PageResponse<DepartmentResponseDTO> departments = departmentService.getAllDepartments(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(departments);
     }
 }

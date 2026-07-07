@@ -5,6 +5,7 @@ import com.krino.backend.dto.application.ApplicationResponseDTO;
 import com.krino.backend.dto.application.ApplicationUpdateDTO;
 import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.service.ApplicationService;
+import com.krino.backend.utility.SortWhitelist;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,9 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
 
+    private static final SortWhitelist SORT_WHITELIST = SortWhitelist.of(
+            "id", "status", "appliedAt", "createdDate", "lastModifiedDate");
+
     @PostMapping
     @PreAuthorize("hasAuthority('CAN_CREATE_APPLICATION')")
     public ResponseEntity<ApplicationResponseDTO> createApplication(@Valid @RequestBody ApplicationCreateDTO applicationCreateDTO) {
@@ -51,7 +55,7 @@ public class ApplicationController {
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<PageResponse<ApplicationResponseDTO>> getAllApplications(@PageableDefault(size = 20, sort =
             "id") Pageable pageable) {
-        PageResponse<ApplicationResponseDTO> applications = applicationService.getAllApplications(pageable);
+        PageResponse<ApplicationResponseDTO> applications = applicationService.getAllApplications(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(applications);
     }
 
@@ -59,7 +63,7 @@ public class ApplicationController {
     @PreAuthorize("hasAuthority('CAN_READ_APPLICATION')")
     public ResponseEntity<PageResponse<ApplicationResponseDTO>> getMyApplications(@PageableDefault(size = 20, sort =
             "id") Pageable pageable) {
-        PageResponse<ApplicationResponseDTO> applications = applicationService.getMyApplications(pageable);
+        PageResponse<ApplicationResponseDTO> applications = applicationService.getMyApplications(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(applications);
     }
 

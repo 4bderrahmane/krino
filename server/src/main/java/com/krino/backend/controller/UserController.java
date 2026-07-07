@@ -9,6 +9,7 @@ import com.krino.backend.dto.user.StaffCreateDTO;
 import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.service.ApplicationService;
 import com.krino.backend.service.UserService;
+import com.krino.backend.utility.SortWhitelist;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,10 +40,13 @@ public class UserController {
 
     private final UserService userService;
 
+    private static final SortWhitelist SORT_WHITELIST = SortWhitelist.of(
+            "id", "email", "firstName", "lastName", "isApproved", "emailVerified", "createdDate", "lastModifiedDate");
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<PageResponse<UserResponseDTO>> getAllUsers(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        PageResponse<UserResponseDTO> users = userService.getAllUsers(pageable);
+        PageResponse<UserResponseDTO> users = userService.getAllUsers(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(users);
     }
 
@@ -146,7 +150,7 @@ public class UserController {
     @GetMapping("/non-approved")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<PageResponse<UserResponseDTO>> getNonApprovedUsers(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        PageResponse<UserResponseDTO> nonApprovedUsers = userService.getNonApprovedUsers(pageable);
+        PageResponse<UserResponseDTO> nonApprovedUsers = userService.getNonApprovedUsers(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(nonApprovedUsers);
     }
 

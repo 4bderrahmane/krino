@@ -5,6 +5,7 @@ import com.krino.backend.dto.slot.SlotRequestDTO;
 import com.krino.backend.dto.slot.SlotResponseDTO;
 import com.krino.backend.dto.slot.SlotUpdateDTO;
 import com.krino.backend.service.SlotService;
+import com.krino.backend.utility.SortWhitelist;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,9 @@ public class SlotController {
 
     private final SlotService slotService;
 
+    private static final SortWhitelist SORT_WHITELIST = SortWhitelist.of(
+            "id", "interviewDate", "startTime", "endTime", "available", "createdDate", "lastModifiedDate");
+
     @PostMapping
     @PreAuthorize("hasAuthority('CAN_CREATE_SLOT')")
     public ResponseEntity<SlotResponseDTO> createSlot(@Valid @RequestBody SlotRequestDTO slotRequestDTO) {
@@ -42,7 +46,7 @@ public class SlotController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<PageResponse<SlotResponseDTO>> getAllSlots(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        PageResponse<SlotResponseDTO> slots = slotService.getAllSlots(pageable);
+        PageResponse<SlotResponseDTO> slots = slotService.getAllSlots(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(slots);
     }
 

@@ -4,6 +4,7 @@ import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.interview.InterviewRequestDTO;
 import com.krino.backend.dto.interview.InterviewResponseDTO;
 import com.krino.backend.service.InterviewService;
+import com.krino.backend.utility.SortWhitelist;
 import com.krino.backend.validation.ValidationGroups;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -26,6 +27,9 @@ public class InterviewController {
 
     private final InterviewService interviewService;
 
+    private static final SortWhitelist SORT_WHITELIST = SortWhitelist.of(
+            "id", "status", "recommendation", "isOnline", "createdDate", "lastModifiedDate");
+
     @PostMapping
     @PreAuthorize("hasAuthority('CAN_CREATE_INTERVIEW')")
     public ResponseEntity<InterviewResponseDTO> createInterview(@Validated(ValidationGroups.FullUpdate.class)
@@ -45,7 +49,7 @@ public class InterviewController {
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<PageResponse<InterviewResponseDTO>> getAllInterviews(@PageableDefault(size = 20, sort = "id"
     ) Pageable pageable) {
-        PageResponse<InterviewResponseDTO> interviews = interviewService.getAllInterviews(pageable);
+        PageResponse<InterviewResponseDTO> interviews = interviewService.getAllInterviews(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(interviews);
     }
 
@@ -53,7 +57,7 @@ public class InterviewController {
     @PreAuthorize("hasAuthority('CAN_READ_INTERVIEW')")
     public ResponseEntity<PageResponse<InterviewResponseDTO>> getMyInterviews(@PageableDefault(size = 20, sort = "id"
     ) Pageable pageable) {
-        PageResponse<InterviewResponseDTO> interviews = interviewService.getMyInterviews(pageable);
+        PageResponse<InterviewResponseDTO> interviews = interviewService.getMyInterviews(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(interviews);
     }
 
