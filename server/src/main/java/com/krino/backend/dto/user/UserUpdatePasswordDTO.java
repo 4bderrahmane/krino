@@ -14,10 +14,10 @@ public class UserUpdatePasswordDTO {
     private String currentPassword;
 
     @NotBlank(message = "New password cannot be blank")
-    @Size(min = 6, max = 100)
+    @Size(min = 8, max = 100)
     private String newPassword;
 
     @NotBlank(message = "New password confirmation cannot be blank")
-    @Size(min = 6, max = 100)
+    @Size(min = 8, max = 100)
     private String confirmNewPassword;
 }
