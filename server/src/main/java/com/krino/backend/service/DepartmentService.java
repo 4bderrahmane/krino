@@ -32,7 +32,6 @@ public class DepartmentService {
     private final DepartmentMapper departmentMapper;
 
     public void deleteDepartmentByPublicId(UUID publicId) {
-        // use object-name constructor to get DEPARTMENT_NOT_FOUND ErrorCode
         Department department = departmentRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(RESOURCE, PUBLIC_ID, publicId));
 

@@ -4,6 +4,7 @@ import com.krino.backend.entity.PasswordResetToken;
 import com.krino.backend.entity.User;
 import com.krino.backend.exception.InvalidPasswordResetTokenException;
 import com.krino.backend.repository.UserRepository;
+import com.krino.backend.service.email.EmailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

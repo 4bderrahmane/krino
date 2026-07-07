@@ -16,6 +16,7 @@ import com.krino.backend.exception.InvalidRefreshTokenException;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
+import com.krino.backend.service.email.EmailVerificationService;
 import com.krino.backend.utility.CookieUtilities;
 import com.krino.backend.utility.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;

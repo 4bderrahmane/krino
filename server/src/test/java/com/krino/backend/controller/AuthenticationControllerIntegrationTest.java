@@ -7,7 +7,7 @@ import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.repository.EmailVerificationTokenRepository;
 import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.repository.UserRepository;
-import com.krino.backend.service.EmailService;
+import com.krino.backend.service.email.EmailService;
 import com.krino.backend.support.AbstractIntegrationTest;
 import io.minio.MinioClient;
 import io.minio.StatObjectArgs;

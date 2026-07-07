@@ -10,6 +10,7 @@ import com.krino.backend.exception.EmailNotVerifiedException;
 import com.krino.backend.exception.InvalidRefreshTokenException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
+import com.krino.backend.service.email.EmailVerificationService;
 import com.krino.backend.utility.CookieUtilities;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;

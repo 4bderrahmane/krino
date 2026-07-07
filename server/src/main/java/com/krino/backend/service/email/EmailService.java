@@ -1,4 +1,4 @@
-package com.krino.backend.service;
+package com.krino.backend.service.email;
 
 public interface EmailService {
     void sendPasswordReset(String to, String resetLink);

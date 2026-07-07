@@ -19,6 +19,8 @@ import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.security.PasswordGenerator;
+import com.krino.backend.service.email.EmailService;
+import com.krino.backend.service.email.EmailVerificationService;
 import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.SecurityUtilities;
 import jakarta.transaction.Transactional;

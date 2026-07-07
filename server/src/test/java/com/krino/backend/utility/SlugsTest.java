@@ -11,32 +11,26 @@ import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 class SlugsTest {
     @ParameterizedTest(name = "[{index}] \"{0}\" -> \"{1}\"")
     @CsvSource({
-            // basic lowercasing and word separation
             "Java,                  java",
             "Data Science,          data-science",
             "Spring Boot,           spring-boot",
 
-            // punctuation, repeated and edge separators collapse to single dashes
             "Node.js,               node-js",
             "Node.js / React,       node-js-react",
             "--Hello--,             hello",
             "a___b,                 a-b",
 
-            // '+' and '#' are spelled out, so these stay distinct (no collision)
             "C++,                   c-plus-plus",
             "C#,                    c-sharp",
             "F#,                    f-sharp",
 
-            // accents are stripped via Unicode decomposition
             "Café,                  cafe",
             "Crème brûlée,          creme-brulee",
 
-            // letters with no decomposition are transliterated, not dropped
             "Bjørn,                 bjorn",
             "Łódź,                  lodz",
             "Straße,                strasse",
 
-            // NFKD compatibility folding (ligatures, circled digits)
             "ﬁle,                   file",
             "Level ①,               level-1"
     })

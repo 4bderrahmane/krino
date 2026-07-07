@@ -2,6 +2,7 @@ package com.krino.backend.service;
 
 import com.krino.backend.configuration.MailProperties;
 import com.krino.backend.exception.EmailDeliveryException;
+import com.krino.backend.service.email.EmailService;
 import com.resend.Resend;
 import com.resend.services.emails.model.CreateEmailResponse;
 import lombok.RequiredArgsConstructor;

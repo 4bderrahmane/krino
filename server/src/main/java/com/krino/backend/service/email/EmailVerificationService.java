@@ -1,4 +1,4 @@
-package com.krino.backend.service;
+package com.krino.backend.service.email;
 
 import com.krino.backend.entity.EmailVerificationToken;
 import com.krino.backend.entity.User;

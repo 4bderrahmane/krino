@@ -9,7 +9,7 @@ import com.krino.backend.dto.authentication.VerifyEmailRequestDTO;
 import com.krino.backend.dto.user.UserLoginDTO;
 import com.krino.backend.dto.user.UserRegistrationDTO;
 import com.krino.backend.service.AuthenticationService;
-import com.krino.backend.service.EmailVerificationService;
+import com.krino.backend.service.email.EmailVerificationService;
 import com.krino.backend.service.PasswordResetService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;

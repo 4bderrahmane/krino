@@ -13,6 +13,9 @@ import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.security.PasswordGenerator;
 import java.security.SecureRandom;
+
+import com.krino.backend.service.email.EmailService;
+import com.krino.backend.service.email.EmailVerificationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
