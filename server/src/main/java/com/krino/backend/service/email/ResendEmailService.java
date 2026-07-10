@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
@@ -19,6 +18,8 @@ import com.resend.services.emails.model.CreateEmailOptions;
 import org.thymeleaf.context.Context;
 
 // Real email delivery; swapped for LoggingEmailService when app.mail.log-only=true (dev).
+// Sends synchronously and throws on failure; the after-commit, off-thread dispatch and retry
+// are handled by EmailEventListener, so callers publish via EmailDispatcher rather than here.
 @Service
 @ConditionalOnProperty(name = "app.mail.log-only", havingValue = "false", matchIfMissing = true)
 @RequiredArgsConstructor
@@ -32,13 +33,11 @@ public class ResendEmailService implements EmailService {
     private String frontendUrl;
 
     @Override
-    @Async("mailExecutor")
     public void sendPasswordReset(String to, String resetLink) {
         send(to, "Reset your password", "mail/password-reset", Map.of("resetLink", resetLink));
     }
 
     @Override
-    @Async("mailExecutor")
     public void sendInitialPassword(String to, String firstName, String password) {
         send(to, "Your Krino account is ready", "mail/account-created",
                 Map.of("firstName", firstName, "email", to, "password", password,
@@ -46,7 +45,6 @@ public class ResendEmailService implements EmailService {
     }
 
     @Override
-    @Async("mailExecutor")
     public void sendEmailVerification(String to, String firstName, String verificationLink) {
         send(to, "Verify your Krino email address", "mail/verify-email",
                 Map.of("firstName", firstName, "verificationLink", verificationLink));
