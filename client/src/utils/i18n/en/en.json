@@ -24,7 +24,7 @@
     "confirmPassword": "Confirm password",
     "cvButton": "Choose PDF",
     "cvNone": "No file chosen",
-    "cvHint": "Your CV is required — PDF only, up to 5MB.",
+    "cvHint": "Your CV is required. PDF only, up to 5MB.",
     "validation": {
       "firstName": "First name must be between 2 and 50 characters.",
       "lastName": "Last name must be between 2 and 50 characters.",

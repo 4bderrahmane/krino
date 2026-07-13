@@ -24,7 +24,7 @@
     "confirmPassword": "Confirmer le mot de passe",
     "cvButton": "Choisir un PDF",
     "cvNone": "Aucun fichier choisi",
-    "cvHint": "Votre CV est obligatoire — PDF uniquement, jusqu'à 5 Mo.",
+    "cvHint": "Votre CV est obligatoire. PDF uniquement, jusqu'à 5 Mo.",
     "validation": {
       "firstName": "Le prénom doit comporter entre 2 et 50 caractères.",
       "lastName": "Le nom doit comporter entre 2 et 50 caractères.",
