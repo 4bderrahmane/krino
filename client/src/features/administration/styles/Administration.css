@@ -166,9 +166,66 @@
 /* User management / approval table                                    */
 /* ------------------------------------------------------------------ */
 .admin-users-container {
-    max-width: 760px;
+    max-width: 1180px;
     margin: 20px auto;
     padding: 0 16px;
+}
+
+.admin-users-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.admin-users-search {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.admin-users-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.admin-users-sort-label {
+    font-size: 0.9rem;
+    color: var(--color-ink-soft);
+}
+
+.admin-users-sort-select {
+    width: auto;
+    height: 48px;
+}
+
+.admin-users-sort-dir {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    line-height: 1;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    cursor: pointer;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.admin-users-sort-dir:hover {
+    border-color: var(--color-primary);
+}
+
+.admin-users-sort-dir:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: var(--ring);
 }
 
 .admin-users-filter {
@@ -195,24 +252,35 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
 }
 
+/* Each user is a self-contained card: identity at the top, the approve/revoke
+   action pinned to the bottom (margin-top:auto) so the controls line up across
+   a row regardless of how many roles a user carries. */
 .admin-user-row {
     display: flex;
-    align-items: center;
-    gap: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    height: 100%;
     background: var(--color-surface);
     border: 1px solid var(--color-line);
     border-radius: var(--radius-lg);
-    padding: 16px 20px;
+    padding: 18px 20px;
     box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.admin-user-row:hover {
+    border-color: var(--color-line-strong);
+    box-shadow: var(--shadow-md);
 }
 
 .admin-user-main {
-    flex: 1;
+    width: 100%;
     min-width: 0;
 }
 
@@ -264,8 +332,11 @@
 .admin-user-actions {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
-    flex-shrink: 0;
+    width: 100%;
+    margin-top: auto;
+    padding-top: 4px;
 }
 
 .admin-user-confirm {
@@ -321,8 +392,14 @@
     border-color: var(--color-danger);
 }
 
+@media (max-width: 960px) {
+    .admin-users-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 600px) {
-    .admin-user-row {
-        flex-wrap: wrap;
+    .admin-users-list {
+        grid-template-columns: 1fr;
     }
 }
