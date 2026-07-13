@@ -19,8 +19,6 @@ public class EmailVerificationTokenService {
     private final TokenHasher tokenHasher;
 
     private static final int TOKEN_BYTES = 32;
-    // Verification links grant no access by themselves, so they can live longer than the
-    // 30-minute password-reset window.
     private static final int EXPIRY_HOURS = 24;
 
     public String issueToken(User user) {

@@ -1,8 +1,7 @@
-package com.krino.backend.service;
+package com.krino.backend.service.email;
 
 import com.krino.backend.configuration.MailProperties;
 import com.krino.backend.exception.EmailDeliveryException;
-import com.krino.backend.service.email.EmailService;
 import com.resend.Resend;
 import com.resend.services.emails.model.CreateEmailResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +16,6 @@ import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.CreateEmailOptions;
 import org.thymeleaf.context.Context;
 
-// Real email delivery; swapped for LoggingEmailService when app.mail.log-only=true (dev).
-// Sends synchronously and throws on failure; the after-commit, off-thread dispatch and retry
-// are handled by EmailEventListener, so callers publish via EmailDispatcher rather than here.
 @Service
 @ConditionalOnProperty(name = "app.mail.log-only", havingValue = "false", matchIfMissing = true)
 @RequiredArgsConstructor
