@@ -4,7 +4,7 @@ import com.krino.backend.entity.EmailVerificationToken;
 import com.krino.backend.entity.User;
 import com.krino.backend.exception.InvalidEmailVerificationTokenException;
 import com.krino.backend.repository.UserRepository;
-import com.krino.backend.service.email.EmailService;
+import com.krino.backend.service.email.EmailDispatcher;
 import com.krino.backend.service.email.EmailVerificationService;
 import com.krino.backend.service.email.EmailVerificationTokenService;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +29,7 @@ class EmailVerificationServiceTest
 
     private UserRepository userRepository;
     private EmailVerificationTokenService emailVerificationTokenService;
-    private EmailService emailService;
+    private EmailDispatcher emailDispatcher;
     private EmailVerificationService service;
 
     @BeforeEach
@@ -37,8 +37,8 @@ class EmailVerificationServiceTest
     {
         userRepository = mock(UserRepository.class);
         emailVerificationTokenService = mock(EmailVerificationTokenService.class);
-        emailService = mock(EmailService.class);
-        service = new EmailVerificationService(userRepository, emailVerificationTokenService, emailService);
+        emailDispatcher = mock(EmailDispatcher.class);
+        service = new EmailVerificationService(userRepository, emailVerificationTokenService, emailDispatcher);
         ReflectionTestUtils.setField(service, "frontendUrl", FRONTEND_URL);
     }
 
@@ -50,7 +50,7 @@ class EmailVerificationServiceTest
 
         service.sendVerificationEmail(user);
 
-        verify(emailService).sendEmailVerification(
+        verify(emailDispatcher).sendEmailVerification(
                 eq("candidate@test.local"),
                 eq("Test"),
                 eq(FRONTEND_URL + "/verify-email?token=raw-token"));
@@ -64,7 +64,7 @@ class EmailVerificationServiceTest
         service.resendVerification(" Nobody@TEST.Local ");
 
         verify(emailVerificationTokenService, never()).issueToken(any());
-        verify(emailService, never()).sendEmailVerification(any(), any(), any());
+        verify(emailDispatcher, never()).sendEmailVerification(any(), any(), any());
     }
 
     @Test
@@ -76,7 +76,7 @@ class EmailVerificationServiceTest
         service.resendVerification("candidate@test.local");
 
         verify(emailVerificationTokenService, never()).issueToken(any());
-        verify(emailService, never()).sendEmailVerification(any(), any(), any());
+        verify(emailDispatcher, never()).sendEmailVerification(any(), any(), any());
     }
 
     @Test
@@ -88,7 +88,7 @@ class EmailVerificationServiceTest
 
         service.resendVerification("candidate@test.local");
 
-        verify(emailService).sendEmailVerification(eq("candidate@test.local"), eq("Test"),
+        verify(emailDispatcher).sendEmailVerification(eq("candidate@test.local"), eq("Test"),
                 contains("token=fresh-token"));
     }
 

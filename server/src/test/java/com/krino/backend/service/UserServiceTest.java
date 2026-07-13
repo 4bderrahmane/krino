@@ -14,7 +14,7 @@ import com.krino.backend.repository.UserRepository;
 import com.krino.backend.security.PasswordGenerator;
 import java.security.SecureRandom;
 
-import com.krino.backend.service.email.EmailService;
+import com.krino.backend.service.email.EmailDispatcher;
 import com.krino.backend.service.email.EmailVerificationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +38,7 @@ import static org.mockito.Mockito.*;
 
 class UserServiceTest
 {
-    private EmailService emailService;
+    private EmailDispatcher emailDispatcher;
     private EmailVerificationService emailVerificationService;
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
@@ -49,14 +49,14 @@ class UserServiceTest
     @BeforeEach
     void setUp()
     {
-        emailService = mock(EmailService.class);
+        emailDispatcher = mock(EmailDispatcher.class);
         emailVerificationService = mock(EmailVerificationService.class);
         userRepository = mock(UserRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         userMapper = mock(UserMapper.class);
         // A plain SecureRandom keeps the unit test off the blocking /dev/random source.
         passwordGenerator = new PasswordGenerator(new SecureRandom());
-        userService = new UserService(emailService, emailVerificationService, userRepository, passwordEncoder,
+        userService = new UserService(emailDispatcher, emailVerificationService, userRepository, passwordEncoder,
                 userMapper, null, null, null, null, null, passwordGenerator);
     }
 
@@ -82,7 +82,7 @@ class UserServiceTest
         // The password is delivered by email only, never in the API response, so capture the
         // generated value from the email send.
         ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
-        verify(emailService).sendInitialPassword(eq("john@test.local"), eq("john"), passwordCaptor.capture());
+        verify(emailDispatcher).sendInitialPassword(eq("john@test.local"), eq("john"), passwordCaptor.capture());
         String generatedPassword = passwordCaptor.getValue();
         // No longer a predictable name.name+year value: it's a 16-char CSPRNG password with no
         // ambiguous characters or whitespace.

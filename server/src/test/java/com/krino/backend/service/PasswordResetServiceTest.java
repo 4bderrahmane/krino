@@ -4,7 +4,7 @@ import com.krino.backend.entity.PasswordResetToken;
 import com.krino.backend.entity.User;
 import com.krino.backend.exception.InvalidPasswordResetTokenException;
 import com.krino.backend.repository.UserRepository;
-import com.krino.backend.service.email.EmailService;
+import com.krino.backend.service.email.EmailDispatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,7 +29,7 @@ class PasswordResetServiceTest {
     private UserRepository userRepository;
     private PasswordResetTokenService passwordResetTokenService;
     private RefreshTokenService refreshTokenService;
-    private EmailService emailService;
+    private EmailDispatcher emailDispatcher;
     private PasswordEncoder passwordEncoder;
     private PasswordResetService service;
 
@@ -38,10 +38,10 @@ class PasswordResetServiceTest {
         userRepository = mock(UserRepository.class);
         passwordResetTokenService = mock(PasswordResetTokenService.class);
         refreshTokenService = mock(RefreshTokenService.class);
-        emailService = mock(EmailService.class);
+        emailDispatcher = mock(EmailDispatcher.class);
         passwordEncoder = mock(PasswordEncoder.class);
         service = new PasswordResetService(userRepository, passwordResetTokenService, refreshTokenService,
-                emailService, passwordEncoder);
+                emailDispatcher, passwordEncoder);
         ReflectionTestUtils.setField(service, "frontendUrl", FRONTEND_URL);
     }
 
@@ -54,7 +54,7 @@ class PasswordResetServiceTest {
         // Mixed case + padding on input to confirm normalization before lookup.
         service.requestReset("  Staff@Krino.com ");
 
-        verify(emailService).sendPasswordReset("staff@krino.com",
+        verify(emailDispatcher).sendPasswordReset("staff@krino.com",
                 FRONTEND_URL + "/reset-password?token=RAW-TOKEN");
     }
 
@@ -65,7 +65,7 @@ class PasswordResetServiceTest {
         service.requestReset("ghost@krino.com");
 
         // No enumeration signal: no token issued, no email sent.
-        verifyNoInteractions(passwordResetTokenService, emailService);
+        verifyNoInteractions(passwordResetTokenService, emailDispatcher);
     }
 
     @Test

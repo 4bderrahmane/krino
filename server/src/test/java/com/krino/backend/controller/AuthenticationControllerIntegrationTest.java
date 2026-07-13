@@ -36,6 +36,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -55,8 +56,6 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final WebApplicationContext webApplicationContext;
-    // Registration uploads the candidate's base CV; these let the tests check the object
-    // really landed in the Testcontainers MinIO bucket.
     private final MinioClient minioClient;
     private final StorageProperties storageProperties;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -175,8 +174,6 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isForbidden())
                 .andReturn();
 
-        // The credentials are valid; the account just isn't approved — so the user
-        // gets a distinct ACCOUNT_NOT_APPROVED rather than a misleading INVALID_CREDENTIALS.
         assertThat(result.getResponse().getContentAsString()).contains("\"errorCode\":\"ACCOUNT_NOT_APPROVED\"");
         assertThat(setCookieHeaders(result)).isEmpty();
     }
@@ -204,7 +201,6 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
         User savedUser = userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow();
         assertThat(savedUser.getRoles()).contains(UserRole.CANDIDATE);
         assertThat(savedUser.isApproved()).isTrue();
-        // The account exists but stays unverified until the emailed link is used.
         assertThat(savedUser.isEmailVerified()).isFalse();
         assertThat(savedUser.getResumeObjectKey())
                 .startsWith("users/" + savedUser.getPublicId() + "/resume/")
@@ -215,7 +211,8 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
                 .object(savedUser.getResumeObjectKey())
                 .build());
         assertThat(storedObject.size()).isEqualTo(PDF_BYTES.length);
-        verify(emailService).sendEmailVerification(eq(CANDIDATE_EMAIL), any(), any());
+        // Delivery is async and fires after the register transaction commits, so await it.
+        verify(emailService, timeout(5_000)).sendEmailVerification(eq(CANDIDATE_EMAIL), any(), any());
     }
 
     @Test
@@ -282,7 +279,7 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\": \"" + CANDIDATE_EMAIL + "\"}"))
                 .andExpect(status().isNoContent());
-        verify(emailService, org.mockito.Mockito.times(2)).sendEmailVerification(eq(CANDIDATE_EMAIL), any(), any());
+        verify(emailService, timeout(5_000).times(2)).sendEmailVerification(eq(CANDIDATE_EMAIL), any(), any());
 
         // A resend invalidates earlier tokens: the newest link works, single-use as always.
         mockMvc.perform(withCsrf(post("/api/auth/verify-email"))
@@ -311,7 +308,7 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
     /** Pulls the raw token out of the most recently emailed verification link. */
     private String capturedVerificationToken() {
         ArgumentCaptor<String> linkCaptor = ArgumentCaptor.forClass(String.class);
-        verify(emailService, org.mockito.Mockito.atLeastOnce())
+        verify(emailService, timeout(5_000).atLeastOnce())
                 .sendEmailVerification(eq(CANDIDATE_EMAIL), any(), linkCaptor.capture());
         String link = linkCaptor.getValue();
         return link.substring(link.indexOf("token=") + "token=".length());
