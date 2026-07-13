@@ -19,11 +19,11 @@ import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.security.PasswordGenerator;
-import com.krino.backend.service.email.EmailService;
+import com.krino.backend.service.email.EmailDispatcher;
 import com.krino.backend.service.email.EmailVerificationService;
 import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.SecurityUtilities;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,7 +48,7 @@ public class UserService {
     private static final String HR_MANAGER = "HR_MANAGER";
     private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
 
-    private final EmailService emailService;
+    private final EmailDispatcher emailDispatcher;
     private final EmailVerificationService emailVerificationService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -97,7 +97,7 @@ public class UserService {
 
         // The initial password reaches the new staff member by email only; it is never
         // returned over the API.
-        emailService.sendInitialPassword(savedUser.getEmail(), savedUser.getFirstName(), initialPassword);
+        emailDispatcher.sendInitialPassword(savedUser.getEmail(), savedUser.getFirstName(), initialPassword);
 
         return userMapper.toResponse(savedUser);
     }
