@@ -8,6 +8,12 @@ spring:
     url: "${SPRING_DATASOURCE_URL}"
     username: "${SPRING_DATASOURCE_USERNAME}"
     password: "${SPRING_DATASOURCE_PASSWORD}"
+  # Redis backs both the Spring cache (CachingConfiguration) and the rate limiter.
+  data:
+    redis:
+      host: "${REDIS_HOST:localhost}"
+      port: "${REDIS_PORT:6379}"
+      password: "${REDIS_PASSWORD:}"
   jpa:
     hibernate:
       ddl-auto: "${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}"
@@ -61,15 +67,16 @@ app:
     allowed-origins: "${APP_CORS_ALLOWED_ORIGINS}"
   cookies:
     secure: "${APP_COOKIES_SECURE:true}"
-  # Per-IP rate limiting for the public auth endpoints (login/register/refresh).
-  # capacity = burst allowed; refill-period = time to refill a drained bucket.
+  # Per-IP rate limiting for the public auth endpoints (login/register/refresh), with the
+  # buckets stored in Redis. capacity = burst allowed; refill-period = time to refill a
+  # drained bucket; idle-expiry = how long a fully refilled bucket lingers before its Redis
+  # key expires.
   ratelimit:
     enabled: "${APP_RATE_LIMIT_ENABLED:true}"
     capacity: "${APP_RATE_LIMIT_AUTH_CAPACITY:10}"
     refill-tokens: 100
     refill-period: "${APP_RATE_LIMIT_AUTH_REFILL_PERIOD:1m}"
     idle-expiry: 10m
-    max-keys: 100000
   admin:
     email: "${APP_ADMIN_EMAIL:}"
     password: "${APP_ADMIN_PASSWORD:}"
