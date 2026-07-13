@@ -105,13 +105,12 @@ export interface Offer {
     location: MoroccanCity | null;
     remotePolicy: RemotePolicy;
 
-    // Compensation. Either bound may be null; the range is only shown to
-    // candidates when `salaryVisible` is true.
+    // Compensation. Either bound may be null; the range is shown whenever a
+    // currency and at least one bound are set.
     salaryMin: number | null;
     salaryMax: number | null;
     salaryCurrency: SalaryCurrency | null;
     salaryPeriod: SalaryPeriod | null;
-    salaryVisible: boolean;
 
     // Timeline (ISO date, e.g. "2026-06-30")
     applyingDeadline: string | null;
@@ -147,7 +146,6 @@ export interface CreateOfferInput {
     salaryMax: number | null;
     salaryCurrency: SalaryCurrency | null;
     salaryPeriod: SalaryPeriod | null;
-    salaryVisible: boolean;
     salaryNegotiable: boolean;
 
     applyingDeadline: string;        // ISO instant; maps to JobCreateDTO.applicationDeadline

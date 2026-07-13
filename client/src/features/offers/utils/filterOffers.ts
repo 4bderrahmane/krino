@@ -53,7 +53,7 @@ export interface OfferFacets {
 const present = <T>(order: readonly T[], values: Set<T>): T[] => order.filter((v) => values.has(v));
 
 const hasDisclosedSalary = (o: Offer): boolean =>
-    o.salaryVisible && (o.salaryMin != null || o.salaryMax != null);
+    o.salaryMin != null || o.salaryMax != null;
 
 // The figure a "minimum salary" filter compares against: the top of the range,
 // falling back to whichever single bound exists.

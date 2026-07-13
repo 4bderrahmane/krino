@@ -37,8 +37,8 @@ const OfferCard: React.FC<OfferCardProps> = ({offer}) => {
     const deadline = offer.applyingDeadline ? formatDate(offer.applyingDeadline, locale) : null;
 
     const renderSalary = () => {
-        const {salaryMin: min, salaryMax: max, salaryCurrency: cur, salaryPeriod: per, salaryVisible} = offer;
-        if (!salaryVisible || cur == null || (min == null && max == null)) {
+        const {salaryMin: min, salaryMax: max, salaryCurrency: cur, salaryPeriod: per} = offer;
+        if (cur == null || (min == null && max == null)) {
             return (
                 <p className="offer-card-salary offer-card-salary-muted">
                     {t('offers.card.salaryNotDisclosed')}

@@ -38,7 +38,6 @@ export interface FormState {
     salaryMax: string;
     salaryCurrency: SalaryCurrency | '';
     salaryPeriod: SalaryPeriod | '';
-    salaryVisible: boolean;
     salaryNegotiable: boolean;
     applyingDeadline: string;
     plannedStartDate: string;
@@ -59,7 +58,6 @@ export const initialState: FormState = {
     salaryMax: '',
     salaryCurrency: '',
     salaryPeriod: '',
-    salaryVisible: true,
     salaryNegotiable: false,
     applyingDeadline: '',
     plannedStartDate: '',
@@ -130,7 +128,6 @@ export const formToCreateInput = (form: FormState, skills: SkillRow[]): CreateOf
     salaryMax: toIntOrNull(form.salaryMax),
     salaryCurrency: form.salaryCurrency || null,
     salaryPeriod: form.salaryPeriod || null,
-    salaryVisible: form.salaryVisible,
     salaryNegotiable: form.salaryNegotiable,
     applyingDeadline: new Date(form.applyingDeadline).toISOString(),
     plannedStartDate: form.plannedStartDate || null,
@@ -153,7 +150,6 @@ export const formToEditInput = (form: FormState, skills: SkillRow[]): EditOfferI
     salaryMax: toIntOrNull(form.salaryMax),
     salaryCurrency: form.salaryCurrency || null,
     salaryPeriod: form.salaryPeriod || null,
-    salaryVisible: form.salaryVisible,
     applyingDeadline: new Date(form.applyingDeadline).toISOString(),
     skills: cleanSkills(skills),
 });
@@ -177,7 +173,6 @@ export const offerToFormState = (offer: Offer): {form: FormState; skills: SkillR
         salaryMax: offer.salaryMax != null ? String(offer.salaryMax) : '',
         salaryCurrency: offer.salaryCurrency ?? '',
         salaryPeriod: offer.salaryPeriod ?? '',
-        salaryVisible: offer.salaryVisible,
         applyingDeadline: isoToDatetimeLocal(offer.applyingDeadline),
     },
     skills: offer.skills.length

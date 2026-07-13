@@ -43,7 +43,6 @@ interface JobResponseDTO {
     salaryMax?: number | null;
     salaryCurrency?: SalaryCurrency | null;
     salaryPeriod?: SalaryPeriod | null;
-    salaryVisible?: boolean | null;
     location?: MoroccanCity | null;
     remotePolicy: RemotePolicy;
     experienceLevel?: ExperienceLevel | null;
@@ -66,7 +65,6 @@ interface JobCreateDTO {
     salaryMax?: number | null;
     salaryCurrency?: SalaryCurrency | null;
     salaryPeriod?: SalaryPeriod | null;
-    salaryVisible: boolean;
     salaryNegotiable: boolean;
     city?: MoroccanCity | null;
     remotePolicy: RemotePolicy;
@@ -109,7 +107,6 @@ const toOffer = (job: JobResponseDTO): Offer => ({
     salaryMax: job.salaryMax ?? null,
     salaryCurrency: job.salaryCurrency ?? null,
     salaryPeriod: job.salaryPeriod ?? null,
-    salaryVisible: job.salaryVisible ?? false,
     applyingDeadline: job.applyingDeadline ?? null,
     skills: job.skills ?? [],
 });
@@ -144,7 +141,6 @@ const toJobCreateDTO = (input: CreateOfferInput): JobCreateDTO => ({
     salaryMax: input.salaryMax,
     salaryCurrency: input.salaryCurrency,
     salaryPeriod: input.salaryPeriod,
-    salaryVisible: input.salaryVisible,
     salaryNegotiable: input.salaryNegotiable,
     city: input.location,
     remotePolicy: input.remotePolicy,
@@ -175,7 +171,6 @@ interface JobPatchDTO {
     salaryMax?: number | null;
     salaryCurrency?: SalaryCurrency | null;
     salaryPeriod?: SalaryPeriod | null;
-    salaryVisible: boolean;
     city?: MoroccanCity | null;
     remotePolicy: RemotePolicy;
     experienceLevel?: ExperienceLevel | null;
@@ -194,7 +189,6 @@ const toJobPatchDTO = (input: EditOfferInput): JobPatchDTO => ({
     salaryMax: input.salaryMax,
     salaryCurrency: input.salaryCurrency,
     salaryPeriod: input.salaryPeriod,
-    salaryVisible: input.salaryVisible,
     city: input.location,
     remotePolicy: input.remotePolicy,
     experienceLevel: input.experienceLevel,

@@ -96,10 +96,10 @@ const OfferDetailPage: React.FC = () => {
         }
     };
 
-    // Salary, mirroring the offer card: only shown when disclosed.
+    // Salary, mirroring the offer card: only shown when a salary is set.
     const salaryText = (): string => {
-        const {salaryMin: min, salaryMax: max, salaryCurrency: cur, salaryPeriod: per, salaryVisible} = offer;
-        if (!salaryVisible || cur == null || (min == null && max == null)) {
+        const {salaryMin: min, salaryMax: max, salaryCurrency: cur, salaryPeriod: per} = offer;
+        if (cur == null || (min == null && max == null)) {
             return t('offers.card.salaryNotDisclosed');
         }
         let amount: string;

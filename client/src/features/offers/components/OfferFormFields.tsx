@@ -279,16 +279,8 @@ const OfferFormFields: React.FC<OfferFormFieldsProps> = ({
                     </label>
                 </div>
 
-                <div className="offer-form-checks">
-                    <label className="offer-check">
-                        <input
-                            type="checkbox"
-                            checked={form.salaryVisible}
-                            onChange={(e) => set('salaryVisible', e.target.checked)}
-                        />
-                        <span>{t('offers.create.fields.salaryVisible')}</span>
-                    </label>
-                    {showHidden && (
+                {showHidden && (
+                    <div className="offer-form-checks">
                         <label className="offer-check">
                             <input
                                 type="checkbox"
@@ -297,8 +289,8 @@ const OfferFormFields: React.FC<OfferFormFieldsProps> = ({
                             />
                             <span>{t('offers.create.fields.salaryNegotiable')}</span>
                         </label>
-                    )}
-                </div>
+                    </div>
+                )}
             </fieldset>
 
             {/* Timeline -------------------------------------------------- */}
