@@ -5,7 +5,8 @@ import com.krino.backend.entity.User;
 import com.krino.backend.mapper.RefreshTokenMapper;
 import com.krino.backend.repository.RefreshTokenRepository;
 import com.krino.backend.security.TokenHasher;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -112,7 +113,7 @@ public class RefreshTokenService {
      * its own transaction because the caller rejects the request by throwing right after —
      * a rollback of the surrounding transaction must not undo the revocation.
      */
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleCompromisedToken(Long userId) {
         revokeAllTokensForUser(userId);
     }

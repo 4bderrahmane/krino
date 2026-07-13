@@ -1,7 +1,7 @@
 package com.krino.backend.service;
 
 import com.krino.backend.service.email.EmailVerificationTokenService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
