@@ -98,9 +98,18 @@ export const clearTokenRefresh = () => {
     }
 };
 
+// Routes meant to be viewed while logged out: the login/registration screens and
+// the emailed password-reset and email-verification links. The on-load session
+// probe (GET /users/me -> refresh) 401s for a logged-out visitor, but on these
+// pages that must NOT bounce them to /login. The verify-email page in particular
+// is only ever reached by users who are, by definition, not signed in yet, so the
+// bounce made email verification impossible to complete. Protected pages are still
+// guarded by ProtectedRoute, so scoping the redirect out here loses no protection.
+const PUBLIC_PATHS = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
+
 const redirectToLogin = () => {
     clearTokenRefresh();
-    if (window.location.pathname !== '/login') {
+    if (!PUBLIC_PATHS.includes(window.location.pathname)) {
         window.location.href = '/login';
     }
 };
