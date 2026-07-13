@@ -190,6 +190,15 @@
     "allDepartments": "Tous les départements",
     "pagination": "Pagination",
     "pageIndicator": "Page {{current}} sur {{total}}",
+    "tagline": {
+      "candidate": "Trouvez le poste qui vous correspond : filtrez par ville, mode de travail et salaire.",
+      "staff": "Publiez, suivez et gérez toutes vos offres au même endroit."
+    },
+    "index": {
+      "offers": "Offres",
+      "departments": "Départements",
+      "open": "Ouvertes"
+    },
     "filters": {
       "title": "Filtres",
       "toggle": "Filtres",

@@ -36,6 +36,20 @@ const OffersPage: React.FC = () => {
 
     const activeCount = countActiveFilters(filters);
 
+    // Masthead figures: all read off the currently filtered set so the "index"
+    // always describes what the visitor is actually looking at.
+    const dateline = new Date().toLocaleDateString(i18n.language, {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+    const departmentCount = useMemo(
+        () => new Set(filtered.map((o) => o.department.name)).size,
+        [filtered],
+    );
+    const openCount = useMemo(
+        () => filtered.filter((o) => o.status === 'OPEN').length,
+        [filtered],
+    );
+
     const updateFilters = (next: OfferFilters) => {
         setFilters(next);
         setPage(0); // any filter change returns to the first page
@@ -63,9 +77,16 @@ const OffersPage: React.FC = () => {
     if (offers.length === 0) {
         return (
             <div className="offers-container">
-                <header className="offers-header">
-                    <h1 className="offers-title">{t('offers.title')}</h1>
+                <header className="offers-masthead offers-masthead--bare">
+                    <div className="offers-masthead-head">
+                        <p className="offers-dateline">{dateline}</p>
+                        <h1 className="offers-title">{t('offers.title')}</h1>
+                        <p className="offers-tagline">
+                            {isStaff ? t('offers.tagline.staff') : t('offers.tagline.candidate')}
+                        </p>
+                    </div>
                 </header>
+                <div className="offers-rule" aria-hidden="true"/>
                 {isStaff ? (
                     <ul className="offers-grid">
                         <li className="offers-grid-item">
@@ -131,10 +152,33 @@ const OffersPage: React.FC = () => {
 
     return (
         <div className="offers-container">
-            <header className="offers-header">
-                <h1 className="offers-title">{t('offers.title')}</h1>
-                <p className="offers-subtitle">{t('offers.count', {count: filtered.length})}</p>
+            <header className="offers-masthead">
+                <div className="offers-masthead-head">
+                    <p className="offers-dateline">{dateline}</p>
+                    <h1 className="offers-title">{t('offers.title')}</h1>
+                    <p className="offers-tagline">
+                        {isStaff ? t('offers.tagline.staff') : t('offers.tagline.candidate')}
+                    </p>
+                </div>
+                <dl className="offers-index" aria-label={t('offers.count', {count: filtered.length})}>
+                    <div className="offers-index-item">
+                        <dt className="offers-index-label">{t('offers.index.offers')}</dt>
+                        <dd className="offers-index-value">{filtered.length}</dd>
+                    </div>
+                    <div className="offers-index-item">
+                        <dt className="offers-index-label">{t('offers.index.departments')}</dt>
+                        <dd className="offers-index-value">{departmentCount}</dd>
+                    </div>
+                    <div className="offers-index-item offers-index-open">
+                        <dt className="offers-index-label">{t('offers.index.open')}</dt>
+                        <dd className="offers-index-value">
+                            <span className="offers-live-dot" aria-hidden="true"/>
+                            {openCount}
+                        </dd>
+                    </div>
+                </dl>
             </header>
+            <div className="offers-rule" aria-hidden="true"/>
 
             <button
                 type="button"

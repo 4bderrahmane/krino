@@ -190,6 +190,15 @@
     "allDepartments": "All departments",
     "pagination": "Pagination",
     "pageIndicator": "Page {{current}} of {{total}}",
+    "tagline": {
+      "candidate": "Find the role that fits: filter by city, work style, and pay.",
+      "staff": "Publish, track, and manage every open role in one place."
+    },
+    "index": {
+      "offers": "Offers",
+      "departments": "Departments",
+      "open": "Open now"
+    },
     "filters": {
       "title": "Filters",
       "toggle": "Filters",
