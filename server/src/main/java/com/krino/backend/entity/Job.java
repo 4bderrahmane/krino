@@ -91,9 +91,6 @@ public class Job extends AbstractPublicEntity {
     @Column(name = "salary_period", length = 30)
     private SalaryPeriod salaryPeriod;
 
-    @Column(name = "salary_visible", nullable = false)
-    private boolean salaryVisible = false;
-
     @Column(name = "salary_negotiable", nullable = false)
     private boolean salaryNegotiable = false;
 
@@ -197,15 +194,14 @@ public class Job extends AbstractPublicEntity {
         plannedStartDate = psDate;
     }
 
-    public void updateSalary(Integer sMin, Integer sMax, SalaryCurrency cur, SalaryPeriod sPer, boolean vis, boolean sNeg) {
+    public void updateSalary(Integer sMin, Integer sMax, SalaryCurrency cur, SalaryPeriod sPer, boolean sNeg) {
         ensureEditable();
-        validateSalary(sMin, sMax, cur, sPer, vis);
+        validateSalary(sMin, sMax, cur, sPer);
 
         salaryMin = sMin;
         salaryMax = sMax;
         salaryCurrency = cur;
         salaryPeriod = sPer;
-        salaryVisible = vis;
         salaryNegotiable = sNeg;
     }
 
@@ -215,7 +211,6 @@ public class Job extends AbstractPublicEntity {
         salaryMax = null;
         salaryCurrency = null;
         salaryPeriod = null;
-        salaryVisible = false;
         salaryNegotiable = false;
     }
 
@@ -323,10 +318,10 @@ public class Job extends AbstractPublicEntity {
         if (department == null) throw new IllegalStateException("A department is required before publication");
         if (applicationDeadline != null && !applicationDeadline.isAfter(publicationTime)) throw new IllegalStateException("The application deadline must be after publication");
 
-        validateSalary(salaryMin, salaryMax, salaryCurrency, salaryPeriod, salaryVisible);
+        validateSalary(salaryMin, salaryMax, salaryCurrency, salaryPeriod);
     }
 
-    private static void validateSalary(Integer salaryMin, Integer salaryMax, SalaryCurrency currency, SalaryPeriod period, boolean visible) {
+    private static void validateSalary(Integer salaryMin, Integer salaryMax, SalaryCurrency currency, SalaryPeriod period) {
         if (salaryMin != null && salaryMax != null && salaryMax < salaryMin) {
             throw new IllegalArgumentException("salaryMax cannot be lower than salaryMin");
         }
@@ -343,10 +338,6 @@ public class Job extends AbstractPublicEntity {
 
         if (!salaryDefined && (currency != null || period != null)) {
             throw new IllegalArgumentException("Salary currency and period require a salary amount");
-        }
-
-        if (visible && !salaryDefined) {
-            throw new IllegalArgumentException("Salary cannot be visible when no salary is defined");
         }
     }
 
@@ -376,7 +367,7 @@ public class Job extends AbstractPublicEntity {
     }
 
     private void validateInvariants() {
-        validateSalary(salaryMin, salaryMax, salaryCurrency, salaryPeriod, salaryVisible);
+        validateSalary(salaryMin, salaryMax, salaryCurrency, salaryPeriod);
         validateLocation(remotePolicy, city);
 
         if (publishedAt != null && applicationDeadline != null && !applicationDeadline.isAfter(publishedAt)) {

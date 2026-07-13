@@ -50,8 +50,6 @@ public class JobUpdateDTO {
 
     private SalaryPeriod salaryPeriod;
 
-    private Boolean salaryVisible;
-
     private Boolean salaryNegotiable;
 
     @Future(message = "Application deadline must be in the future",

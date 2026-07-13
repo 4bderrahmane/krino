@@ -26,7 +26,6 @@ public class JobResponseDTO {
     private Integer salaryMax;
     private SalaryCurrency salaryCurrency;
     private SalaryPeriod salaryPeriod;
-    private Boolean salaryVisible;
     private MoroccanCity city;
     private RemotePolicy remotePolicy;
     private ExperienceLevel experienceLevel;

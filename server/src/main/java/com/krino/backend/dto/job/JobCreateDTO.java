@@ -52,8 +52,6 @@ public class JobCreateDTO {
 
     private SalaryPeriod salaryPeriod;
 
-    private Boolean salaryVisible = true;
-
     private Boolean salaryNegotiable = false;
 
     private MoroccanCity city;
