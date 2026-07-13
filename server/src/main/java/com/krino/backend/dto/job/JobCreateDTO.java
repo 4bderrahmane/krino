@@ -32,7 +32,7 @@ public class JobCreateDTO {
     @Size(max = 100, message = "Title cannot exceed 100 characters")
     private String title;
 
-    @Pattern(regexp = "(?s).*\\S.*", message = "Description cannot be blank")
+    @NotBlank(message = "Description cannot be blank")
     @Size(max = 4000, message = "Description cannot exceed 4000 characters")
     private String description;
 

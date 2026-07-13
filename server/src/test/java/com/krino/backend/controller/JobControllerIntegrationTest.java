@@ -98,6 +98,7 @@ class JobControllerIntegrationTest extends AbstractControllerIntegrationTest
                                 {
                                   "departmentName": "Engineering",
                                   "title": "Backend Engineer",
+                                  "description": "Build APIs",
                                   "applicationDeadline": "2099-12-31T23:59:00Z",
                                   "remotePolicy": "REMOTE",
                                   "employmentType": "FULL_TIME",
@@ -130,6 +131,7 @@ class JobControllerIntegrationTest extends AbstractControllerIntegrationTest
                                 {
                                   "departmentName": "Ghost",
                                   "title": "Backend Engineer",
+                                  "description": "Build APIs",
                                   "applicationDeadline": "2099-12-31T23:59:00Z",
                                   "remotePolicy": "REMOTE",
                                   "employmentType": "FULL_TIME",
@@ -251,6 +253,7 @@ class JobControllerIntegrationTest extends AbstractControllerIntegrationTest
                                 {
                                   "departmentName": "Engineering",
                                   "title": "Backend Engineer",
+                                  "description": "Build APIs",
                                   "applicationDeadline": "2099-12-31T23:59:00Z",
                                   "remotePolicy": "REMOTE",
                                   "employmentType": "FULL_TIME",
