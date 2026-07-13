@@ -4,7 +4,7 @@ import com.krino.backend.entity.EmailVerificationToken;
 import com.krino.backend.entity.User;
 import com.krino.backend.exception.InvalidEmailVerificationTokenException;
 import com.krino.backend.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,19 +17,15 @@ public class EmailVerificationService {
 
     private final UserRepository userRepository;
     private final EmailVerificationTokenService emailVerificationTokenService;
-    private final EmailService emailService;
+    private final EmailDispatcher emailDispatcher;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
-    /**
-     * Issues a fresh verification token (invalidating any earlier ones) and emails the link.
-     * Called at registration and from the resend endpoint.
-     */
     public void sendVerificationEmail(User user) {
         String rawToken = emailVerificationTokenService.issueToken(user);
         String verificationLink = frontendUrl + "/verify-email?token=" + rawToken;
-        emailService.sendEmailVerification(user.getEmail(), user.getFirstName(), verificationLink);
+        emailDispatcher.sendEmailVerification(user.getEmail(), user.getFirstName(), verificationLink);
         log.info("Email verification link issued for user {}", user.getId());
     }
 
@@ -50,10 +46,6 @@ public class EmailVerificationService {
         }, () -> log.info("Verification resend requested for an unknown email; ignoring."));
     }
 
-    /**
-     * Completes verification: validates the single-use, unexpired token and marks the owning
-     * account's email as verified, which unblocks login.
-     */
     @Transactional
     public void verifyEmail(String rawToken) {
         EmailVerificationToken token = emailVerificationTokenService.consume(rawToken)
