@@ -18,8 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "app.ratelimit.capacity=2",
         "app.ratelimit.refill-tokens=2",
         "app.ratelimit.refill-period=1h",
-        "app.ratelimit.idle-expiry=2h",
-        "app.ratelimit.max-keys=1000"
+        "app.ratelimit.idle-expiry=2h"
 })
 class AuthRateLimitIntegrationTest extends AbstractControllerIntegrationTest {
 

@@ -1,6 +1,11 @@
 package com.krino.backend.support;
 
+import com.redis.testcontainers.RedisContainer;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MinIOContainer;
@@ -10,9 +15,9 @@ import org.testcontainers.utility.DockerImageName;
 
 /**
  * Base for every test that boots the full application context. Provisions the production
- * stack — PostgreSQL and MinIO — via Testcontainers, so the Flyway migrations, the
- * PostgreSQL-only constraints (partial indexes, CHECK clauses) and real object storage are
- * exercised instead of an in-memory stand-in.
+ * stack: PostgreSQL, MinIO and Redis via Testcontainers, so the Flyway migrations, the
+ * PostgreSQL-only constraints (partial indexes, CHECK clauses), real object storage, and the
+ * Redis backed cache/rate limiter are exercised instead of an in-memory stand-in.
  *
  * <p>The containers are static singletons: started once per test JVM, shared by every Spring
  * context the suite creates, and removed by Testcontainers' reaper when the JVM exits.
@@ -22,16 +27,32 @@ import org.testcontainers.utility.DockerImageName;
 @SpringBootTest
 public abstract class AbstractIntegrationTest {
 
-    // postgres:16 instead of compose's postgres:18-alpine: it is the image already present
-    // locally, and nothing under test depends on the major version. MinIO matches compose's
-    // image; the quay.io mirror must be declared compatible with the Docker Hub name the
-    // Testcontainers module expects.
-    private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16");
-    private static final MinIOContainer MINIO = new MinIOContainer(
-            DockerImageName.parse("quay.io/minio/minio:latest").asCompatibleSubstituteFor("minio/minio"));
+    private static final PostgreSQLContainer POSTGRES =
+            new PostgreSQLContainer("postgres:18-alpine");
+
+    private static final MinIOContainer MINIO =
+            new MinIOContainer(DockerImageName
+            .parse("quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z")
+                    .asCompatibleSubstituteFor("minio/minio"));
+
+    private static final RedisContainer REDIS =
+            new RedisContainer("redis:8-alpine");
 
     static {
-        Startables.deepStart(POSTGRES, MINIO).join();
+        Startables.deepStart(POSTGRES, MINIO, REDIS).join();
+    }
+
+    @Autowired
+    private RedisConnectionFactory redisConnectionFactory;
+
+    // Postgres isolation comes from each test class wiping its tables; Redis (cache entries,
+    // rate-limit buckets) is the state that would otherwise survive from test to test, so
+    // flush it before every test.
+    @BeforeEach
+    void flushRedis() {
+        try (RedisConnection connection = redisConnectionFactory.getConnection()) {
+            connection.serverCommands().flushDb();
+        }
     }
 
     @DynamicPropertySource
@@ -42,5 +63,7 @@ public abstract class AbstractIntegrationTest {
         registry.add("app.storage.endpoint", MINIO::getS3URL);
         registry.add("app.storage.access-key", MINIO::getUserName);
         registry.add("app.storage.secret-key", MINIO::getPassword);
+        registry.add("spring.data.redis.host", REDIS::getRedisHost);
+        registry.add("spring.data.redis.port", REDIS::getRedisPort);
     }
 }
