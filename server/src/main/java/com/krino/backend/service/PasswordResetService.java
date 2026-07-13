@@ -4,8 +4,8 @@ import com.krino.backend.entity.PasswordResetToken;
 import com.krino.backend.entity.User;
 import com.krino.backend.exception.InvalidPasswordResetTokenException;
 import com.krino.backend.repository.UserRepository;
-import com.krino.backend.service.email.EmailService;
-import jakarta.transaction.Transactional;
+import com.krino.backend.service.email.EmailDispatcher;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +20,7 @@ public class PasswordResetService {
     private final UserRepository userRepository;
     private final PasswordResetTokenService passwordResetTokenService;
     private final RefreshTokenService refreshTokenService;
-    private final EmailService emailService;
+    private final EmailDispatcher emailDispatcher;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${app.frontend.url}")
@@ -37,7 +37,7 @@ public class PasswordResetService {
         userRepository.findByEmail(normalizedEmail).ifPresentOrElse(user -> {
             String rawToken = passwordResetTokenService.issueToken(user);
             String resetLink = frontendUrl + "/reset-password?token=" + rawToken;
-            emailService.sendPasswordReset(user.getEmail(), resetLink);
+            emailDispatcher.sendPasswordReset(user.getEmail(), resetLink);
             log.info("Password reset link issued for user {}", user.getId());
         }, () -> log.info("Password reset requested for an unknown email; ignoring."));
     }
