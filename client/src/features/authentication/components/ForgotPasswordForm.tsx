@@ -6,6 +6,7 @@ import '@/features/authentication/styles/PasswordReset.css';
 import {requestPasswordReset} from '@/features/authentication/services/AuthenticationService.ts';
 import {resolveServerError} from '@/shared/services/errors.ts';
 import LanguageSwitcher from '@/shared/components/LanguageSwitcher.tsx';
+import ThemeToggle from '@/shared/components/ThemeToggle.tsx';
 import BrandLogo from '@/shared/components/BrandLogo.tsx';
 
 const ButtonSpinner: React.FC = () => (
@@ -50,6 +51,7 @@ const ForgotPasswordForm: React.FC = () => {
     return (
         <>
             <div className="language-switcher-fixed">
+                <ThemeToggle/>
                 <LanguageSwitcher/>
             </div>
             <div className="login-page-container white-bg">

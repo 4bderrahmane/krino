@@ -8,6 +8,7 @@ import {useSuccessToast} from '@/shared/hooks/useSuccessToast';
 import {useAuth} from '@/shared/hooks/useAuth';
 import {usePermissions} from '@/shared/hooks/usePermissions';
 import useOutsideClick from '@/shared/hooks/useOutsideClick';
+import ThemeToggle from '@/shared/components/ThemeToggle.tsx';
 import {MdSettings, MdPerson, MdLogout} from "react-icons/md";
 import {logout as logoutService} from '@/features/authentication/services/AuthenticationService';
 import SettingsDropDown from "@/features/user-management/components/settings/SettingsDropDown.tsx";
@@ -113,6 +114,8 @@ const NavBar: React.FC = () => {
                 </ul>
 
                 <div className="navbar-actions">
+                    <ThemeToggle/>
+
                     <LanguageSwitcher/>
 
                     <div className="navbar-user" ref={dropdownRef}>

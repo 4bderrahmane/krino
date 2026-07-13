@@ -5,6 +5,7 @@ import type {UserRegistrationDTO} from '@/features/authentication/types/api.type
 import '@/features/authentication/styles/RegistrationForm.css';
 import {register} from "@/features/authentication/services/AuthenticationService.ts";
 import LanguageSwitcher from "@/shared/components/LanguageSwitcher.tsx";
+import ThemeToggle from '@/shared/components/ThemeToggle.tsx';
 import {useSuccessToast} from "@/shared/hooks/useSuccessToast.ts";
 import {resolveServerError} from "@/shared/services/errors.ts";
 import BrandLogo from "@/shared/components/BrandLogo.tsx";
@@ -156,6 +157,7 @@ const RegistrationForm: React.FC = () => {
     return (
         <>
             <div className="language-switcher-fixed">
+                <ThemeToggle/>
                 <LanguageSwitcher/>
             </div>
             <div className="registration-page-container">

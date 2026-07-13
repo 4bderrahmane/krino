@@ -3,8 +3,10 @@
 @tailwind utilities;
 
 /* ============================================================
-   Krino design tokens — "evergreen on paper"
+   Krino design tokens: "evergreen on paper"
    Display: Lora (serif) · UI/body: Inter (sans)
+   Accent: brass (used with restraint, editorial only)
+   Themeable: light is the default; [data-theme="dark"] overrides.
    ============================================================ */
 :root {
   color-scheme: light;
@@ -26,10 +28,17 @@
   --color-primary-tint: #e8f1ed;   /* quiet evergreen fill */
   --color-on-primary: #ffffff;
 
+  /* Accent: brass — editorial marks only (masthead rule, dateline) */
+  --color-accent: #a97b3c;         /* the rule / decorative marks */
+  --color-accent-ink: #855b26;     /* accessible brass text */
+  --color-accent-tint: #f4ecdd;
+
   /* Feedback */
   --color-danger: #b4322a;
   --color-danger-hover: #92281f;
   --color-danger-tint: #fbeeec;
+  --color-success: #1f7a3d;
+  --color-success-tint: #ecf7ef;
 
   /* Status badges (warm, tuned to paper) */
   --badge-amber-bg: #f5ead0;  --badge-amber-fg: #875a12;
@@ -67,8 +76,67 @@
   --transition: 160ms ease;
   --ring: 0 0 0 3px rgba(28, 107, 90, 0.20);
 
-  /* Shared page artwork */
+  /* Shared page artwork + its readability scrim (themeable) */
   --app-background-image: url("/background.png");
+  --app-scrim-top: rgba(252, 251, 249, 0.90);
+  --app-scrim-bottom: rgba(252, 251, 249, 0.94);
+  /* Auth pages show the illustration as a hero, so their scrim is far lighter
+     than the app's. In dark mode it flips to a dark wash (see dark block). */
+  --auth-scrim-top: rgba(252, 251, 249, 0.16);
+  --auth-scrim-bottom: rgba(252, 251, 249, 0.16);
+}
+
+/* ============================================================
+   Dark theme: "evergreen at night"
+   Warm charcoals (not blue-black) to keep the paper's warmth.
+   Primary is lightened to stay legible as text; on-primary flips
+   to near-black so filled evergreen buttons keep AA contrast.
+   ============================================================ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-paper: #141311;
+  --color-surface: #1c1b17;
+  --color-surface-sunken: #26241e;
+  --color-ink: #f2efe8;
+  --color-ink-soft: #b6b0a3;
+  --color-ink-faint: #8b8578;
+  --color-line: #322e27;
+  --color-line-strong: #453f36;
+
+  --color-primary: #57b092;
+  --color-primary-hover: #6cc0a4;
+  --color-primary-active: #82ccb4;
+  --color-primary-tint: rgba(87, 176, 146, 0.14);
+  --color-on-primary: #08130f;
+
+  --color-accent: #d3a55f;
+  --color-accent-ink: #e0b671;
+  --color-accent-tint: rgba(211, 165, 95, 0.16);
+
+  --color-danger: #e07a6e;
+  --color-danger-hover: #ea8e83;
+  --color-danger-tint: rgba(224, 122, 110, 0.15);
+  --color-success: #5cc07f;
+  --color-success-tint: rgba(92, 192, 127, 0.15);
+
+  --badge-amber-bg: #3a2e12;  --badge-amber-fg: #e7c07d;
+  --badge-blue-bg: #17273a;   --badge-blue-fg: #92b8de;
+  --badge-green-bg: #143329;  --badge-green-fg: #6fceac;
+  --badge-red-bg: #3a201c;    --badge-red-fg: #e49b90;
+  --badge-violet-bg: #2a2135; --badge-violet-fg: #c4a8d9;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.30);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.35), 0 10px 28px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.40), 0 20px 46px rgba(0, 0, 0, 0.55);
+
+  --ring: 0 0 0 3px rgba(87, 176, 146, 0.32);
+
+  --app-scrim-top: rgba(16, 15, 13, 0.90);
+  --app-scrim-bottom: rgba(16, 15, 13, 0.96);
+  --auth-scrim-top: rgba(16, 15, 13, 0.88);
+  --auth-scrim-bottom: rgba(16, 15, 13, 0.93);
 }
 
 /* ============================================================
@@ -98,6 +166,7 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition), color var(--transition);
 }
 
 #root {

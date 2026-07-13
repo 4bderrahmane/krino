@@ -12,6 +12,23 @@
       rel="stylesheet"
     />
     <title>KRINO</title>
+    <script>
+      // Resolve the theme before first paint so there's no flash of the wrong
+      // one. Kept in sync afterwards by ThemeProvider.
+      (function () {
+        try {
+          var t = localStorage.getItem("krino-theme");
+          if (t !== "light" && t !== "dark") {
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+          }
+          document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

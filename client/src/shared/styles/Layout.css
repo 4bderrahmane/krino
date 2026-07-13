@@ -10,7 +10,7 @@
     padding-top: 20px;
     background-color: var(--color-paper);
     background-image:
-        linear-gradient(rgba(252, 251, 249, 0.9), rgba(252, 251, 249, 0.94)),
+        linear-gradient(var(--app-scrim-top), var(--app-scrim-bottom)),
         var(--app-background-image);
     background-position: center top;
     background-size: cover;

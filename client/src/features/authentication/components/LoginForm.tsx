@@ -7,6 +7,7 @@ import {login, resendVerificationEmail} from "@/features/authentication/services
 import {getServerErrorCode, resolveServerError} from "@/shared/services/errors.ts";
 import {Link} from "react-router-dom";
 import LanguageSwitcher from "@/shared/components/LanguageSwitcher.tsx";
+import ThemeToggle from '@/shared/components/ThemeToggle.tsx';
 import {useAuth} from "@/shared/hooks/useAuth.ts";
 import BrandLogo from "@/shared/components/BrandLogo.tsx";
 
@@ -89,6 +90,7 @@ const LoginForm: React.FC = () => {
     return (
         <>
             <div className="language-switcher-fixed">
+                <ThemeToggle/>
                 <LanguageSwitcher/>
             </div>
             <div className="login-page-container white-bg">

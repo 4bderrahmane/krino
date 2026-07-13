@@ -6,6 +6,7 @@ import '@/features/authentication/styles/PasswordReset.css';
 import {verifyEmail, resendVerificationEmail} from '@/features/authentication/services/AuthenticationService.ts';
 import {getServerErrorCode, resolveServerError} from '@/shared/services/errors.ts';
 import LanguageSwitcher from '@/shared/components/LanguageSwitcher.tsx';
+import ThemeToggle from '@/shared/components/ThemeToggle.tsx';
 import BrandLogo from '@/shared/components/BrandLogo.tsx';
 
 // Seconds before we send the user to login after a successful verification.
@@ -170,6 +171,7 @@ const VerifyEmailPage: React.FC = () => {
     return (
         <>
             <div className="language-switcher-fixed">
+                <ThemeToggle/>
                 <LanguageSwitcher/>
             </div>
             <div className="login-page-container white-bg">

@@ -7,6 +7,9 @@
     top: 24px;
     right: 32px;
     z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .registration-page-container {
@@ -21,7 +24,7 @@
     min-height: 100vh;
     background-color: var(--color-paper);
     background-image:
-        linear-gradient(rgba(252, 251, 249, 0.16), rgba(252, 251, 249, 0.16)),
+        linear-gradient(var(--auth-scrim-top), var(--auth-scrim-bottom)),
         var(--app-background-image);
     background-position: center;
     background-size: cover;
@@ -139,7 +142,7 @@
 
 .error-message {
     background-color: var(--color-danger-tint);
-    border: 1px solid #eccac6;
+    border: 1px solid color-mix(in srgb, var(--color-danger) 32%, transparent);
     color: var(--color-danger);
     padding: 0.75rem 1rem;
     border-radius: var(--radius-md);
