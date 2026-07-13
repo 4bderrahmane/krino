@@ -22,10 +22,16 @@ import com.krino.backend.repository.JobRepository;
 import com.krino.backend.repository.SkillRepository;
 import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.Slugs;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import static com.krino.backend.configuration.CachingConfiguration.JOBS_CACHE;
+import static com.krino.backend.configuration.CachingConfiguration.JOB_LISTINGS_CACHE;
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
@@ -40,14 +46,15 @@ import java.util.function.Consumer;
 @Service
 @RequiredArgsConstructor
 public class JobService {
-    private static final String JOB_NOT_FOUND_MESSAGE = "Job with public ID '%s' not found.";
-    private static final String DEPARTMENT_NOT_FOUND_MESSAGE = "Department with name '%s' not found.";
     private final JobRepository jobRepository;
     private final DepartmentRepository departmentRepository;
     private final ApplicationRepository applicationRepository;
     private final SkillRepository skillRepository;
     private final JobMapper jobMapper;
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
     public void deleteJobByPublicId(UUID publicId) {
         Job job = findJob(publicId);
 
@@ -62,6 +69,7 @@ public class JobService {
         jobRepository.delete(job);
     }
 
+    @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)
     public JobResponseDTO createJob(JobCreateDTO dto) {
         Department department = findDepartment(dto.getDepartmentName());
 
@@ -76,7 +84,7 @@ public class JobService {
             job.updateWorkArrangement(dto.getRemotePolicy(), dto.getCity());
             job.updateTimeline(dto.getApplicationDeadline(), dto.getPlannedStartDate());
             applySalary(job, dto.getSalaryMin(), dto.getSalaryMax(), dto.getSalaryCurrency(),
-                    dto.getSalaryPeriod(), dto.getSalaryVisible(), dto.getSalaryNegotiable());
+                    dto.getSalaryPeriod(), dto.getSalaryNegotiable());
             job.replaceSkills(resolveJobSkills(dto.getSkills()));
             return jobMapper.toResponse(jobRepository.save(job));
         } catch (IllegalStateException ex) {
@@ -84,47 +92,63 @@ public class JobService {
         }
     }
 
+    @Cacheable(cacheNames = JOBS_CACHE, key = "#publicId")
     public JobResponseDTO getJobByPublicId(UUID publicId) {
         return jobMapper.toResponse(findJob(publicId));
     }
 
     // Offers are intentionally NOT paginated. The offer catalogue is small and
-    // bounded by design — we keep only the offers we currently need and delete
+    // bounded by design, I keep only the offers we currently need and delete
     // stale ones, so it never grows large enough to justify server-side paging.
-    // We therefore ignore the incoming Pageable and return the WHOLE list in a
-    // single page; the web client fetches everything and does its own filtering
-    // (e.g. by department). Larger collections (applications, interviews, ...)
+    // I therefore ignore the incoming Pageable and return the WHOLE list in a
+    // single page; the web client fetches everything and does its own filtering.
+    // Larger collections (applications, interviews, ...)
     // DO paginate on the server, so they keep a real Pageable.
+    // The Pageable is ignored (see above), so one constant key covers the whole catalogue.
+    @Cacheable(cacheNames = JOB_LISTINGS_CACHE, key = "'all'")
     public PageResponse<JobResponseDTO> getAllJobs(Pageable pageable) {
         return PageResponse.from(jobRepository.findAll(Pageable.unpaged()),
                 jobMapper::toResponse);
     }
 
-    // PUT — full replace. The FullUpdate validation group guarantees the core
-    // fields are present; every behaviour-method group is applied unconditionally.
+    @Caching(evict = {
+            @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
     public JobResponseDTO updateJob(UUID publicId, JobUpdateDTO dto) {
         return mutate(publicId, job -> applyFullUpdate(job, dto));
     }
 
-    // PATCH — partial. A group is touched only when at least one of its fields is
-    // present; unspecified fields in a touched group keep the entity's current value
-    // (a plain DTO can't tell "absent" from "explicit null", so null means "unchanged").
+    @Caching(evict = {
+            @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
     public JobResponseDTO patchJob(UUID publicId, JobUpdateDTO dto) {
         return mutate(publicId, job -> applyPatch(job, dto));
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
     public JobResponseDTO publishJob(UUID publicId) {
         return mutate(publicId, job -> job.publish(Instant.now()));
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
     public JobResponseDTO pauseJob(UUID publicId) {
         return mutate(publicId, Job::pause);
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
     public JobResponseDTO closeJob(UUID publicId, JobStatus closingStatus) {
         return mutate(publicId, job -> job.close(closingStatus, Instant.now()));
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
     public JobResponseDTO archiveJob(UUID publicId) {
         return mutate(publicId, job -> job.archive(Instant.now()));
     }
@@ -153,7 +177,7 @@ public class JobService {
         job.updateWorkArrangement(dto.getRemotePolicy(), dto.getCity());
         job.updateTimeline(dto.getApplicationDeadline(), dto.getPlannedStartDate());
         applySalary(job, dto.getSalaryMin(), dto.getSalaryMax(), dto.getSalaryCurrency(),
-                dto.getSalaryPeriod(), dto.getSalaryVisible(), dto.getSalaryNegotiable());
+                dto.getSalaryPeriod(), dto.getSalaryNegotiable());
         replaceSkillsIfPresent(job, dto.getSkills());
     }
 
@@ -191,30 +215,27 @@ public class JobService {
         }
 
         if (dto.getSalaryMin() != null || dto.getSalaryMax() != null || dto.getSalaryCurrency() != null
-                || dto.getSalaryPeriod() != null || dto.getSalaryVisible() != null
-                || dto.getSalaryNegotiable() != null) {
+                || dto.getSalaryPeriod() != null || dto.getSalaryNegotiable() != null) {
             job.updateSalary(
                     orElse(dto.getSalaryMin(), job.getSalaryMin()),
                     orElse(dto.getSalaryMax(), job.getSalaryMax()),
                     orElse(dto.getSalaryCurrency(), job.getSalaryCurrency()),
                     orElse(dto.getSalaryPeriod(), job.getSalaryPeriod()),
-                    orElse(dto.getSalaryVisible(), job.isSalaryVisible()),
                     orElse(dto.getSalaryNegotiable(), job.isSalaryNegotiable()));
         }
 
         replaceSkillsIfPresent(job, dto.getSkills());
     }
 
-    // No salary amount means no salary at all; clearSalary keeps currency/period/
-    // visibility consistent and avoids validateSalary rejecting a stray salaryVisible.
+    // No salary amount means no salary at all; clearSalary keeps currency/period
+    // consistent and avoids validateSalary rejecting a stray currency/period.
     private void applySalary(Job job, Integer salaryMin, Integer salaryMax, SalaryCurrency currency,
-                             SalaryPeriod period, Boolean visible, Boolean negotiable) {
+                             SalaryPeriod period, Boolean negotiable) {
         if (salaryMin == null && salaryMax == null) {
             job.clearSalary();
             return;
         }
-        job.updateSalary(salaryMin, salaryMax, currency, period,
-                Boolean.TRUE.equals(visible), Boolean.TRUE.equals(negotiable));
+        job.updateSalary(salaryMin, salaryMax, currency, period, Boolean.TRUE.equals(negotiable));
     }
 
     private static <T> T orElse(T value, T fallback) {
@@ -227,12 +248,12 @@ public class JobService {
 
     private Job findJob(UUID publicId) {
         return jobRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(JOB_NOT_FOUND_MESSAGE, publicId)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("Job with public ID '%s' not found.", publicId)));
     }
 
     private Department findDepartment(String name) {
         return departmentRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(DEPARTMENT_NOT_FOUND_MESSAGE, name)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("Department with name '%s' not found.", name)));
     }
 
     private ResourceConflictException notAllowed(IllegalStateException ex) {
