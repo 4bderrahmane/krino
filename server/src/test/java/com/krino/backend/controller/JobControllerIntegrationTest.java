@@ -43,7 +43,6 @@ class JobControllerIntegrationTest extends AbstractControllerIntegrationTest
                                   "salaryMax": 18000,
                                   "salaryCurrency": "MAD",
                                   "salaryPeriod": "MONTHLY",
-                                  "salaryVisible": true,
                                   "remotePolicy": "REMOTE",
                                   "experienceLevel": "MID_LEVEL",
                                   "openPositions": 2,

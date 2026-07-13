@@ -47,7 +47,7 @@ class JobMapperTest {
                 ExperienceLevel.MID_LEVEL, 3, 2);
         job.updateWorkArrangement(RemotePolicy.HYBRID, MoroccanCity.CASABLANCA);
         job.updateTimeline(deadline, null);
-        job.updateSalary(12000, 18000, SalaryCurrency.MAD, SalaryPeriod.MONTHLY, true, false);
+        job.updateSalary(12000, 18000, SalaryCurrency.MAD, SalaryPeriod.MONTHLY, false);
 
         JobResponseDTO response = jobMapper.toResponse(job);
 
@@ -58,7 +58,6 @@ class JobMapperTest {
         assertEquals(Integer.valueOf(18000), response.getSalaryMax());
         assertEquals(SalaryCurrency.MAD, response.getSalaryCurrency());
         assertEquals(SalaryPeriod.MONTHLY, response.getSalaryPeriod());
-        assertEquals(true, response.getSalaryVisible());
         assertEquals(MoroccanCity.CASABLANCA, response.getCity());
         assertEquals(RemotePolicy.HYBRID, response.getRemotePolicy());
         assertEquals(ExperienceLevel.MID_LEVEL, response.getExperienceLevel());
