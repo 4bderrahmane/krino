@@ -43,16 +43,12 @@
             <artifactId>bucket4j_jdk17-core</artifactId>
             <version>8.19.0</version>
         </dependency>
+        <!-- Redis-backed Bucket4j buckets over Lettuce; lettuce-core itself comes from
+             spring-boot-starter-data-redis. -->
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j_jdk17-caffeine</artifactId>
+            <artifactId>bucket4j_jdk17-lettuce</artifactId>
             <version>8.19.0</version>
-        </dependency>
-        <!-- bucket4j_jdk17-caffeine declares Caffeine as provided, so pull it in
-             explicitly; the version is managed by the Spring Boot parent. -->
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -156,6 +152,14 @@
             <artifactId>testcontainers-minio</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Third-party (Redis Ltd) module; its transitive org.testcontainers core is
+             aligned to 2.x by the BOM above. -->
+        <dependency>
+            <groupId>com.redis</groupId>
+            <artifactId>testcontainers-redis</artifactId>
+            <version>2.2.4</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -164,6 +168,14 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>3.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
     </dependencies>
 
