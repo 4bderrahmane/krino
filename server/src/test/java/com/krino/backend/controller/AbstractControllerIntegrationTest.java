@@ -37,8 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Base for full-stack controller tests: boots the application against Testcontainers
  * PostgreSQL + MinIO (see {@link AbstractIntegrationTest}), wires a security-aware
- * {@link MockMvc}, and provides user-creation, login and CSRF helpers. A clean database is
- * guaranteed before every test by wiping all tables in foreign-key-safe order.
+ * {@link MockMvc}, and provides user-creation, login and CSRF helpers.
  */
 abstract class AbstractControllerIntegrationTest extends AbstractIntegrationTest
 {
@@ -84,9 +83,6 @@ abstract class AbstractControllerIntegrationTest extends AbstractIntegrationTest
                 .apply(springSecurity())
                 .build();
 
-        // Delete dependents before the tables they reference (FK-safe order). deleteAllInBatch
-        // issues direct DELETE statements without loading entities, which sidesteps the
-        // bidirectional Slot<->Interview relationship tripping Hibernate's flush ordering.
         refreshTokenRepository.deleteAllInBatch();
         passwordResetTokenRepository.deleteAllInBatch();
         emailVerificationTokenRepository.deleteAllInBatch();
