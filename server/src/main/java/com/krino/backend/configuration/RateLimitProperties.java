@@ -12,20 +12,13 @@ public record RateLimitProperties(
         long capacity,
         long refillTokens,
         Duration refillPeriod,
-        Duration idleExpiry,
-        long maxKeys) {
+        Duration idleExpiry) {
 
     public RateLimitProperties {
         if (enabled) {
             if (capacity <= 0) throw new IllegalArgumentException("capacity should be > 0");
             if (refillTokens <= 0) throw new IllegalArgumentException("refill tokens should be > 0");
-
-            long periodsToFill = (long) Math.ceil((double) capacity / refillTokens);
-            Duration fullRefill = refillPeriod.multipliedBy(periodsToFill);
-
-            if (idleExpiry.compareTo(fullRefill) < 0)
-                throw new IllegalArgumentException("idleExpiry " + idleExpiry + " < full refill " + fullRefill + " — " +
-                        "a throttled client's bucket would evict and reset to full");
+            if (idleExpiry == null || idleExpiry.isNegative()) throw new IllegalArgumentException("idleExpiry should be >= 0");
         }
     }
 }
