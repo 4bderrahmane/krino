@@ -1,5 +1,6 @@
 package com.krino.backend.configuration;
 
+import com.krino.backend.configuration.properties.MailProperties;
 import com.resend.Resend;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

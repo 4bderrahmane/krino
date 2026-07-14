@@ -1,5 +1,6 @@
 package com.krino.backend.configuration;
 
+import com.krino.backend.configuration.properties.RateLimitProperties;
 import com.krino.backend.exception.ExceptionProblemDetailFactory;
 import com.krino.backend.security.Bucket4jRateLimiter;
 import com.krino.backend.security.ClientKeyResolver;

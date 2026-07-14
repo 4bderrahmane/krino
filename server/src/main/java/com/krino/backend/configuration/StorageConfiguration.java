@@ -1,5 +1,6 @@
 package com.krino.backend.configuration;
 
+import com.krino.backend.configuration.properties.StorageProperties;
 import io.minio.MinioClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

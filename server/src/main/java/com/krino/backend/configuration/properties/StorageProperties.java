@@ -1,4 +1,4 @@
-package com.krino.backend.configuration;
+package com.krino.backend.configuration.properties;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;

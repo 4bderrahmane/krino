@@ -1,4 +1,4 @@
-package com.krino.backend.configuration;
+package com.krino.backend.configuration.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
