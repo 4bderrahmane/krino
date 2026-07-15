@@ -1,6 +1,6 @@
 package com.krino.backend.security;
 
-import com.krino.backend.configuration.RateLimitProperties;
+import com.krino.backend.configuration.properties.RateLimitProperties;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConsumptionProbe;

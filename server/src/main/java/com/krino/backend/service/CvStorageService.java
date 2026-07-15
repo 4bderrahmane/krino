@@ -1,6 +1,6 @@
 package com.krino.backend.service;
 
-import com.krino.backend.configuration.StorageProperties;
+import com.krino.backend.configuration.properties.StorageProperties;
 import com.krino.backend.exception.FileStorageException;
 import com.krino.backend.utility.ErrorCode;
 import io.minio.BucketExistsArgs;

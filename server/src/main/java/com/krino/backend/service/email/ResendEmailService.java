@@ -1,6 +1,6 @@
 package com.krino.backend.service.email;
 
-import com.krino.backend.configuration.MailProperties;
+import com.krino.backend.configuration.properties.MailProperties;
 import com.krino.backend.exception.EmailDeliveryException;
 import com.resend.Resend;
 import com.resend.services.emails.model.CreateEmailResponse;
