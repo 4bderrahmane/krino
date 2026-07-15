@@ -2,7 +2,6 @@ package com.krino.backend.controller;
 
 import com.krino.backend.dto.authentication.AuthenticationResponseDTO;
 import com.krino.backend.dto.authentication.ForgotPasswordRequestDTO;
-import com.krino.backend.dto.authentication.RegistrationResponseDTO;
 import com.krino.backend.dto.authentication.ResendVerificationRequestDTO;
 import com.krino.backend.dto.authentication.ResetPasswordRequestDTO;
 import com.krino.backend.dto.authentication.VerifyEmailRequestDTO;
@@ -27,8 +26,6 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URI;
-
 @Tag(name = "Authentication")
 @RestController
 @RequestMapping("/api/auth")
@@ -39,9 +36,9 @@ public class AuthenticationController {
     private final EmailVerificationService emailVerificationService;
 
     @PostMapping(path = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<RegistrationResponseDTO> register(@Valid @RequestPart("data") UserRegistrationDTO request, @RequestPart("resume") MultipartFile resume) {
-        RegistrationResponseDTO registration = authenticationService.register(request, resume);
-        return ResponseEntity.created(URI.create("/api/users/" + registration.getUser().getId())).body(registration);
+    public ResponseEntity<Void> register(@Valid @RequestPart("data") UserRegistrationDTO request, @RequestPart("resume") MultipartFile resume) {
+        authenticationService.register(request, resume);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/csrf")
@@ -69,8 +66,6 @@ public class AuthenticationController {
         return ResponseEntity.ok(authResponse);
     }
 
-    // Always returns 204 regardless of whether the email is registered, so it can't be used to
-    // enumerate accounts. A reset link is emailed only when a matching user exists.
     @PostMapping("/forgot-password")
     public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO request) {
         passwordResetService.requestReset(request.getEmail());
@@ -89,8 +84,6 @@ public class AuthenticationController {
         return ResponseEntity.noContent().build();
     }
 
-    // Always returns 204 regardless of whether the email is registered or already verified,
-    // so it can't be used to enumerate accounts.
     @PostMapping("/resend-verification")
     public ResponseEntity<Void> resendVerification(@Valid @RequestBody ResendVerificationRequestDTO request) {
         emailVerificationService.resendVerification(request.getEmail());
