@@ -12,8 +12,7 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,8 +28,8 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CvStorageService {
-    private static final Logger LOG = LoggerFactory.getLogger(CvStorageService.class);
     private static final String PDF_CONTENT_TYPE = "application/pdf";
     private static final byte[] PDF_SIGNATURE = "%PDF-".getBytes(StandardCharsets.US_ASCII);
 
@@ -126,7 +125,7 @@ public class CvStorageService {
         try {
             deleteResume(objectKey);
         } catch (FileStorageException ex) {
-            LOG.warn("Could not delete obsolete resume object key={}", objectKey, ex);
+            log.warn("Could not delete obsolete resume object key={}", objectKey, ex);
         }
     }
 
