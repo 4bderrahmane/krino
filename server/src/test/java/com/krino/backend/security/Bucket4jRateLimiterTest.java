@@ -1,6 +1,6 @@
 package com.krino.backend.security;
 
-import com.krino.backend.configuration.RateLimitProperties;
+import com.krino.backend.configuration.properties.RateLimitProperties;
 import com.redis.testcontainers.RedisContainer;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;

@@ -1,7 +1,7 @@
 package com.krino.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.krino.backend.configuration.StorageProperties;
+import com.krino.backend.configuration.properties.StorageProperties;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.repository.EmailVerificationTokenRepository;
