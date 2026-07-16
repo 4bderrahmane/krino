@@ -71,7 +71,7 @@ public class CvStorageService {
     }
 
     /**
-     * Server-side copy of an already-stored resume (e.g. a user's base CV) into a new
+     * Server-side copy of an already-stored résumé (e.g., a user's base CV) into a new
      * application-scoped object. The source is a previously validated PDF, so no
      * re-validation is needed. Returns the new object key.
      */
