@@ -60,8 +60,7 @@ public class CvStorageService {
                     .contentType(PDF_CONTENT_TYPE)
                     .build());
         } catch (Exception ex) {
-            throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE,
-                    "Could not store the resume file.", ex);
+            throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE, "Could not store the resume file.", ex);
         }
 
         return new StoredResume(
@@ -91,8 +90,7 @@ public class CvStorageService {
                             .build())
                     .build());
         } catch (Exception ex) {
-            throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE,
-                    "Could not copy the resume file.", ex);
+            throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE, "Could not copy the resume file.", ex);
         }
         return targetObjectKey;
     }
@@ -105,8 +103,7 @@ public class CvStorageService {
                     .object(objectKey)
                     .build());
         } catch (Exception ex) {
-            throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE,
-                    "Could not read the resume file.", ex);
+            throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE, "Could not read the resume file.", ex);
         }
     }
 
@@ -118,8 +115,7 @@ public class CvStorageService {
                     .object(objectKey)
                     .build());
         } catch (Exception ex) {
-            throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE,
-                    "Could not delete the resume file.", ex);
+            throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE, "Could not delete the resume file.", ex);
         }
     }
 
@@ -141,18 +137,15 @@ public class CvStorageService {
 
         long maxSizeBytes = storageProperties.getMaxCvSize().toBytes();
         if (file.getSize() > maxSizeBytes) {
-            throw new FileStorageException(ErrorCode.PAYLOAD_TOO_LARGE,
-                    "Resume file cannot exceed " + storageProperties.getMaxCvSize() + ".");
+            throw new FileStorageException(ErrorCode.PAYLOAD_TOO_LARGE, "Resume file cannot exceed " + storageProperties.getMaxCvSize() + ".");
         }
 
         if (!PDF_CONTENT_TYPE.equalsIgnoreCase(file.getContentType())) {
-            throw new FileStorageException(ErrorCode.UNSUPPORTED_MEDIA_TYPE,
-                    "Only PDF resume files are supported.");
+            throw new FileStorageException(ErrorCode.UNSUPPORTED_MEDIA_TYPE, "Only PDF resume files are supported.");
         }
 
         if (!hasPdfSignature(file)) {
-            throw new FileStorageException(ErrorCode.UNSUPPORTED_MEDIA_TYPE,
-                    "Resume file must be a valid PDF.");
+            throw new FileStorageException(ErrorCode.UNSUPPORTED_MEDIA_TYPE, "Resume file must be a valid PDF.");
         }
     }
 
@@ -161,8 +154,7 @@ public class CvStorageService {
             byte[] signature = inputStream.readNBytes(PDF_SIGNATURE.length);
             return Arrays.equals(PDF_SIGNATURE, signature);
         } catch (IOException ex) {
-            throw new FileStorageException(ErrorCode.VALIDATION_ERROR,
-                    "Could not read the resume file.", ex);
+            throw new FileStorageException(ErrorCode.VALIDATION_ERROR, "Could not read the resume file.", ex);
         }
     }
 
@@ -185,8 +177,7 @@ public class CvStorageService {
                 }
                 bucketReady = true;
             } catch (Exception ex) {
-                throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE,
-                        "Could not prepare resume storage.", ex);
+                throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE, "Could not prepare resume storage.", ex);
             }
         }
     }
