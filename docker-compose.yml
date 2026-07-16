@@ -56,12 +56,10 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-minio-password}
       APP_STORAGE_BUCKET: ${APP_STORAGE_BUCKET:-krino-cvs}
     entrypoint: >
-      /bin/sh -c "
-      until mc alias set local http://minio:9000 \"$${MINIO_ROOT_USER}\" \"$${MINIO_ROOT_PASSWORD}\"; do
+      /bin/sh -c " until mc alias set local http://minio:9000
+      \"$${MINIO_ROOT_USER}\" \"$${MINIO_ROOT_PASSWORD}\"; do
         sleep 2;
-      done;
-      mc mb --ignore-existing local/\"$${APP_STORAGE_BUCKET}\";
-      "
+      done; mc mb --ignore-existing local/\"$${APP_STORAGE_BUCKET}\"; "
     restart: "no"
 
   server:
@@ -90,8 +88,11 @@ services:
       APP_STORAGE_BUCKET: ${APP_STORAGE_BUCKET:-krino-cvs}
       APP_STORAGE_MAX_CV_SIZE: ${APP_STORAGE_MAX_CV_SIZE:-5MB}
       APP_STORAGE_MAX_REQUEST_SIZE: ${APP_STORAGE_MAX_REQUEST_SIZE:-6MB}
+      REDIS_HOST: redis
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
