@@ -90,62 +90,62 @@ WHERE NOT EXISTS (
 INSERT INTO job_postings (
     public_id, reference_code, slug, department_id, title, description,
     application_deadline, planned_start_date,
-    salary_min, salary_max, salary_currency, salary_period, salary_visible, salary_negotiable,
+    salary_min, salary_max, salary_currency, salary_period, salary_negotiable,
     city, remote_policy, experience_level, minimum_experience_years, open_positions,
     employment_type, contract_type, status, published_at, version
 )
 SELECT
     gen_random_uuid(), v.reference_code, v.slug, d.id, v.title, v.description,
     v.application_deadline, v.planned_start_date,
-    v.salary_min, v.salary_max, v.salary_currency, v.salary_period, v.salary_visible, v.salary_negotiable,
+    v.salary_min, v.salary_max, v.salary_currency, v.salary_period, v.salary_negotiable,
     v.city, v.remote_policy, v.experience_level, v.minimum_experience_years, v.open_positions,
     v.employment_type, v.contract_type, v.status, v.published_at, 0
 FROM (VALUES
     ('JOB-2026-0001', 'senior-backend-engineer-casablanca', 'Engineering',
         'Senior Backend Engineer', 'Design and build core backend services in Java/Spring Boot.',
         NOW() + INTERVAL '30 days', DATE '2026-09-01',
-        25000, 40000, 'MAD', 'MONTHLY', TRUE, FALSE,
+        25000, 40000, 'MAD', 'MONTHLY', FALSE,
         'CASABLANCA', 'ON_SITE', 'SENIOR', 5, 2,
         'FULL_TIME', 'PERMANENT', 'OPEN', NOW() - INTERVAL '10 days'),
 
     ('JOB-2026-0002', 'frontend-engineer-react-remote', 'Engineering',
         'Frontend Engineer (React)', 'Build the candidate-facing web experience with React and TypeScript.',
         NOW() + INTERVAL '45 days', DATE '2026-08-15',
-        18000, 30000, 'MAD', 'MONTHLY', TRUE, TRUE,
+        18000, 30000, 'MAD', 'MONTHLY', TRUE,
         NULL, 'REMOTE', 'MID_LEVEL', 3, 1,
         'FULL_TIME', 'PERMANENT', 'OPEN', NOW() - INTERVAL '5 days'),
 
     ('JOB-2026-0003', 'account-executive-casablanca', 'Sales',
         'Account Executive', 'Own the full sales cycle and grow a portfolio of enterprise clients.',
         NOW() + INTERVAL '20 days', DATE '2026-08-01',
-        15000, 25000, 'MAD', 'MONTHLY', TRUE, TRUE,
+        15000, 25000, 'MAD', 'MONTHLY', TRUE,
         'CASABLANCA', 'HYBRID', 'MID_LEVEL', 2, 3,
         'FULL_TIME', 'PERMANENT', 'OPEN', NOW() - INTERVAL '3 days'),
 
     ('JOB-2026-0004', 'growth-marketing-manager-marrakech', 'Marketing',
         'Growth Marketing Manager', 'Lead acquisition and retention campaigns across all channels.',
         NOW() + INTERVAL '60 days', DATE '2026-10-01',
-        20000, 35000, 'MAD', 'MONTHLY', TRUE, FALSE,
+        20000, 35000, 'MAD', 'MONTHLY', FALSE,
         'MARRAKECH', 'HYBRID', 'MANAGER', 6, 1,
         'FULL_TIME', 'PERMANENT', 'OPEN', NOW() - INTERVAL '1 days'),
 
     ('JOB-2026-0005', 'technical-recruiter-rabat', 'Human Resources',
         'Technical Recruiter', 'Source and screen engineering talent end to end.',
         NOW() + INTERVAL '25 days', DATE '2026-08-20',
-        12000, 18000, 'MAD', 'MONTHLY', FALSE, FALSE,
+        12000, 18000, 'MAD', 'MONTHLY', FALSE,
         'RABAT', 'ON_SITE', 'JUNIOR', 1, 1,
         'PART_TIME', 'FIXED_TERM', 'OPEN', NOW() - INTERVAL '2 days'),
 
     ('JOB-2026-0006', 'devops-intern-rabat', 'Engineering',
         'DevOps Intern', 'Support CI/CD and cloud infrastructure as a six-month intern.',
         NULL, DATE '2026-07-15',
-        NULL, NULL, NULL, NULL, FALSE, FALSE,
+        NULL, NULL, NULL, NULL, FALSE,
         'RABAT', 'ON_SITE', 'INTERN', 0, 1,
         'FULL_TIME', 'INTERNSHIP', 'DRAFT', NULL)
 ) AS v(
     reference_code, slug, dept_name, title, description,
     application_deadline, planned_start_date,
-    salary_min, salary_max, salary_currency, salary_period, salary_visible, salary_negotiable,
+    salary_min, salary_max, salary_currency, salary_period, salary_negotiable,
     city, remote_policy, experience_level, minimum_experience_years, open_positions,
     employment_type, contract_type, status, published_at
 )
