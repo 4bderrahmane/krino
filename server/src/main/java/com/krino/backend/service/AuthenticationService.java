@@ -1,7 +1,6 @@
 package com.krino.backend.service;
 
 import com.krino.backend.dto.authentication.AuthenticationResponseDTO;
-import com.krino.backend.dto.authentication.RegistrationResponseDTO;
 import com.krino.backend.dto.user.UserLoginDTO;
 import com.krino.backend.dto.user.UserRegistrationDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
@@ -13,12 +12,10 @@ import com.krino.backend.exception.AccountNotApprovedException;
 import com.krino.backend.exception.EmailNotVerifiedException;
 import com.krino.backend.exception.InvalidCredentialsException;
 import com.krino.backend.exception.InvalidRefreshTokenException;
-import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.service.email.EmailVerificationService;
 import com.krino.backend.utility.CookieUtilities;
-import com.krino.backend.utility.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,14 +32,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Map;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthenticationService {
 
-    private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -54,26 +48,18 @@ public class AuthenticationService {
     private final EmailVerificationService emailVerificationService;
 
     @Transactional
-    public RegistrationResponseDTO register(@NonNull final UserRegistrationDTO request, @NonNull final MultipartFile resume) {
-        if (request.getEmail() == null || request.getEmail().trim().isEmpty())
-            throw new IllegalArgumentException("Email cannot be null or empty");
+    public void register(@NonNull final UserRegistrationDTO dto, @NonNull final MultipartFile resume) {
 
-        if (request.getPassword() == null || request.getPassword().trim().isEmpty())
-            throw new IllegalArgumentException("Password cannot be null or empty");
+        String email = normalizeEmail(dto.getEmail());
 
-        String normalizedEmail = normalizeEmail(request.getEmail());
-
-        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
-            throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, normalizedEmail),
-                    ErrorCode.DATA_CONFLICT,
-                    Map.of("field", "email", "value", normalizedEmail));
+        if (userRepository.findByEmail(email).isPresent()) {
+            log.info("Registration ignored for already-registered email");
+            return;
         }
 
-        User user = userMapper.toEntity(request, normalizedEmail, passwordEncoder.encode(request.getPassword()));
+        User user = userMapper.toEntity(dto, email, passwordEncoder.encode(dto.getPassword()));
         user.addRole(UserRole.CANDIDATE);
-
         User savedUser = userRepository.save(user);
-
         CvStorageService.StoredResume storedResume = cvStorageService.uploadUserResume(savedUser.getPublicId(), resume);
         applyResume(savedUser, storedResume);
         savedUser.setApproved(true);
@@ -81,11 +67,7 @@ public class AuthenticationService {
         // The account exists but cannot log in until the emailed verification link is used.
         emailVerificationService.sendVerificationEmail(savedUser);
 
-        UserResponseDTO userResponse = userMapper.toResponse(savedUser);
-
-        log.info("User registered successfully with email: {}", normalizedEmail);
-        return new RegistrationResponseDTO(userResponse,
-                "User registered successfully. Please check your email to verify your account.");
+        log.info("User registered successfully with email: {}", email);
     }
 
     private void applyResume(User user, CvStorageService.StoredResume resume) {
@@ -97,19 +79,18 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public AuthenticationResponseDTO login(@NonNull final UserLoginDTO request, HttpServletResponse response,
-                                           HttpServletRequest httpRequest) {
+    public AuthenticationResponseDTO login(@NonNull final UserLoginDTO dto, HttpServletResponse response, HttpServletRequest request) {
 
-        String normalizedEmail = normalizeEmail(request.getEmail());
+        String email = normalizeEmail(dto.getEmail());
+        String password = dto.getPassword();
 
-        authenticateUser(normalizedEmail, request.getPassword());
+        authenticateUser(email, password);
 
-        User user = userRepository.findByEmail(normalizedEmail)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(String.format("User not found with email: %s",
-                        normalizedEmail)));
+                        email)));
 
-        // Checked only after the password was proven correct, so this reveals nothing to
-        // someone probing foreign accounts; it lets the client offer a resend action.
+
         if (!user.isEmailVerified()) {
             log.warn("Login blocked: email not verified for user {}", user.getId());
             throw new EmailNotVerifiedException("Please verify your email address before signing in.");
@@ -119,8 +100,8 @@ public class AuthenticationService {
         UserResponseDTO userResponse = userMapper.toResponse(user);
 
         String accessToken = jwtService.generateAccessToken(userDetails);
-        String refreshToken = refreshTokenService.generateAndSaveRefreshToken(user, extractDeviceInfo(httpRequest),
-                extractIpAddress(httpRequest));
+        String refreshToken = refreshTokenService.generateAndSaveRefreshToken(user, extractDeviceInfo(request),
+                extractIpAddress(request));
 
         cookieUtilities.setCookies(accessToken, refreshToken, response);
 
@@ -140,7 +121,8 @@ public class AuthenticationService {
 
         } catch (DisabledException _) {
             log.warn("Authentication blocked: account deactivated for email: {}", email);
-            throw new AccountNotApprovedException("Your account has been deactivated. Please contact an administrator.");
+            throw new AccountNotApprovedException("Your account has been deactivated. Please contact an administrator" +
+                    ".");
         } catch (AuthenticationException _) {
             log.warn("Authentication failed for email: {}", email);
             throw new InvalidCredentialsException("Invalid email or password");

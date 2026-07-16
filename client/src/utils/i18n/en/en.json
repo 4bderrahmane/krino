@@ -72,7 +72,7 @@
     "success": {
       "loginSuccess": "Successfully logged in! Welcome back.",
       "registrationSuccess": "Account created successfully! Please log in with your new credentials.",
-      "registrationVerifyEmail": "Account created! Check your inbox to verify your email before signing in.",
+      "registrationVerifyEmail": "If that email isn't already registered, we've sent a confirmation link to it. Check your inbox to verify your address and finish signing up.",
       "logoutSuccess": "You have been logged out successfully."
     }
   },

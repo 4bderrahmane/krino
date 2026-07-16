@@ -50,7 +50,10 @@ export const login = async (credentials: UserLoginDTO): Promise<AuthResponse> =>
     }
 };
 
-export const register = async (userData: UserRegistrationDTO, resume: File): Promise<UserResponseDTO> => {
+// The API always returns 204 with no body (whether or not the email is already registered), so
+// this never reveals if an account exists and returns no user data. The caller shows a generic
+// "check your inbox" message on success.
+export const register = async (userData: UserRegistrationDTO, resume: File): Promise<void> => {
     try {
         // The register endpoint is multipart: a JSON `data` part plus the required CV PDF.
         // The `data` part must be application/json so the backend binds it to the DTO.
@@ -60,10 +63,9 @@ export const register = async (userData: UserRegistrationDTO, resume: File): Pro
 
         // Override the api instance's default application/json header so axios sets the
         // multipart/form-data content-type with the correct boundary.
-        const response = await api.post<UserResponseDTO>(AUTH_ENDPOINTS.REGISTER, formData, {
+        await api.post(AUTH_ENDPOINTS.REGISTER, formData, {
             headers: {'Content-Type': undefined},
         });
-        return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
             console.error("Registration failed:", error.response?.data || error.message);

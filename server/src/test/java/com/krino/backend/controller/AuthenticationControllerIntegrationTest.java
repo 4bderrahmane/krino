@@ -192,12 +192,11 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
         MockMultipartFile resume = new MockMultipartFile("resume", "cv.pdf", "application/pdf", PDF_BYTES);
 
         MvcResult result = mockMvc.perform(withCsrf(multipart("/api/auth/register").file(data).file(resume)))
-                .andExpect(status().isCreated())
+                .andExpect(status().isNoContent())
                 .andReturn();
 
-        assertThat(result.getResponse().getContentAsString()).contains(
-                "\"email\":\"" + CANDIDATE_EMAIL + "\"",
-                "\"resumeFilename\":\"cv.pdf\"");
+        // Empty body: the server emits no account-identifying data (and no oracle).
+        assertThat(result.getResponse().getContentAsString()).isEmpty();
         User savedUser = userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow();
         assertThat(savedUser.getRoles()).contains(UserRole.CANDIDATE);
         assertThat(savedUser.isApproved()).isTrue();
@@ -213,6 +212,19 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
         assertThat(storedObject.size()).isEqualTo(PDF_BYTES.length);
         // Delivery is async and fires after the register transaction commits, so await it.
         verify(emailService, timeout(5_000)).sendEmailVerification(eq(CANDIDATE_EMAIL), any(), any());
+    }
+
+    @Test
+    void registerWithAlreadyUsedEmailReturnsSameAcknowledgementWithoutCreatingADuplicate() throws Exception {
+        registerCandidate();
+        User original = userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow();
+
+        // A second attempt on the taken email is indistinguishable from a fresh signup: 202 Accepted.
+        registerCandidate();
+
+        // No duplicate row, and the existing account is left untouched (same id).
+        assertThat(userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow().getId()).isEqualTo(original.getId());
+        assertThat(userRepository.count()).isEqualTo(1);
     }
 
     @Test
@@ -302,7 +314,7 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
         MockMultipartFile resume = new MockMultipartFile("resume", "cv.pdf", "application/pdf", PDF_BYTES);
 
         mockMvc.perform(withCsrf(multipart("/api/auth/register").file(data).file(resume)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isNoContent());
     }
 
     /** Pulls the raw token out of the most recently emailed verification link. */

@@ -1,6 +1,5 @@
 package com.krino.backend.service;
 
-import com.krino.backend.dto.authentication.RegistrationResponseDTO;
 import com.krino.backend.dto.user.UserLoginDTO;
 import com.krino.backend.dto.user.UserRegistrationDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
@@ -88,9 +87,6 @@ class AuthenticationServiceTest
                 "Password123!",
                 "123456789"
         );
-        UserResponseDTO response = new UserResponseDTO();
-        response.setEmail("candidate@test.local");
-
         when(userRepository.findByEmail("candidate@test.local")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("Password123!")).thenReturn("encoded");
         when(userMapper.toEntity(request, "candidate@test.local", "encoded")).thenReturn(new User(
@@ -101,7 +97,6 @@ class AuthenticationServiceTest
                 "123456789"
         ));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(userMapper.toResponse(any(User.class))).thenReturn(response);
         when(cvStorageService.uploadUserResume(any(), any(MultipartFile.class))).thenReturn(
                 new CvStorageService.StoredResume("users/key/resume/cv.pdf", "cv.pdf", "application/pdf", 1024L,
                         LocalDateTime.of(2026, Month.JANUARY, 15, 10, 30)));
@@ -109,9 +104,8 @@ class AuthenticationServiceTest
         MockMultipartFile resume = new MockMultipartFile(
                 "resume", "cv.pdf", "application/pdf", "%PDF-1.7\ncontent".getBytes());
 
-        RegistrationResponseDTO registration = authenticationService.register(request, resume);
+        authenticationService.register(request, resume);
 
-        assertThat(registration.getUser().getEmail()).isEqualTo("candidate@test.local");
         verify(userRepository).findByEmail("candidate@test.local");
         verify(cvStorageService).uploadUserResume(any(), any(MultipartFile.class));
         verify(userRepository).save(org.mockito.ArgumentMatchers.argThat(user ->
@@ -122,6 +116,31 @@ class AuthenticationServiceTest
         ));
         // Registration must kick off the verification email; the account stays unverified.
         verify(emailVerificationService).sendVerificationEmail(any(User.class));
+    }
+
+    @Test
+    void registerWithAlreadyUsedEmailIsSilentlyIgnoredToAvoidAccountEnumeration()
+    {
+        UserRegistrationDTO request = new UserRegistrationDTO(
+                "Test",
+                "User",
+                "candidate@test.local",
+                "Password123!",
+                "123456789"
+        );
+        when(userRepository.findByEmail("candidate@test.local"))
+                .thenReturn(Optional.of(approvedCandidate()));
+
+        MockMultipartFile resume = new MockMultipartFile(
+                "resume", "cv.pdf", "application/pdf", "%PDF-1.7\ncontent".getBytes());
+
+        authenticationService.register(request, resume);
+
+        // Silently ignored: nothing is written and no email goes out for the existing account,
+        // and the endpoint's 204 is indistinguishable from a fresh signup.
+        verify(userRepository, never()).save(any(User.class));
+        verify(cvStorageService, never()).uploadUserResume(any(), any(MultipartFile.class));
+        verify(emailVerificationService, never()).sendVerificationEmail(any(User.class));
     }
 
     @Test

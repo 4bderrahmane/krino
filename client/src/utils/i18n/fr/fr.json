@@ -72,7 +72,7 @@
     "success": {
       "loginSuccess": "Connexion réussie ! Bon retour.",
       "registrationSuccess": "Compte créé avec succès ! Veuillez vous connecter avec vos nouveaux identifiants.",
-      "registrationVerifyEmail": "Compte créé ! Consultez votre boîte mail pour vérifier votre e-mail avant de vous connecter.",
+      "registrationVerifyEmail": "Si cette adresse e-mail n'est pas déjà enregistrée, nous y avons envoyé un lien de confirmation. Consultez votre boîte mail pour vérifier votre adresse et terminer votre inscription.",
       "logoutSuccess": "Vous avez été déconnecté avec succès."
     }
   },
