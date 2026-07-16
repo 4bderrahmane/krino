@@ -3,7 +3,7 @@ package com.krino.backend.dto.user;
 import com.krino.backend.entity.enums.UserRole;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
@@ -20,7 +20,7 @@ public class UserResponseDTO {
     private String phoneNumber;
     private Set<UserRole> roles;
     private String resumeFilename;
-    private LocalDateTime resumeUploadedAt;
+    private Instant resumeUploadedAt;
     private boolean mustChangePassword;
     private boolean approved;
     private boolean emailVerified;

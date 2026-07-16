@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @NoArgsConstructor
@@ -13,5 +13,5 @@ public class ApplicationResumeDTO {
     private String originalFilename;
     private String contentType;
     private Long sizeBytes;
-    private LocalDateTime uploadedAt;
+    private Instant uploadedAt;
 }

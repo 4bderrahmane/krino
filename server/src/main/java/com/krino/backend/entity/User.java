@@ -8,7 +8,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -59,7 +59,7 @@ public class User extends AbstractPublicEntity {
 
     private Long resumeSizeBytes;
 
-    private LocalDateTime resumeUploadedAt;
+    private Instant resumeUploadedAt;
 
     public User(String email, String password, String firstName, String lastName, String phoneNumber) {
         this.email = email;
