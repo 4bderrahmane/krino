@@ -21,6 +21,7 @@ import com.krino.backend.repository.UserRepository;
 import com.krino.backend.security.PasswordGenerator;
 import com.krino.backend.service.email.EmailDispatcher;
 import com.krino.backend.service.email.EmailVerificationService;
+import com.krino.backend.service.resume.ResumeStorageService;
 import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.SecurityUtilities;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,7 +58,7 @@ public class UserService {
     private final ApplicationRepository applicationRepository;
     private final InterviewRepository interviewRepository;
     private final SlotRepository slotRepository;
-    private final CvStorageService cvStorageService;
+    private final ResumeStorageService resumeStorageService;
     private final PasswordGenerator passwordGenerator;
 
     public List<User> getAllInterviewers() {
@@ -128,7 +129,7 @@ public class UserService {
             throw new ResourceNotFoundException("Resume file not found for this user.");
         }
 
-        InputStream inputStream = cvStorageService.downloadResume(user.getResumeObjectKey());
+        InputStream inputStream = resumeStorageService.downloadResume(user.getResumeObjectKey());
         return new ApplicationService.ResumeDownload(
                 StringUtils.hasText(user.getResumeOriginalFilename())
                         ? user.getResumeOriginalFilename()

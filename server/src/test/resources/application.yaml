@@ -52,7 +52,7 @@ app:
     password: Test-Admin-Password-123
 
   # Endpoint and credentials are overridden per run by AbstractIntegrationTest with the
-  # Testcontainers MinIO coordinates; the bucket is created on demand by CvStorageService.
+  # Testcontainers MinIO coordinates; the bucket is created on demand by ResumeStorageService.
   storage:
     endpoint: "http://localhost:9000"
     access-key: minioadmin

@@ -17,6 +17,8 @@ import com.krino.backend.mapper.ApplicationMapper;
 import com.krino.backend.repository.ApplicationRepository;
 import com.krino.backend.repository.JobRepository;
 import com.krino.backend.repository.UserRepository;
+import com.krino.backend.service.resume.ResumeStorageService;
+import com.krino.backend.service.resume.StoredResume;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,8 +28,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.Month;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -48,7 +48,7 @@ class ApplicationServiceTest {
     private JobRepository jobRepository;
     private UserRepository userRepository;
     private ApplicationMapper applicationMapper;
-    private CvStorageService cvStorageService;
+    private ResumeStorageService resumeStorageService;
     private ApplicationService applicationService;
 
     @BeforeEach
@@ -57,8 +57,8 @@ class ApplicationServiceTest {
         jobRepository = mock(JobRepository.class);
         userRepository = mock(UserRepository.class);
         applicationMapper = mock(ApplicationMapper.class);
-        cvStorageService = mock(CvStorageService.class);
-        applicationService = new ApplicationService(applicationRepository, jobRepository, userRepository, applicationMapper, cvStorageService);
+        resumeStorageService = mock(ResumeStorageService.class);
+        applicationService = new ApplicationService(applicationRepository, jobRepository, userRepository, applicationMapper, resumeStorageService);
     }
 
     @AfterEach
@@ -283,7 +283,7 @@ class ApplicationServiceTest {
 
         applicationService.deleteApplication(publicId);
 
-        verify(cvStorageService).deleteResume(application.getResumeObjectKey());
+        verify(resumeStorageService).deleteResume(application.getResumeObjectKey());
         verify(applicationRepository).delete(application);
     }
 
@@ -291,12 +291,12 @@ class ApplicationServiceTest {
     void uploadResume_found_updatesMetadataAndDeletesPreviousResume() {
         authenticateAsAdmin();
         UUID publicId = UUID.randomUUID();
-        LocalDateTime uploadedAt = LocalDateTime.of(2026, Month.JANUARY, 15, 10, 30);
+        Instant uploadedAt = Instant.parse("2026-01-15T10:30:00Z");
         MultipartFile resume = mock(MultipartFile.class);
         Application application = new Application();
         application.setPublicId(publicId);
         application.setResumeObjectKey("applications/%s/resume/old.pdf".formatted(publicId));
-        CvStorageService.StoredResume storedResume = new CvStorageService.StoredResume(
+        StoredResume storedResume = new StoredResume(
                 "applications/%s/resume/new.pdf".formatted(publicId),
                 "candidate.pdf",
                 "application/pdf",
@@ -305,7 +305,7 @@ class ApplicationServiceTest {
         ApplicationResponseDTO response = new ApplicationResponseDTO();
 
         when(applicationRepository.findByPublicId(publicId)).thenReturn(Optional.of(application));
-        when(cvStorageService.uploadResume(publicId, resume)).thenReturn(storedResume);
+        when(resumeStorageService.uploadResume(publicId, resume)).thenReturn(storedResume);
         when(applicationRepository.save(application)).thenReturn(application);
         when(applicationMapper.toResponse(application)).thenReturn(response);
 
@@ -317,7 +317,7 @@ class ApplicationServiceTest {
         assertThat(application.getResumeContentType()).isEqualTo("application/pdf");
         assertThat(application.getResumeSizeBytes()).isEqualTo(1024L);
         assertThat(application.getResumeUploadedAt()).isEqualTo(uploadedAt);
-        verify(cvStorageService).deleteResumeBestEffort("applications/%s/resume/old.pdf".formatted(publicId));
+        verify(resumeStorageService).deleteResumeBestEffort("applications/%s/resume/old.pdf".formatted(publicId));
     }
 
     @Test
@@ -337,7 +337,7 @@ class ApplicationServiceTest {
         ApplicationResponseDTO response = new ApplicationResponseDTO();
 
         when(applicationRepository.findByPublicId(publicId)).thenReturn(Optional.of(application));
-        when(cvStorageService.copyResumeForApplication("users/base/resume/base.pdf", publicId))
+        when(resumeStorageService.copyResumeForApplication("users/base/resume/base.pdf", publicId))
                 .thenReturn("applications/%s/resume/copied.pdf".formatted(publicId));
         when(applicationRepository.save(application)).thenReturn(application);
         when(applicationMapper.toResponse(application)).thenReturn(response);
@@ -362,7 +362,7 @@ class ApplicationServiceTest {
 
         assertThatThrownBy(() -> applicationService.applyBaseResume(publicId))
                 .isInstanceOf(ResourceConflictException.class);
-        verify(cvStorageService, never()).copyResumeForApplication(any(), any());
+        verify(resumeStorageService, never()).copyResumeForApplication(any(), any());
     }
 
     @Test

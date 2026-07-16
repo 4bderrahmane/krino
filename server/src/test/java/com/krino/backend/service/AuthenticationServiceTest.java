@@ -10,10 +10,14 @@ import com.krino.backend.exception.InvalidRefreshTokenException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.service.email.EmailVerificationService;
+import com.krino.backend.service.resume.RegistrationResumeStoredEvent;
+import com.krino.backend.service.resume.ResumeStorageService;
+import com.krino.backend.service.resume.StoredResume;
 import com.krino.backend.utility.CookieUtilities;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
@@ -23,8 +27,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
-import java.time.Month;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -47,8 +50,9 @@ class AuthenticationServiceTest
     private AuthenticationManager authenticationManager;
     private UserMapper userMapper;
     private CookieUtilities cookieUtilities;
-    private CvStorageService cvStorageService;
+    private ResumeStorageService resumeStorageService;
     private EmailVerificationService emailVerificationService;
+    private ApplicationEventPublisher eventPublisher;
     private AuthenticationService authenticationService;
 
     @BeforeEach
@@ -61,8 +65,9 @@ class AuthenticationServiceTest
         authenticationManager = mock(AuthenticationManager.class);
         userMapper = mock(UserMapper.class);
         cookieUtilities = mock(CookieUtilities.class);
-        cvStorageService = mock(CvStorageService.class);
+        resumeStorageService = mock(ResumeStorageService.class);
         emailVerificationService = mock(EmailVerificationService.class);
+        eventPublisher = mock(ApplicationEventPublisher.class);
 
         authenticationService = new AuthenticationService(
                 userRepository,
@@ -72,8 +77,9 @@ class AuthenticationServiceTest
                 authenticationManager,
                 userMapper,
                 cookieUtilities,
-                cvStorageService,
-                emailVerificationService
+                resumeStorageService,
+                emailVerificationService,
+                eventPublisher
         );
     }
 
@@ -97,9 +103,9 @@ class AuthenticationServiceTest
                 "123456789"
         ));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(cvStorageService.uploadUserResume(any(), any(MultipartFile.class))).thenReturn(
-                new CvStorageService.StoredResume("users/key/resume/cv.pdf", "cv.pdf", "application/pdf", 1024L,
-                        LocalDateTime.of(2026, Month.JANUARY, 15, 10, 30)));
+        when(resumeStorageService.uploadUserResume(any(), any(MultipartFile.class))).thenReturn(
+                new StoredResume("users/key/resume/cv.pdf", "cv.pdf", "application/pdf", 1024L,
+                        Instant.parse("2026-01-15T10:30:00Z")));
 
         MockMultipartFile resume = new MockMultipartFile(
                 "resume", "cv.pdf", "application/pdf", "%PDF-1.7\ncontent".getBytes());
@@ -107,7 +113,8 @@ class AuthenticationServiceTest
         authenticationService.register(request, resume);
 
         verify(userRepository).findByEmail("candidate@test.local");
-        verify(cvStorageService).uploadUserResume(any(), any(MultipartFile.class));
+        verify(resumeStorageService).uploadUserResume(any(), any(MultipartFile.class));
+        verify(eventPublisher).publishEvent(new RegistrationResumeStoredEvent("users/key/resume/cv.pdf"));
         verify(userRepository).save(org.mockito.ArgumentMatchers.argThat(user ->
                 user.getEmail().equals("candidate@test.local")
                         && user.getFirstName().equals("Test")
@@ -139,7 +146,8 @@ class AuthenticationServiceTest
         // Silently ignored: nothing is written and no email goes out for the existing account,
         // and the endpoint's 204 is indistinguishable from a fresh signup.
         verify(userRepository, never()).save(any(User.class));
-        verify(cvStorageService, never()).uploadUserResume(any(), any(MultipartFile.class));
+        verify(resumeStorageService, never()).uploadUserResume(any(), any(MultipartFile.class));
+        verify(eventPublisher, never()).publishEvent(any(RegistrationResumeStoredEvent.class));
         verify(emailVerificationService, never()).sendVerificationEmail(any(User.class));
     }
 

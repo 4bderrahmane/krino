@@ -13,8 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
-import java.time.Month;
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,7 +76,7 @@ class ApplicationMapperTest
     {
         UUID applicationId = UUID.randomUUID();
         UUID jobId = UUID.randomUUID();
-        LocalDateTime uploadedAt = LocalDateTime.of(2026, Month.JANUARY, 15, 10, 30);
+        Instant uploadedAt = Instant.parse("2026-01-15T10:30:00Z");
         Job job = TestJobs.withPublicId(TestJobs.draft("Backend Engineer"), jobId);
         Application application = new Application();
         application.setPublicId(applicationId);

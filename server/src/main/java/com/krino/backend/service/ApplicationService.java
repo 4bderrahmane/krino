@@ -15,6 +15,8 @@ import com.krino.backend.mapper.ApplicationMapper;
 import com.krino.backend.repository.ApplicationRepository;
 import com.krino.backend.repository.JobRepository;
 import com.krino.backend.repository.UserRepository;
+import com.krino.backend.service.resume.ResumeStorageService;
+import com.krino.backend.service.resume.StoredResume;
 import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.SecurityUtilities;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.UUID;
 
@@ -47,7 +47,7 @@ public class ApplicationService {
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
     private final ApplicationMapper applicationMapper;
-    private final CvStorageService cvStorageService;
+    private final ResumeStorageService resumeStorageService;
 
     public ApplicationResponseDTO createApplication(ApplicationCreateDTO applicationCreateDTO) {
         Job job = resolveJob(applicationCreateDTO.getJobId());
@@ -144,7 +144,7 @@ public class ApplicationService {
                         publicId));
         requireApplicationOwnerOrStaff(application);
         if (StringUtils.hasText(application.getResumeObjectKey())) {
-            cvStorageService.deleteResume(application.getResumeObjectKey());
+            resumeStorageService.deleteResume(application.getResumeObjectKey());
         }
         applicationRepository.delete(application);
     }
@@ -154,12 +154,12 @@ public class ApplicationService {
         requireApplicationOwnerOrStaff(application);
 
         String previousObjectKey = application.getResumeObjectKey();
-        CvStorageService.StoredResume storedResume = cvStorageService.uploadResume(application.getPublicId(), resume);
+        StoredResume storedResume = resumeStorageService.uploadResume(application.getPublicId(), resume);
         applyResumeMetadata(application, storedResume);
 
         Application savedApplication = applicationRepository.save(application);
         if (StringUtils.hasText(previousObjectKey) && !previousObjectKey.equals(storedResume.objectKey())) {
-            cvStorageService.deleteResumeBestEffort(previousObjectKey);
+            resumeStorageService.deleteResumeBestEffort(previousObjectKey);
         }
         return applicationMapper.toResponse(savedApplication);
     }
@@ -181,10 +181,10 @@ public class ApplicationService {
         }
 
         String previousObjectKey = application.getResumeObjectKey();
-        String copiedObjectKey = cvStorageService.copyResumeForApplication(candidate.getResumeObjectKey(),
+        String copiedObjectKey = resumeStorageService.copyResumeForApplication(candidate.getResumeObjectKey(),
                 application.getPublicId());
 
-        CvStorageService.StoredResume storedResume = new CvStorageService.StoredResume(
+        StoredResume storedResume = new StoredResume(
                 copiedObjectKey,
                 StringUtils.hasText(candidate.getResumeOriginalFilename())
                         ? candidate.getResumeOriginalFilename()
@@ -193,12 +193,12 @@ public class ApplicationService {
                         ? candidate.getResumeContentType()
                         : PDF_CONTENT_TYPE,
                 candidate.getResumeSizeBytes(),
-                LocalDateTime.now(ZoneOffset.UTC));
+                Instant.now());
         applyResumeMetadata(application, storedResume);
 
         Application savedApplication = applicationRepository.save(application);
         if (StringUtils.hasText(previousObjectKey) && !previousObjectKey.equals(copiedObjectKey)) {
-            cvStorageService.deleteResumeBestEffort(previousObjectKey);
+            resumeStorageService.deleteResumeBestEffort(previousObjectKey);
         }
         return applicationMapper.toResponse(savedApplication);
     }
@@ -210,7 +210,7 @@ public class ApplicationService {
             throw new ResourceNotFoundException("Resume file not found for this application.");
         }
 
-        InputStream inputStream = cvStorageService.downloadResume(application.getResumeObjectKey());
+        InputStream inputStream = resumeStorageService.downloadResume(application.getResumeObjectKey());
         return new ResumeDownload(
                 StringUtils.hasText(application.getResumeOriginalFilename())
                         ? application.getResumeOriginalFilename()
@@ -229,7 +229,7 @@ public class ApplicationService {
             return;
         }
 
-        cvStorageService.deleteResume(application.getResumeObjectKey());
+        resumeStorageService.deleteResume(application.getResumeObjectKey());
         clearResumeMetadata(application);
         applicationRepository.save(application);
     }
@@ -240,7 +240,7 @@ public class ApplicationService {
                         publicId));
     }
 
-    private void applyResumeMetadata(Application application, CvStorageService.StoredResume storedResume) {
+    private void applyResumeMetadata(Application application, StoredResume storedResume) {
         application.setResumeObjectKey(storedResume.objectKey());
         application.setResumeOriginalFilename(storedResume.originalFilename());
         application.setResumeContentType(storedResume.contentType());
