@@ -15,13 +15,11 @@ import com.krino.backend.exception.InvalidRefreshTokenException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.service.email.EmailVerificationService;
-import com.krino.backend.service.resume.RegistrationResumeStoredEvent;
 import com.krino.backend.service.resume.ResumeStorageService;
 import com.krino.backend.service.resume.StoredResume;
 import com.krino.backend.utility.CookieUtilities;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +48,6 @@ public class AuthenticationService {
     private final CookieUtilities cookieUtilities;
     private final ResumeStorageService resumeStorageService;
     private final EmailVerificationService emailVerificationService;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void register(@NonNull final UserRegistrationDTO dto, @NonNull final MultipartFile resume) {
@@ -66,7 +63,6 @@ public class AuthenticationService {
         user.addRole(UserRole.CANDIDATE);
         User savedUser = userRepository.save(user);
         StoredResume storedResume = resumeStorageService.uploadUserResume(savedUser.getPublicId(), resume);
-        eventPublisher.publishEvent(new RegistrationResumeStoredEvent(storedResume.objectKey()));
         applyResume(savedUser, storedResume);
         savedUser.setApproved(true);
 

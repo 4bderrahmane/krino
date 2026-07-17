@@ -13,6 +13,7 @@ import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +37,7 @@ public class ResumeStorageService {
     private final MinioClient minioClient;
     private final StorageProperties storageProperties;
     private final Clock clock;
+    private final ApplicationEventPublisher eventPublisher;
 
     private volatile boolean bucketReady;
 
@@ -62,12 +64,14 @@ public class ResumeStorageService {
             throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE, "Could not store the resume file.", ex);
         }
 
-        return new StoredResume(
+        StoredResume storedResume = new StoredResume(
                 objectKey,
                 normalizeOriginalFilename(file.getOriginalFilename()),
                 PDF_CONTENT_TYPE,
                 file.getSize(),
                 Instant.now(clock));
+        eventPublisher.publishEvent(new ResumeStoredEvent(objectKey));
+        return storedResume;
     }
 
     /**
@@ -91,6 +95,7 @@ public class ResumeStorageService {
         } catch (Exception ex) {
             throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE, "Could not copy the resume file.", ex);
         }
+        eventPublisher.publishEvent(new ResumeStoredEvent(targetObjectKey));
         return targetObjectKey;
     }
 
@@ -116,6 +121,12 @@ public class ResumeStorageService {
         } catch (Exception ex) {
             throw new FileStorageException(ErrorCode.EXTERNAL_SERVICE_FAILURE, "Could not delete the resume file.", ex);
         }
+    }
+
+    /** Executes immediately when called outside a transaction. */
+    public void deleteResumeAfterCommit(String objectKey) {
+        requireObjectKey(objectKey);
+        eventPublisher.publishEvent(new ResumeDeletionRequestedEvent(objectKey));
     }
 
     public void deleteResumeBestEffort(String objectKey) {

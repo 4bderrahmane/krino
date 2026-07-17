@@ -10,14 +10,12 @@ import com.krino.backend.exception.InvalidRefreshTokenException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.service.email.EmailVerificationService;
-import com.krino.backend.service.resume.RegistrationResumeStoredEvent;
 import com.krino.backend.service.resume.ResumeStorageService;
 import com.krino.backend.service.resume.StoredResume;
 import com.krino.backend.utility.CookieUtilities;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
@@ -52,7 +50,6 @@ class AuthenticationServiceTest
     private CookieUtilities cookieUtilities;
     private ResumeStorageService resumeStorageService;
     private EmailVerificationService emailVerificationService;
-    private ApplicationEventPublisher eventPublisher;
     private AuthenticationService authenticationService;
 
     @BeforeEach
@@ -67,7 +64,6 @@ class AuthenticationServiceTest
         cookieUtilities = mock(CookieUtilities.class);
         resumeStorageService = mock(ResumeStorageService.class);
         emailVerificationService = mock(EmailVerificationService.class);
-        eventPublisher = mock(ApplicationEventPublisher.class);
 
         authenticationService = new AuthenticationService(
                 userRepository,
@@ -78,8 +74,7 @@ class AuthenticationServiceTest
                 userMapper,
                 cookieUtilities,
                 resumeStorageService,
-                emailVerificationService,
-                eventPublisher
+                emailVerificationService
         );
     }
 
@@ -114,7 +109,6 @@ class AuthenticationServiceTest
 
         verify(userRepository).findByEmail("candidate@test.local");
         verify(resumeStorageService).uploadUserResume(any(), any(MultipartFile.class));
-        verify(eventPublisher).publishEvent(new RegistrationResumeStoredEvent("users/key/resume/cv.pdf"));
         verify(userRepository).save(org.mockito.ArgumentMatchers.argThat(user ->
                 user.getEmail().equals("candidate@test.local")
                         && user.getFirstName().equals("Test")
@@ -147,7 +141,6 @@ class AuthenticationServiceTest
         // and the endpoint's 204 is indistinguishable from a fresh signup.
         verify(userRepository, never()).save(any(User.class));
         verify(resumeStorageService, never()).uploadUserResume(any(), any(MultipartFile.class));
-        verify(eventPublisher, never()).publishEvent(any(RegistrationResumeStoredEvent.class));
         verify(emailVerificationService, never()).sendVerificationEmail(any(User.class));
     }
 

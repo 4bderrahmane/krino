@@ -24,13 +24,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @RequiredArgsConstructor
-class RegistrationResumeRollbackIntegrationTest extends AbstractIntegrationTest {
+class ResumeStorageTransactionIntegrationTest extends AbstractIntegrationTest {
 
     private final AuthenticationService authenticationService;
     private final UserRepository userRepository;
     private final PlatformTransactionManager transactionManager;
     private final MinioClient minioClient;
     private final StorageProperties storageProperties;
+    private final ResumeStorageService resumeStorageService;
 
     @Test
     void registrationRollbackDeletesUploadedResume() {
@@ -63,5 +64,41 @@ class RegistrationResumeRollbackIntegrationTest extends AbstractIntegrationTest 
                 .isInstanceOf(ErrorResponseException.class)
                 .satisfies(exception -> assertThat(((ErrorResponseException) exception)
                         .errorResponse().code()).isEqualTo("NoSuchKey"));
+    }
+
+    @Test
+    void deletionRunsOnlyAfterSuccessfulCommit() throws Exception {
+        StoredResume storedResume = resumeStorageService.uploadResume(
+                UUID.randomUUID(),
+                resume());
+
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            resumeStorageService.deleteResumeAfterCommit(storedResume.objectKey());
+            status.setRollbackOnly();
+        });
+
+        assertThat(minioClient.statObject(StatObjectArgs.builder()
+                .bucket(storageProperties.getBucket())
+                .object(storedResume.objectKey())
+                .build()).size()).isEqualTo(storedResume.sizeBytes());
+
+        new TransactionTemplate(transactionManager).executeWithoutResult(_ ->
+                resumeStorageService.deleteResumeAfterCommit(storedResume.objectKey()));
+
+        assertThatThrownBy(() -> minioClient.statObject(StatObjectArgs.builder()
+                .bucket(storageProperties.getBucket())
+                .object(storedResume.objectKey())
+                .build()))
+                .isInstanceOf(ErrorResponseException.class)
+                .satisfies(exception -> assertThat(((ErrorResponseException) exception)
+                        .errorResponse().code()).isEqualTo("NoSuchKey"));
+    }
+
+    private MockMultipartFile resume() {
+        return new MockMultipartFile(
+                "resume",
+                "cv.pdf",
+                "application/pdf",
+                "%PDF-1.7\ncontent".getBytes(StandardCharsets.US_ASCII));
     }
 }

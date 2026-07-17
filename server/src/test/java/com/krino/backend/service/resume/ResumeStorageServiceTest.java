@@ -4,10 +4,12 @@ import com.krino.backend.configuration.properties.StorageProperties;
 import com.krino.backend.exception.FileStorageException;
 import com.krino.backend.utility.ErrorCode;
 import io.minio.BucketExistsArgs;
+import io.minio.CopyObjectArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +25,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class ResumeStorageServiceTest {
@@ -31,7 +34,9 @@ class ResumeStorageServiceTest {
     @Test
     void uploadResume_validPdfUploadsToMinioAndReturnsMetadata() throws Exception {
         MinioClient minioClient = mock(MinioClient.class);
-        ResumeStorageService storageService = new ResumeStorageService(minioClient, storageProperties(), FIXED_CLOCK);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        ResumeStorageService storageService =
+                new ResumeStorageService(minioClient, storageProperties(), FIXED_CLOCK, eventPublisher);
         UUID applicationId = UUID.randomUUID();
         MockMultipartFile file = new MockMultipartFile(
                 "resume",
@@ -51,12 +56,15 @@ class ResumeStorageServiceTest {
         assertThat(storedResume.uploadedAt()).isEqualTo(FIXED_CLOCK.instant());
         verify(minioClient).makeBucket(any(MakeBucketArgs.class));
         verify(minioClient).putObject(any(PutObjectArgs.class));
+        verify(eventPublisher).publishEvent(new ResumeStoredEvent(storedResume.objectKey()));
     }
 
     @Test
     void uploadUserResume_validPdfUsesUserScopedKey() throws Exception {
         MinioClient minioClient = mock(MinioClient.class);
-        ResumeStorageService storageService = new ResumeStorageService(minioClient, storageProperties(), FIXED_CLOCK);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        ResumeStorageService storageService =
+                new ResumeStorageService(minioClient, storageProperties(), FIXED_CLOCK, eventPublisher);
         UUID userId = UUID.randomUUID();
         MockMultipartFile file = new MockMultipartFile(
                 "resume",
@@ -72,6 +80,37 @@ class ResumeStorageServiceTest {
         assertThat(storedResume.objectKey()).endsWith(".pdf");
         assertThat(storedResume.originalFilename()).isEqualTo("base-cv.pdf");
         verify(minioClient).putObject(any(PutObjectArgs.class));
+        verify(eventPublisher).publishEvent(new ResumeStoredEvent(storedResume.objectKey()));
+    }
+
+    @Test
+    void copyResumeForApplication_publishesStoredEventForRollbackCleanup() throws Exception {
+        MinioClient minioClient = mock(MinioClient.class);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        ResumeStorageService storageService =
+                new ResumeStorageService(minioClient, storageProperties(), FIXED_CLOCK, eventPublisher);
+        UUID applicationId = UUID.randomUUID();
+        when(minioClient.bucketExists(any(BucketExistsArgs.class))).thenReturn(true);
+
+        String objectKey = storageService.copyResumeForApplication("users/user-id/resume/base.pdf", applicationId);
+
+        assertThat(objectKey).startsWith("applications/" + applicationId + "/resume/");
+        verify(minioClient).copyObject(any(CopyObjectArgs.class));
+        verify(eventPublisher).publishEvent(new ResumeStoredEvent(objectKey));
+    }
+
+    @Test
+    void deleteResumeAfterCommit_publishesDeletionRequestWithoutDeletingImmediately() {
+        MinioClient minioClient = mock(MinioClient.class);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        ResumeStorageService storageService =
+                new ResumeStorageService(minioClient, storageProperties(), FIXED_CLOCK, eventPublisher);
+        String objectKey = "applications/application-id/resume/cv.pdf";
+
+        storageService.deleteResumeAfterCommit(objectKey);
+
+        verify(eventPublisher).publishEvent(new ResumeDeletionRequestedEvent(objectKey));
+        verifyNoInteractions(minioClient);
     }
 
     @Test
@@ -115,7 +154,11 @@ class ResumeStorageServiceTest {
     }
 
     private ResumeStorageService storageService() {
-        return new ResumeStorageService(mock(MinioClient.class), storageProperties(), FIXED_CLOCK);
+        return new ResumeStorageService(
+                mock(MinioClient.class),
+                storageProperties(),
+                FIXED_CLOCK,
+                mock(ApplicationEventPublisher.class));
     }
 
     private StorageProperties storageProperties() {

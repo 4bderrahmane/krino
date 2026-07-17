@@ -7,12 +7,17 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
-public class RegistrationResumeRollbackListener {
+public class ResumeStorageEventListener {
 
     private final ResumeStorageService resumeStorageService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
-    public void onRegistrationResumeStored(RegistrationResumeStoredEvent event) {
+    public void deleteRolledBackResume(ResumeStoredEvent event) {
+        resumeStorageService.deleteResumeBestEffort(event.objectKey());
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void deleteCommittedResume(ResumeDeletionRequestedEvent event) {
         resumeStorageService.deleteResumeBestEffort(event.objectKey());
     }
 }
