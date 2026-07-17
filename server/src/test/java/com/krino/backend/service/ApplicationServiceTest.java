@@ -274,7 +274,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void deleteApplication_found_deletesApplication() {
+    void deleteApplication_foundDeletesApplicationAndSchedulesResumeDeletion() {
         authenticateAsAdmin();
         UUID publicId = UUID.randomUUID();
         Application application = new Application();
@@ -283,12 +283,12 @@ class ApplicationServiceTest {
 
         applicationService.deleteApplication(publicId);
 
-        verify(resumeStorageService).deleteResume(application.getResumeObjectKey());
+        verify(resumeStorageService).deleteResumeAfterCommit(application.getResumeObjectKey());
         verify(applicationRepository).delete(application);
     }
 
     @Test
-    void uploadResume_found_updatesMetadataAndDeletesPreviousResume() {
+    void uploadResume_foundUpdatesMetadataAndSchedulesPreviousResumeDeletion() {
         authenticateAsAdmin();
         UUID publicId = UUID.randomUUID();
         Instant uploadedAt = Instant.parse("2026-01-15T10:30:00Z");
@@ -317,7 +317,7 @@ class ApplicationServiceTest {
         assertThat(application.getResumeContentType()).isEqualTo("application/pdf");
         assertThat(application.getResumeSizeBytes()).isEqualTo(1024L);
         assertThat(application.getResumeUploadedAt()).isEqualTo(uploadedAt);
-        verify(resumeStorageService).deleteResumeBestEffort("applications/%s/resume/old.pdf".formatted(publicId));
+        verify(resumeStorageService).deleteResumeAfterCommit("applications/%s/resume/old.pdf".formatted(publicId));
     }
 
     @Test
@@ -334,6 +334,7 @@ class ApplicationServiceTest {
         Application application = new Application();
         application.setPublicId(publicId);
         application.setCandidate(candidate);
+        application.setResumeObjectKey("applications/%s/resume/old.pdf".formatted(publicId));
         ApplicationResponseDTO response = new ApplicationResponseDTO();
 
         when(applicationRepository.findByPublicId(publicId)).thenReturn(Optional.of(application));
@@ -348,6 +349,8 @@ class ApplicationServiceTest {
         assertThat(application.getResumeObjectKey()).isEqualTo("applications/%s/resume/copied.pdf".formatted(publicId));
         assertThat(application.getResumeOriginalFilename()).isEqualTo("base-cv.pdf");
         assertThat(application.getResumeSizeBytes()).isEqualTo(2048L);
+        verify(resumeStorageService)
+                .deleteResumeAfterCommit("applications/%s/resume/old.pdf".formatted(publicId));
     }
 
     @Test
@@ -375,6 +378,31 @@ class ApplicationServiceTest {
 
         assertThatThrownBy(() -> applicationService.downloadResume(publicId))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void deleteResume_clearsMetadataAndSchedulesObjectDeletion() {
+        authenticateAsAdmin();
+        UUID publicId = UUID.randomUUID();
+        String objectKey = "applications/%s/resume/cv.pdf".formatted(publicId);
+        Application application = new Application();
+        application.setResumeObjectKey(objectKey);
+        application.setResumeOriginalFilename("cv.pdf");
+        application.setResumeContentType("application/pdf");
+        application.setResumeSizeBytes(1024L);
+        application.setResumeUploadedAt(Instant.parse("2026-01-15T10:30:00Z"));
+        when(applicationRepository.findByPublicId(publicId)).thenReturn(Optional.of(application));
+
+        applicationService.deleteResume(publicId);
+
+        assertThat(application.getResumeObjectKey()).isNull();
+        assertThat(application.getResumeOriginalFilename()).isNull();
+        assertThat(application.getResumeContentType()).isNull();
+        assertThat(application.getResumeSizeBytes()).isNull();
+        assertThat(application.getResumeUploadedAt()).isNull();
+        verify(applicationRepository).save(application);
+        verify(resumeStorageService).deleteResumeAfterCommit(objectKey);
+        verify(resumeStorageService, never()).deleteResume(objectKey);
     }
 
     private Job job(UUID publicId, JobStatus status, Instant deadline) {

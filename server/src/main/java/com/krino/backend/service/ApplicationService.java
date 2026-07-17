@@ -144,7 +144,7 @@ public class ApplicationService {
                         publicId));
         requireApplicationOwnerOrStaff(application);
         if (StringUtils.hasText(application.getResumeObjectKey())) {
-            resumeStorageService.deleteResume(application.getResumeObjectKey());
+            resumeStorageService.deleteResumeAfterCommit(application.getResumeObjectKey());
         }
         applicationRepository.delete(application);
     }
@@ -159,7 +159,7 @@ public class ApplicationService {
 
         Application savedApplication = applicationRepository.save(application);
         if (StringUtils.hasText(previousObjectKey) && !previousObjectKey.equals(storedResume.objectKey())) {
-            resumeStorageService.deleteResumeBestEffort(previousObjectKey);
+            resumeStorageService.deleteResumeAfterCommit(previousObjectKey);
         }
         return applicationMapper.toResponse(savedApplication);
     }
@@ -198,7 +198,7 @@ public class ApplicationService {
 
         Application savedApplication = applicationRepository.save(application);
         if (StringUtils.hasText(previousObjectKey) && !previousObjectKey.equals(copiedObjectKey)) {
-            resumeStorageService.deleteResumeBestEffort(previousObjectKey);
+            resumeStorageService.deleteResumeAfterCommit(previousObjectKey);
         }
         return applicationMapper.toResponse(savedApplication);
     }
@@ -229,9 +229,10 @@ public class ApplicationService {
             return;
         }
 
-        resumeStorageService.deleteResume(application.getResumeObjectKey());
+        String objectKey = application.getResumeObjectKey();
         clearResumeMetadata(application);
         applicationRepository.save(application);
+        resumeStorageService.deleteResumeAfterCommit(objectKey);
     }
 
     private Application findApplication(UUID publicId) {
