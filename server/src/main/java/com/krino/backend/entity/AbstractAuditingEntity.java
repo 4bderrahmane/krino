@@ -49,7 +49,7 @@ public abstract class AbstractAuditingEntity implements Serializable {
     private Long id;
 
     @CreatedBy
-    @Column(name = "created_by", nullable = false, length = 50, updatable = false)
+    @Column(name = "created_by", nullable = false, length = 100, updatable = false)
     @ColumnDefault("'system'")
     private String createdBy;
 
@@ -59,7 +59,7 @@ public abstract class AbstractAuditingEntity implements Serializable {
     private Instant createdDate;
 
     @LastModifiedBy
-    @Column(name = "last_modified_by", nullable = false, length = 50)
+    @Column(name = "last_modified_by", nullable = false, length = 100)
     @ColumnDefault("'system'")
     private String lastModifiedBy;
 
