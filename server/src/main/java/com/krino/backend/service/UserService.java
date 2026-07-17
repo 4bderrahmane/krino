@@ -252,6 +252,9 @@ public class UserService {
 
         refreshTokenRepository.deleteAllByUserId(userToDelete.getId());
         userRepository.delete(userToDelete);
+        if (StringUtils.hasText(userToDelete.getResumeObjectKey())) {
+            resumeStorageService.deleteResumeAfterCommit(userToDelete.getResumeObjectKey());
+        }
     }
 
     public void setApproval(UUID publicId, boolean approved) {

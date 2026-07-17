@@ -10,12 +10,17 @@ import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.exception.IncorrectPasswordException;
 import com.krino.backend.exception.InvalidCredentialsException;
 import com.krino.backend.mapper.UserMapper;
+import com.krino.backend.repository.ApplicationRepository;
+import com.krino.backend.repository.InterviewRepository;
+import com.krino.backend.repository.RefreshTokenRepository;
+import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.security.PasswordGenerator;
 import java.security.SecureRandom;
 
 import com.krino.backend.service.email.EmailDispatcher;
 import com.krino.backend.service.email.EmailVerificationService;
+import com.krino.backend.service.resume.ResumeStorageService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +48,11 @@ class UserServiceTest
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
     private UserMapper userMapper;
+    private RefreshTokenRepository refreshTokenRepository;
+    private ApplicationRepository applicationRepository;
+    private InterviewRepository interviewRepository;
+    private SlotRepository slotRepository;
+    private ResumeStorageService resumeStorageService;
     private UserService userService;
     private PasswordGenerator passwordGenerator;
 
@@ -54,10 +64,16 @@ class UserServiceTest
         userRepository = mock(UserRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         userMapper = mock(UserMapper.class);
+        refreshTokenRepository = mock(RefreshTokenRepository.class);
+        applicationRepository = mock(ApplicationRepository.class);
+        interviewRepository = mock(InterviewRepository.class);
+        slotRepository = mock(SlotRepository.class);
+        resumeStorageService = mock(ResumeStorageService.class);
         // A plain SecureRandom keeps the unit test off the blocking /dev/random source.
         passwordGenerator = new PasswordGenerator(new SecureRandom());
         userService = new UserService(emailDispatcher, emailVerificationService, userRepository, passwordEncoder,
-                userMapper, null, null, null, null, null, passwordGenerator);
+                userMapper, refreshTokenRepository, applicationRepository, interviewRepository, slotRepository,
+                resumeStorageService, passwordGenerator);
     }
 
     @AfterEach
@@ -319,6 +335,26 @@ class UserServiceTest
 
         assertThat(user.isEmailVerified()).isFalse();
         verify(emailVerificationService).sendVerificationEmail(user);
+    }
+
+    @Test
+    void deleteUser_schedulesBaseResumeDeletionAfterCommit()
+    {
+        UUID publicId = UUID.randomUUID();
+        String objectKey = "users/%s/resume/cv.pdf".formatted(publicId);
+        User user = User.builder()
+                .id(42L)
+                .publicId(publicId)
+                .resumeObjectKey(objectKey)
+                .build();
+        authenticateAs(publicId, UserRole.CANDIDATE);
+        when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
+
+        userService.deleteUserByPublicId(publicId);
+
+        verify(refreshTokenRepository).deleteAllByUserId(42L);
+        verify(userRepository).delete(user);
+        verify(resumeStorageService).deleteResumeAfterCommit(objectKey);
     }
 
     private void authenticateAs(UUID publicId, UserRole role)
