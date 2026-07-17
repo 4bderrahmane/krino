@@ -46,7 +46,7 @@ class Bucket4jRateLimiterTest {
 
     private static RateLimiter limiterWithCapacity(long capacity) {
         RateLimitProperties properties = new RateLimitProperties(
-                true, capacity, capacity, Duration.ofHours(1), Duration.ofHours(2));
+                true, capacity, Duration.ofHours(1), Duration.ofHours(2));
         var proxyManager = Bucket4jLettuce.casBasedBuilder(connection)
                 .expirationAfterWrite(ExpirationAfterWriteStrategy
                         .basedOnTimeForRefillingBucketUpToMax(properties.idleExpiry()))

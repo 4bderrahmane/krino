@@ -68,13 +68,13 @@ app:
   cookies:
     secure: "${APP_COOKIES_SECURE:true}"
   # Per-IP rate limiting for the public auth endpoints (login/register/refresh), with the
-  # buckets stored in Redis. capacity = burst allowed; refill-period = time to refill a
-  # drained bucket; idle-expiry = how long a fully refilled bucket lingers before its Redis
+  # buckets stored in Redis. capacity = burst allowed; refill-period = time for a drained
+  # bucket to refill completely (capacity tokens per period, so the sustained rate equals
+  # the burst); idle-expiry = how long a fully refilled bucket lingers before its Redis
   # key expires.
   ratelimit:
     enabled: "${APP_RATE_LIMIT_ENABLED:true}"
     capacity: "${APP_RATE_LIMIT_AUTH_CAPACITY:10}"
-    refill-tokens: 100
     refill-period: "${APP_RATE_LIMIT_AUTH_REFILL_PERIOD:1m}"
     idle-expiry: 10m
   admin:

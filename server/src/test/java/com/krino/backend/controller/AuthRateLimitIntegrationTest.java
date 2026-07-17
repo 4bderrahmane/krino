@@ -16,7 +16,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = {
         "app.ratelimit.enabled=true",
         "app.ratelimit.capacity=2",
-        "app.ratelimit.refill-tokens=2",
         "app.ratelimit.refill-period=1h",
         "app.ratelimit.idle-expiry=2h"
 })

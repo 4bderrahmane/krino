@@ -30,9 +30,11 @@ public class Bucket4jRateLimiter implements RateLimiter {
         this.proxyManager = proxyManager;
         this.limit = properties.capacity();
 
+        // Refill exactly `capacity` tokens per refill-period, so a drained bucket takes the
+        // whole period to recover and the sustained rate can never exceed the burst capacity.
         Bandwidth bandwidth = Bandwidth.builder()
                 .capacity(properties.capacity())
-                .refillGreedy(properties.refillTokens(), properties.refillPeriod())
+                .refillGreedy(properties.capacity(), properties.refillPeriod())
                 .build();
         BucketConfiguration configuration = BucketConfiguration.builder().addLimit(bandwidth).build();
         this.bucketConfiguration = () -> configuration;

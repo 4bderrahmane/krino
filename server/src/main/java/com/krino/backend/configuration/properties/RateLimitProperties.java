@@ -10,14 +10,14 @@ import java.time.Duration;
 public record RateLimitProperties(
         boolean enabled,
         long capacity,
-        long refillTokens,
         Duration refillPeriod,
         Duration idleExpiry) {
 
     public RateLimitProperties {
         if (enabled) {
             if (capacity <= 0) throw new IllegalArgumentException("capacity should be > 0");
-            if (refillTokens <= 0) throw new IllegalArgumentException("refill tokens should be > 0");
+            if (refillPeriod == null || refillPeriod.isZero() || refillPeriod.isNegative())
+                throw new IllegalArgumentException("refillPeriod should be > 0");
             if (idleExpiry == null || idleExpiry.isNegative()) throw new IllegalArgumentException("idleExpiry should be >= 0");
         }
     }
