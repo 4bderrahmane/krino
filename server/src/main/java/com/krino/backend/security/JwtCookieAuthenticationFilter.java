@@ -43,6 +43,12 @@ public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
                         CustomUserDetails userDetails =
                                 customUserDetailsService.loadUserByPublicId(jwtService.getUserPublicIdFromToken(accessToken));
 
+                        if (!userDetails.isEnabled()) {
+                            log.debug("Cookie authentication rejected for disabled user: {}", userDetails.getEmail());
+                            SecurityContextHolder.clearContext();
+                            return;
+                        }
+
                         UsernamePasswordAuthenticationToken authToken =
                                 new UsernamePasswordAuthenticationToken(userDetails, null,
                                         userDetails.getAuthorities());
