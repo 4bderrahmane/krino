@@ -31,7 +31,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
         ProblemDetail problem = problemDetailFactory.buildProblemDetail(
                 ErrorCode.ACCESS_DENIED,
-                "Ta sir b7alk. You do not have permission to perform this action.",
+                "You do not have permission to perform this action.",
                 request,
                 null,
                 null
