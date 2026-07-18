@@ -17,12 +17,19 @@ updates:
       minor-and-patch:
         update-types: [minor, patch]
 
+  # Base-image and action bumps are low-risk; take each week's batch as one PR.
   - package-ecosystem: docker
     directories: [/server, /client]
     schedule:
       interval: weekly
+    groups:
+      docker-images:
+        patterns: ['*']
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
