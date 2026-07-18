@@ -71,9 +71,14 @@ public class User extends AbstractPublicEntity {
     }
 
     @ElementCollection(targetClass = UserRole.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), indexes = {
-            @Index(name = "idx_user_roles_roles", columnList = "roles")
-    })
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"),
+            uniqueConstraints = {
+                    @UniqueConstraint(name = "uk_user_roles_user_role", columnNames = {"user_id", "roles"})
+            },
+            indexes = {
+                    @Index(name = "idx_user_roles_roles", columnList = "roles")
+            })
+    @Column(name = "roles", nullable = false)
     @Enumerated(EnumType.STRING)
     private Set<UserRole> roles;
 

@@ -30,7 +30,9 @@ CREATE INDEX idx_users_pending_approval ON users (id)
 
 CREATE TABLE user_roles (
     user_id BIGINT NOT NULL,
-    roles VARCHAR(255),
+    roles VARCHAR(255) NOT NULL,
+    -- Composite PK: a user can hold each role at most once.
+    PRIMARY KEY (user_id, roles),
     CONSTRAINT fk_user_roles_user
         FOREIGN KEY (user_id) REFERENCES users (id)
 );
