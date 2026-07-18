@@ -89,7 +89,7 @@ interviewer, candidate) with per-resource ownership checks.
 
 | Threat | Vector | Control | Status |
 |---|---|---|---|
-| Secrets committed to the repo | `.env` or keys in git history | Secrets live in gitignored `.env` files with placeholder `.env.example`s; JWT and token-HMAC secrets must differ and be ≥ 32 bytes | ◐ no automated secret scanning (gitleaks) in CI yet |
+| Secrets committed to the repo | `.env` or keys in git history | Secrets live in gitignored `.env` files with placeholder `.env.example`s; JWT and token-HMAC secrets must differ and be ≥ 32 bytes; gitleaks scans the full git history in CI on every push and PR (see [`ci.yml`](.github/workflows/ci.yml)) | ✅ |
 | Insecure production deploy | Dev settings (insecure cookies, auto-DDL, default creds, log-only mail) reaching prod | Fail-fast startup validator refuses to boot on insecure prod config: secure cookies required, unsafe `ddl-auto` rejected, blank or shared secrets rejected, default MinIO credentials rejected, CORS origins validated; see [`ProductionConfigurationValidator`](server/src/main/java/com/krino/backend/configuration/ProductionConfigurationValidator.java) | ✅ |
 | Management-endpoint exposure | Actuator leaking internals | Only `/actuator/health` is exposed; everything else requires auth/is disabled; see [`SecurityConfiguration`](server/src/main/java/com/krino/backend/configuration/SecurityConfiguration.java) | ✅ |
 | API-docs exposure | Swagger UI reachable in production | springdoc/Swagger UI enabled in dev, disabled in prod unless explicitly opted in; see [`application-prod.yaml`](server/src/main/resources/application-prod.yaml) | ✅ |
@@ -102,7 +102,7 @@ interviewer, candidate) with per-resource ownership checks.
 | Race conditions | Double-booking an interview slot; concurrent token use; lost updates | Booking uniqueness enforced at the database (`UNIQUE (slot_id)` on interviews), refresh-token consumption under a pessimistic lock, `@Version` optimistic locking on entities; see [`V1__initial_schema.sql`](server/src/main/resources/db/migration/V1__initial_schema.sql) | ✅ |
 | PII exposure in logs | Emails logged at info level across auth flows | none yet | ✗ masking/hashing planned |
 | Horizontal-scaling gaps | No shared access-token denylist across replicas | Rate-limit buckets are shared via Redis (see [`RateLimitConfiguration`](server/src/main/java/com/krino/backend/configuration/RateLimitConfiguration.java)); refresh-token state lives in PostgreSQL, so rotation and revocation already hold across replicas | ◐ access-token denylist planned before scaling out; the scheduled token cleanup would also need a distributed lock (e.g. ShedLock) to avoid double runs |
-| Vulnerable dependencies / supply chain | Known CVEs in libraries or the Docker image | CI builds and tests every push | ✗ Dependabot/CodeQL/Trivy scanning planned |
+| Vulnerable dependencies / supply chain | Known CVEs in libraries or the Docker image | CI builds and tests every push; Dependabot raises weekly update PRs for Maven, npm, Docker base images and GitHub Actions (see [`dependabot.yml`](.github/dependabot.yml)); CodeQL static analysis runs on every push/PR and weekly (see [`codeql.yml`](.github/workflows/codeql.yml)) | ◐ container-image CVE scanning (Trivy or equivalent) still planned |
 
 ## Verification
 
