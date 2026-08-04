@@ -227,10 +227,14 @@ public class UserService {
         }
 
         existingUser.setPassword(passwordEncoder.encode(passwordChangeDTO.getNewPassword()));
-        // They've chosen their own password — the initial-password reminder is done.
+        // They've chosen their own password, the initial-password reminder is done.
         existingUser.setMustChangePassword(false);
 
         userRepository.save(existingUser);
+
+        // Revoke every session, including the caller's, so one stolen before the change
+        // can't outlive it. Same as a reset (see PasswordResetService.resetPassword).
+        refreshTokenRepository.revokeAllUserTokens(existingUser.getId());
     }
 
     public void deleteUserByPublicId(UUID publicId) {

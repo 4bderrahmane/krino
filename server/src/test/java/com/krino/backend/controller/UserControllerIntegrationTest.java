@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
@@ -340,5 +341,32 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
         assertThat(userRepository.findByEmail(CANDIDATE_EMAIL)).isEmpty();
         assertThat(emailVerificationTokenRepository.count()).isZero();
         assertThat(passwordResetTokenRepository.count()).isZero();
+    }
+
+    @Test
+    void changingPasswordRevokesEveryRefreshToken() throws Exception
+    {
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+
+        assertThat(refreshTokenRepository.findActiveTokensByUser(candidate.getId(), Instant.now()))
+                .as("active session before the change")
+                .isNotEmpty();
+
+        mockMvc.perform(withCsrf(put("/api/users/me/password"))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "currentPassword": "%s",
+                                  "newPassword": "BrandNewPassword123!",
+                                  "confirmNewPassword": "BrandNewPassword123!"
+                                }
+                                """.formatted(RAW_PASSWORD)))
+                .andExpect(status().isNoContent());
+
+        assertThat(refreshTokenRepository.findActiveTokensByUser(candidate.getId(), Instant.now()))
+                .as("sessions surviving the password change")
+                .isEmpty();
     }
 }
