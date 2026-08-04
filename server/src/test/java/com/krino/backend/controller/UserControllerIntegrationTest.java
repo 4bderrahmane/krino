@@ -273,4 +273,28 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
                         .cookie(accessCookie))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void userWithLongEmailCanPerformAuditedWrites() throws Exception
+    {
+        String longEmail = "a".repeat(64) + "@really-quite-long-domain-name.example.local";
+        assertThat(longEmail.length()).isGreaterThan(100);
+
+        User candidate = createUser(longEmail, true, UserRole.CANDIDATE);
+        Cookie accessCookie = loginAndGetAccessCookie(longEmail);
+
+        mockMvc.perform(withCsrf(patch("/api/users/" + candidate.getPublicId()))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName": "Updated"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        User reloaded = userRepository.findByPublicId(candidate.getPublicId()).orElseThrow();
+        assertThat(reloaded.getFirstName()).isEqualTo("Updated");
+        assertThat(reloaded.getLastModifiedBy()).isEqualTo(longEmail);
+    }
 }

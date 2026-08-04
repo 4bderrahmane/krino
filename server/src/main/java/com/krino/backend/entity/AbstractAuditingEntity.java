@@ -48,8 +48,9 @@ public abstract class AbstractAuditingEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Holds the acting user's email, so it tracks the width of users.email.
     @CreatedBy
-    @Column(name = "created_by", nullable = false, length = 100, updatable = false)
+    @Column(name = "created_by", nullable = false, length = 255, updatable = false)
     @ColumnDefault("'system'")
     private String createdBy;
 
@@ -59,7 +60,7 @@ public abstract class AbstractAuditingEntity implements Serializable {
     private Instant createdDate;
 
     @LastModifiedBy
-    @Column(name = "last_modified_by", nullable = false, length = 100)
+    @Column(name = "last_modified_by", nullable = false, length = 255)
     @ColumnDefault("'system'")
     private String lastModifiedBy;
 
