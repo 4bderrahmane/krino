@@ -54,8 +54,10 @@ CREATE TABLE refresh_tokens (
     PRIMARY KEY (id),
     CONSTRAINT uk_refresh_tokens_token_hash UNIQUE (token_hash),
     CONSTRAINT ck_refresh_tokens_token_hash_length CHECK (octet_length(token_hash) = 32),
+    -- Consumed tokens linger until the nightly purge; cascade so they can't block a
+    -- user deletion in the meantime. Same for the two token tables below.
     CONSTRAINT fk_refresh_tokens_user
-        FOREIGN KEY (user_id) REFERENCES users (id)
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);
@@ -79,7 +81,7 @@ CREATE TABLE email_verification_tokens (
     CONSTRAINT uk_email_verification_tokens_token_hash UNIQUE (token_hash),
     CONSTRAINT ck_email_verification_tokens_token_hash_length CHECK (octet_length(token_hash) = 32),
     CONSTRAINT fk_email_verification_tokens_user
-        FOREIGN KEY (user_id) REFERENCES users (id)
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_email_verification_tokens_expires_at ON email_verification_tokens (expires_at);
@@ -98,7 +100,7 @@ CREATE TABLE password_reset_tokens (
     CONSTRAINT uk_password_reset_tokens_token_hash UNIQUE (token_hash),
     CONSTRAINT ck_password_reset_tokens_token_hash_length CHECK (octet_length(token_hash) = 32),
     CONSTRAINT fk_password_reset_tokens_user
-        FOREIGN KEY (user_id) REFERENCES users (id)
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_password_reset_tokens_expires_at ON password_reset_tokens (expires_at);

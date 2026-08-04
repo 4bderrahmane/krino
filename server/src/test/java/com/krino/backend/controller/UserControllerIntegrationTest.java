@@ -1,11 +1,17 @@
 package com.krino.backend.controller;
 
+import com.krino.backend.entity.EmailVerificationToken;
+import com.krino.backend.entity.PasswordResetToken;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -17,6 +23,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
 {
     private static final String OTHER_CANDIDATE_EMAIL = "other-candidate@test.local";
+
+    /** The token tables CHECK that the hash is exactly 32 bytes. */
+    private static byte[] tokenHashOf(byte fill)
+    {
+        byte[] hash = new byte[32];
+        Arrays.fill(hash, fill);
+        return hash;
+    }
 
     @Test
     void adminListsAllUsers() throws Exception
@@ -296,5 +310,35 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
         User reloaded = userRepository.findByPublicId(candidate.getPublicId()).orElseThrow();
         assertThat(reloaded.getFirstName()).isEqualTo("Updated");
         assertThat(reloaded.getLastModifiedBy()).isEqualTo(longEmail);
+    }
+
+    @Test
+    void candidateWithVerificationAndResetTokensCanStillBeDeleted() throws Exception
+    {
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        // Consuming a token only flips `used`, so the row outlives it until the nightly purge.
+        emailVerificationTokenRepository.save(EmailVerificationToken.builder()
+                .tokenHash(tokenHashOf((byte) 1))
+                .user(candidate)
+                .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
+                .used(true)
+                .build());
+        passwordResetTokenRepository.save(PasswordResetToken.builder()
+                .tokenHash(tokenHashOf((byte) 2))
+                .user(candidate)
+                .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
+                .used(true)
+                .build());
+        assertThat(emailVerificationTokenRepository.count()).isEqualTo(1);
+        assertThat(passwordResetTokenRepository.count()).isEqualTo(1);
+
+        Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+
+        mockMvc.perform(withCsrf(delete("/api/users/me")).cookie(accessCookie))
+                .andExpect(status().isNoContent());
+
+        assertThat(userRepository.findByEmail(CANDIDATE_EMAIL)).isEmpty();
+        assertThat(emailVerificationTokenRepository.count()).isZero();
+        assertThat(passwordResetTokenRepository.count()).isZero();
     }
 }
