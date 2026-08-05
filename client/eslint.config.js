@@ -20,4 +20,13 @@ export default tseslint.config([
       globals: globals.browser,
     },
   },
+  {
+    // The router builds its route components with lazy() but exports only the router
+    // itself, so it is not a Fast Refresh boundary and editing it always reloads the
+    // page. react-refresh 0.5 started counting those lazy() consts as components.
+    files: ['src/routes/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])
