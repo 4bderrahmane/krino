@@ -38,14 +38,14 @@ public class ApplicationController {
             "id", "status", "appliedAt", "createdDate", "lastModifiedDate");
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CAN_CREATE_APPLICATION')")
+    @PreAuthorize("hasAuthority('application:create')")
     public ResponseEntity<ApplicationResponseDTO> createApplication(@Valid @RequestBody ApplicationCreateDTO applicationCreateDTO) {
         ApplicationResponseDTO createdApplication = applicationService.createApplication(applicationCreateDTO);
         return ResponseEntity.created(URI.create("/api/applications/" + createdApplication.getId())).body(createdApplication);
     }
 
     @GetMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_READ_APPLICATION')")
+    @PreAuthorize("hasAuthority('application:read')")
     public ResponseEntity<ApplicationResponseDTO> getApplicationByPublicId(@PathVariable UUID publicId) {
         ApplicationResponseDTO application = applicationService.getApplicationByPublicId(publicId);
         return ResponseEntity.ok(application);
@@ -60,7 +60,7 @@ public class ApplicationController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAuthority('CAN_READ_APPLICATION')")
+    @PreAuthorize("hasAuthority('application:read')")
     public ResponseEntity<PageResponse<ApplicationResponseDTO>> getMyApplications(@PageableDefault(size = 20, sort =
             "id") Pageable pageable) {
         PageResponse<ApplicationResponseDTO> applications = applicationService.getMyApplications(SORT_WHITELIST.sanitize(pageable));
@@ -68,7 +68,7 @@ public class ApplicationController {
     }
 
     @PutMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_APPLICATION')")
+    @PreAuthorize("hasAuthority('application:update')")
     public ResponseEntity<ApplicationResponseDTO> updateApplication(@PathVariable UUID publicId,
                                                                     @Valid @RequestBody ApplicationUpdateDTO applicationUpdateDTO) {
         ApplicationResponseDTO updatedApplication = applicationService.updateApplication(publicId,
@@ -77,7 +77,7 @@ public class ApplicationController {
     }
 
     @PatchMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_APPLICATION')")
+    @PreAuthorize("hasAuthority('application:update')")
     public ResponseEntity<ApplicationResponseDTO> patchApplication(@PathVariable UUID publicId,
                                                                    @Valid @RequestBody ApplicationUpdateDTO applicationUpdateDTO) {
         ApplicationResponseDTO patchedApplication = applicationService.patchApplication(publicId, applicationUpdateDTO);
@@ -85,14 +85,14 @@ public class ApplicationController {
     }
 
     @DeleteMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_DELETE_APPLICATION')")
+    @PreAuthorize("hasAuthority('application:delete')")
     public ResponseEntity<Void> deleteApplication(@PathVariable UUID publicId) {
         applicationService.deleteApplication(publicId);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping(path = "/{publicId}/resume", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('CAN_UPDATE_APPLICATION')")
+    @PreAuthorize("hasAuthority('application:update')")
     public ResponseEntity<ApplicationResponseDTO> uploadResume(@PathVariable UUID publicId,
                                                                @RequestPart("resume") MultipartFile resume) {
         ApplicationResponseDTO application = applicationService.uploadResume(publicId, resume);
@@ -100,14 +100,14 @@ public class ApplicationController {
     }
 
     @PutMapping("/{publicId}/resume/from-base")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_APPLICATION')")
+    @PreAuthorize("hasAuthority('application:update')")
     public ResponseEntity<ApplicationResponseDTO> applyBaseResume(@PathVariable UUID publicId) {
         ApplicationResponseDTO application = applicationService.applyBaseResume(publicId);
         return ResponseEntity.ok(application);
     }
 
     @GetMapping("/{publicId}/resume")
-    @PreAuthorize("hasAuthority('CAN_READ_APPLICATION')")
+    @PreAuthorize("hasAuthority('application:read')")
     public ResponseEntity<Resource> downloadResume(@PathVariable UUID publicId) {
         ApplicationService.ResumeDownload resume = applicationService.downloadResume(publicId);
         return getResourceResponseEntity(resume);
@@ -130,7 +130,7 @@ public class ApplicationController {
     }
 
     @DeleteMapping("/{publicId}/resume")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_APPLICATION')")
+    @PreAuthorize("hasAuthority('application:update')")
     public ResponseEntity<Void> deleteResume(@PathVariable UUID publicId) {
         applicationService.deleteResume(publicId);
         return ResponseEntity.noContent().build();

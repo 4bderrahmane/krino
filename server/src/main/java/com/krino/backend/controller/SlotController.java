@@ -30,14 +30,14 @@ public class SlotController {
             "id", "interviewDate", "startTime", "endTime", "available", "createdDate", "lastModifiedDate");
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CAN_CREATE_SLOT')")
+    @PreAuthorize("hasAuthority('slot:create')")
     public ResponseEntity<SlotResponseDTO> createSlot(@Valid @RequestBody SlotRequestDTO slotRequestDTO) {
         SlotResponseDTO createdSlot = slotService.createSlot(slotRequestDTO);
         return ResponseEntity.created(URI.create("/api/slots/" + createdSlot.getId())).body(createdSlot);
     }
 
     @GetMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_READ_SLOT')")
+    @PreAuthorize("hasAuthority('slot:read')")
     public ResponseEntity<SlotResponseDTO> getSlotByPublicId(@PathVariable UUID publicId) {
         SlotResponseDTO slot = slotService.getSlotByPublicId(publicId);
         return ResponseEntity.ok(slot);
@@ -51,21 +51,21 @@ public class SlotController {
     }
 
     @PutMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_SLOT')")
+    @PreAuthorize("hasAuthority('slot:update')")
     public ResponseEntity<SlotResponseDTO> updateSlot(@PathVariable UUID publicId, @Valid @RequestBody SlotUpdateDTO slotUpdateDTO) {
         SlotResponseDTO updatedSlot = slotService.updateSlot(publicId, slotUpdateDTO);
         return ResponseEntity.ok(updatedSlot);
     }
 
     @PatchMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_SLOT')")
+    @PreAuthorize("hasAuthority('slot:update')")
     public ResponseEntity<SlotResponseDTO> patchSlot(@PathVariable UUID publicId, @Valid @RequestBody SlotUpdateDTO slotUpdateDTO) {
         SlotResponseDTO patchedSlot = slotService.patchSlot(publicId, slotUpdateDTO);
         return ResponseEntity.ok(patchedSlot);
     }
 
     @DeleteMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_DELETE_SLOT')")
+    @PreAuthorize("hasAuthority('slot:delete')")
     public ResponseEntity<Void> deleteSlot(@PathVariable UUID publicId) {
         slotService.deleteSlot(publicId);
         return ResponseEntity.noContent().build();

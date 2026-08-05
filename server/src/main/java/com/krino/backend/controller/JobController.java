@@ -29,14 +29,14 @@ public class JobController {
     private final JobService jobService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CAN_CREATE_JOB')")
+    @PreAuthorize("hasAuthority('job:create')")
     public ResponseEntity<JobResponseDTO> createJob(@Valid @RequestBody JobCreateDTO jobRequest) {
         JobResponseDTO response = jobService.createJob(jobRequest);
         return ResponseEntity.created(URI.create("/api/jobs/" + response.getId())).body(response);
     }
 
     @GetMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_READ_JOB')")
+    @PreAuthorize("hasAuthority('job:read')")
     public ResponseEntity<JobResponseDTO> getJobByPublicId(@PathVariable UUID publicId) {
         JobResponseDTO job = jobService.getJobByPublicId(publicId);
         return ResponseEntity.ok(job);
@@ -45,14 +45,14 @@ public class JobController {
     // NOTE: offers are returned in full — this endpoint does not really paginate.
     // The Pageable is accepted for API consistency but ignored; see JobService#getAllJobs.
     @GetMapping
-    @PreAuthorize("hasAuthority('CAN_READ_JOB')")
+    @PreAuthorize("hasAuthority('job:read')")
     public ResponseEntity<PageResponse<JobResponseDTO>> getAllJobs(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
         PageResponse<JobResponseDTO> jobs = jobService.getAllJobs(pageable);
         return ResponseEntity.ok(jobs);
     }
 
     @PutMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_JOB')")
+    @PreAuthorize("hasAuthority('job:update')")
     public ResponseEntity<JobResponseDTO> updateJob(@PathVariable UUID publicId,
                                                     @Validated(ValidationGroups.FullUpdate.class)
                                                     @RequestBody JobUpdateDTO jobUpdateDTO) {
@@ -61,38 +61,38 @@ public class JobController {
     }
 
     @PatchMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_JOB')")
+    @PreAuthorize("hasAuthority('job:update')")
     public ResponseEntity<JobResponseDTO> patchJob(@PathVariable UUID publicId, @Valid @RequestBody JobUpdateDTO jobUpdateDTO) {
         JobResponseDTO patchedJob = jobService.patchJob(publicId, jobUpdateDTO);
         return ResponseEntity.ok(patchedJob);
     }
 
     @PostMapping("/{publicId}/publish")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_JOB')")
+    @PreAuthorize("hasAuthority('job:update')")
     public ResponseEntity<JobResponseDTO> publishJob(@PathVariable UUID publicId) {
         return ResponseEntity.ok(jobService.publishJob(publicId));
     }
 
     @PostMapping("/{publicId}/pause")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_JOB')")
+    @PreAuthorize("hasAuthority('job:update')")
     public ResponseEntity<JobResponseDTO> pauseJob(@PathVariable UUID publicId) {
         return ResponseEntity.ok(jobService.pauseJob(publicId));
     }
 
     @PostMapping("/{publicId}/close")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_JOB')")
+    @PreAuthorize("hasAuthority('job:update')")
     public ResponseEntity<JobResponseDTO> closeJob(@PathVariable UUID publicId, @Valid @RequestBody JobCloseRequestDTO closeRequest) {
         return ResponseEntity.ok(jobService.closeJob(publicId, closeRequest.getStatus()));
     }
 
     @PostMapping("/{publicId}/archive")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_JOB')")
+    @PreAuthorize("hasAuthority('job:update')")
     public ResponseEntity<JobResponseDTO> archiveJob(@PathVariable UUID publicId) {
         return ResponseEntity.ok(jobService.archiveJob(publicId));
     }
 
     @DeleteMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_DELETE_JOB')")
+    @PreAuthorize("hasAuthority('job:delete')")
     public ResponseEntity<Void> deleteJobByPublicId(@PathVariable UUID publicId) {
         jobService.deleteJobByPublicId(publicId);
         return ResponseEntity.noContent().build();

@@ -236,8 +236,9 @@ class ControllerAuthorizationTest
         {
             for (String op : new String[]{"CREATE", "READ", "UPDATE", "DELETE"})
             {
-                String authority = "CAN_" + op + "_" + entity;
-                assertThatCode(() -> Permission.valueOf(authority)).doesNotThrowAnyException();
+                String permissionName = "CAN_" + op + "_" + entity;
+                assertThatCode(() -> Permission.valueOf(permissionName)).doesNotThrowAnyException();
+                String authority = Permission.valueOf(permissionName).getAuthority();
                 assertThat(grantedByAnyRole)
                         .as("authority %s must be granted by at least one role, else the endpoint is unreachable", authority)
                         .contains(authority);

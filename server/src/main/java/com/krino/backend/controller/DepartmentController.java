@@ -31,21 +31,21 @@ public class DepartmentController {
             "id", "name", "createdDate", "lastModifiedDate");
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CAN_CREATE_DEPARTMENT')")
+    @PreAuthorize("hasAuthority('department:create')")
     public ResponseEntity<DepartmentResponseDTO> createDepartment(@Valid @RequestBody DepartmentCreateDTO request) {
         DepartmentResponseDTO department = departmentService.createDepartment(request);
         return ResponseEntity.created(URI.create("/api/departments/" + department.getId())).body(department);
     }
 
     @DeleteMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_DELETE_DEPARTMENT')")
+    @PreAuthorize("hasAuthority('department:delete')")
     public ResponseEntity<Void> deleteDepartmentByPublicId(@PathVariable UUID publicId) {
         departmentService.deleteDepartmentByPublicId(publicId);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_DEPARTMENT')")
+    @PreAuthorize("hasAuthority('department:update')")
     public ResponseEntity<DepartmentResponseDTO> editDepartmentCompletelyByPublicId(
                             @PathVariable UUID publicId,
                             @Validated(ValidationGroups.FullUpdate.class)
@@ -55,21 +55,21 @@ public class DepartmentController {
     }
 
     @PatchMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_DEPARTMENT')")
+    @PreAuthorize("hasAuthority('department:update')")
     public ResponseEntity<DepartmentResponseDTO> editDepartmentPartiallyByPublicId(@PathVariable UUID publicId, @Valid @RequestBody DepartmentUpdateDTO request) {
         DepartmentResponseDTO department = departmentService.patchDepartment(publicId, request);
         return ResponseEntity.ok(department);
     }
 
     @GetMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_READ_DEPARTMENT')")
+    @PreAuthorize("hasAuthority('department:read')")
     public ResponseEntity<DepartmentResponseDTO> getDepartmentByPublicId(@PathVariable UUID publicId) {
         DepartmentResponseDTO department = departmentService.getDepartmentByPublicId(publicId);
         return ResponseEntity.ok(department);
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('CAN_READ_DEPARTMENT')")
+    @PreAuthorize("hasAuthority('department:read')")
     public ResponseEntity<PageResponse<DepartmentResponseDTO>> getAllDepartments(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
         PageResponse<DepartmentResponseDTO> departments = departmentService.getAllDepartments(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(departments);

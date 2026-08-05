@@ -31,7 +31,7 @@ public class InterviewController {
             "id", "status", "recommendation", "isOnline", "createdDate", "lastModifiedDate");
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CAN_CREATE_INTERVIEW')")
+    @PreAuthorize("hasAuthority('interview:create')")
     public ResponseEntity<InterviewResponseDTO> createInterview(@Validated(ValidationGroups.FullUpdate.class)
                                                                 @RequestBody InterviewRequestDTO interviewRequestDTO) {
         InterviewResponseDTO createdInterview = interviewService.createInterview(interviewRequestDTO);
@@ -39,7 +39,7 @@ public class InterviewController {
     }
 
     @GetMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_READ_INTERVIEW')")
+    @PreAuthorize("hasAuthority('interview:read')")
     public ResponseEntity<InterviewResponseDTO> getInterviewByPublicId(@PathVariable UUID publicId) {
         InterviewResponseDTO interview = interviewService.getInterviewByPublicId(publicId);
         return ResponseEntity.ok(interview);
@@ -54,7 +54,7 @@ public class InterviewController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAuthority('CAN_READ_INTERVIEW')")
+    @PreAuthorize("hasAuthority('interview:read')")
     public ResponseEntity<PageResponse<InterviewResponseDTO>> getMyInterviews(@PageableDefault(size = 20, sort = "id"
     ) Pageable pageable) {
         PageResponse<InterviewResponseDTO> interviews = interviewService.getMyInterviews(SORT_WHITELIST.sanitize(pageable));
@@ -62,7 +62,7 @@ public class InterviewController {
     }
 
     @PutMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_INTERVIEW')")
+    @PreAuthorize("hasAuthority('interview:update')")
     public ResponseEntity<InterviewResponseDTO> updateInterview(@PathVariable UUID publicId,
                                                                 @Validated(ValidationGroups.FullUpdate.class)
                                                                 @RequestBody InterviewRequestDTO interviewRequestDTO) {
@@ -71,7 +71,7 @@ public class InterviewController {
     }
 
     @PatchMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_UPDATE_INTERVIEW')")
+    @PreAuthorize("hasAuthority('interview:update')")
     public ResponseEntity<InterviewResponseDTO> patchInterview(@PathVariable UUID publicId,
                                                                @Valid @RequestBody InterviewRequestDTO interviewRequestDTO) {
         InterviewResponseDTO patchedInterview = interviewService.patchInterview(publicId, interviewRequestDTO);
@@ -79,7 +79,7 @@ public class InterviewController {
     }
 
     @DeleteMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('CAN_DELETE_INTERVIEW')")
+    @PreAuthorize("hasAuthority('interview:delete')")
     public ResponseEntity<Void> deleteInterview(@PathVariable UUID publicId) {
         interviewService.deleteInterview(publicId);
         return ResponseEntity.noContent().build();
