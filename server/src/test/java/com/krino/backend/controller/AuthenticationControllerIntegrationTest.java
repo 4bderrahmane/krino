@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.krino.backend.configuration.properties.StorageProperties;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
+import com.krino.backend.repository.ApplicationRepository;
 import com.krino.backend.repository.EmailVerificationTokenRepository;
+import com.krino.backend.repository.InterviewRepository;
 import com.krino.backend.repository.RefreshTokenRepository;
+import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.service.email.EmailService;
 import com.krino.backend.support.AbstractIntegrationTest;
@@ -54,6 +57,9 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
+    private final InterviewRepository interviewRepository;
+    private final ApplicationRepository applicationRepository;
+    private final SlotRepository slotRepository;
     private final PasswordEncoder passwordEncoder;
     private final WebApplicationContext webApplicationContext;
     private final MinioClient minioClient;
@@ -71,6 +77,12 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();
+        // Each class wipes the tables it uses, so rows from the previous class are still
+        // around and interviews/applications/slots all point at users. Clear them first,
+        // otherwise deleting the users below trips their foreign keys.
+        interviewRepository.deleteAll();
+        applicationRepository.deleteAll();
+        slotRepository.deleteAll();
         refreshTokenRepository.deleteAll();
         emailVerificationTokenRepository.deleteAll();
         userRepository.deleteAll();
