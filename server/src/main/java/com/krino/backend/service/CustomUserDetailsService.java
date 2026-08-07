@@ -1,8 +1,7 @@
 package com.krino.backend.service;
 
-import com.krino.backend.entity.User;
 import com.krino.backend.entity.CustomUserDetails;
-import com.krino.backend.exception.ResourceNotFoundException;
+import com.krino.backend.entity.User;
 import com.krino.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
@@ -31,7 +30,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     public CustomUserDetails loadUserByPublicId(UUID publicId) {
         User user = userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "publicId", publicId));
+                .orElseThrow(() -> UsernameNotFoundException.fromUsername(publicId.toString()));
         return new CustomUserDetails(user);
     }
 }
