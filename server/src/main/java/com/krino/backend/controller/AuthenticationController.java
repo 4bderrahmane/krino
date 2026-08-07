@@ -10,6 +10,7 @@ import com.krino.backend.dto.user.UserRegistrationDTO;
 import com.krino.backend.service.AuthenticationService;
 import com.krino.backend.service.email.EmailVerificationService;
 import com.krino.backend.service.PasswordResetService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Authentication")
+@SecurityRequirements
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
