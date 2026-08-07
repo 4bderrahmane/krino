@@ -16,17 +16,18 @@ spring:
       ddl-auto: validate
     show-sql: false
 
-jwt:
-  # Alternative test secrets:
-  secret: "R0EyTHQgIJ8SJYeyEMYwB71zXSEVhLkOqnhauG8lARJ4U8EE80NAnTuVqcd0pjFRNxmy640jmK+PgMHekuhiUebO1U="
-
 resend:
   api-key: "test-resend-api-key"
 
 app:
-  jwt:
+  authentication:
     issuer: krino-test
-    access-token-expiration: 15m
+    # Alternative test secret:
+    secret: "R0EyTHQgIJ8SJYeyEMYwB71zXSEVhLkOqnhauG8lARJ4U8EE80NAnTuVqcd0pjFRNxmy640jmK+PgMHekuhiUebO1U="
+    access-ttl: 15m
+    refresh-ttl: 30d
+    access-cookie-name: access_token
+    refresh-cookie-name: refresh_token
 
   cors:
     allowed-origins: "http://localhost:5000"

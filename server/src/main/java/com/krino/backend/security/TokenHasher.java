@@ -3,6 +3,7 @@ package com.krino.backend.security;
 import com.krino.backend.exception.TokenException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,7 @@ import java.util.Base64;
  * verification): CSPRNG raw-token generation and keyed HMAC-SHA256 hashing, so only the
  * hash is ever persisted and a database leak never exposes a usable token.
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TokenHasher {
@@ -27,7 +29,7 @@ public class TokenHasher {
 
     private final SecureRandom secureRandom;
 
-    @Value("${app.refresh-token.hmac-secret:${jwt.secret}}")
+    @Value("${app.refresh-token.hmac-secret:${app.authentication.secret}}")
     private String hmacSecret;
 
     private SecretKeySpec hmacKey;

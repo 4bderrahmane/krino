@@ -29,10 +29,10 @@ public class ProductionConfigurationValidator implements ApplicationRunner {
 
         requireTrue("app.cookies.secure", errors);
         rejectUnsafeDdlMode(errors);
-        requireNonBlank("jwt.secret", errors);
+        requireNonBlank("app.authentication.secret", errors);
         requireNonBlank("app.refresh-token.hmac-secret", errors);
         rejectSharedTokenSecrets(errors);
-        requireNonBlank("app.jwt.issuer", errors);
+        requireNonBlank("app.authentication.issuer", errors);
         validateCorsOrigins(errors);
         requireNonBlank("app.storage.endpoint", errors);
         requireNonBlank("app.storage.access-key", errors);
@@ -68,7 +68,7 @@ public class ProductionConfigurationValidator implements ApplicationRunner {
     }
 
     private void rejectSharedTokenSecrets(List<String> errors) {
-        String jwtSecret = environment.getProperty("jwt.secret");
+        String jwtSecret = environment.getProperty("app.authentication.secret");
         String refreshSecret = environment.getProperty("app.refresh-token.hmac-secret");
         if (StringUtils.hasText(jwtSecret) && jwtSecret.equals(refreshSecret)) {
             errors.add("JWT and refresh-token HMAC secrets must be different in production");

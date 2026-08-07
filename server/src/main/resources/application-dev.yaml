@@ -12,7 +12,7 @@ spring:
 app:
   refresh-token:
     hmac-secret: "${APP_REFRESH_TOKEN_HMAC_SECRET:${JWT_SECRET}}"
-  jwt:
+  authentication:
     issuer: "${APP_JWT_ISSUER:krino-dev}"
   # Dev default: log email content (verification/reset links, initial passwords) to the
   # console instead of sending through Resend, so fake test addresses can complete the

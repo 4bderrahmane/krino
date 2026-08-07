@@ -1,5 +1,6 @@
 package com.krino.backend.service;
 
+import com.krino.backend.configuration.properties.AuthenticationProperties;
 import com.krino.backend.entity.RefreshToken;
 import com.krino.backend.entity.User;
 import com.krino.backend.mapper.RefreshTokenMapper;
@@ -11,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,17 +21,17 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenMapper refreshTokenMapper;
     private final TokenHasher tokenHasher;
+    private final AuthenticationProperties authenticationProperties;
 
     private static final int TOKEN_LENGTH = 64;
-    private static final int EXPIRY_DAYS = 30;
 
     public String generateAndSaveRefreshToken(User user, String deviceInfo, String ipAddress) {
         String token = tokenHasher.generateUrlSafeToken(TOKEN_LENGTH);
 
         byte[] tokenHash = tokenHasher.hmac(token);
 
-        Instant expiresAt = Instant.now().plus(EXPIRY_DAYS, ChronoUnit.DAYS);
         Instant now = Instant.now();
+        Instant expiresAt = now.plus(authenticationProperties.refreshTtl());
 
         RefreshToken refreshToken = refreshTokenMapper.toEntity(user, tokenHash, expiresAt, now, deviceInfo,
                 ipAddress);

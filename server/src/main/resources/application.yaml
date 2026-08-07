@@ -29,8 +29,6 @@ spring:
 #    username: "${MAIL_USERNAME:resend}"
 #    password: "${MAIL_PASSWORD}"
 
-jwt:
-  secret: "${JWT_SECRET}"
 
 # Actuator: expose only the health endpoint over HTTP, and never reveal component
 # details/probes — the endpoint is public, so it must return at most {"status":"UP"}.
@@ -60,9 +58,14 @@ springdoc:
 app:
   refresh-token:
     hmac-secret: "${APP_REFRESH_TOKEN_HMAC_SECRET}"
-  jwt:
+  authentication:
     issuer: "${APP_JWT_ISSUER}"
-    access-token-expiration: "${APP_JWT_ACCESS_TOKEN_EXPIRATION:15m}"
+    secret: "${JWT_SECRET}"
+    access-ttl: "${APP_JWT_ACCESS_TOKEN_EXPIRATION:15m}"
+    refresh-ttl: "${APP_REFRESH_TOKEN_EXPIRATION:30d}"
+    access-cookie-name: access_token
+    refresh-cookie-name: refresh_token
+
   cors:
     allowed-origins: "${APP_CORS_ALLOWED_ORIGINS}"
   cookies:

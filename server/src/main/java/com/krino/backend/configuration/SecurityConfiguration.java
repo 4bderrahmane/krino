@@ -1,5 +1,7 @@
 package com.krino.backend.configuration;
 
+import com.krino.backend.configuration.properties.AuthenticationProperties;
+import com.krino.backend.configuration.properties.CookieProperties;
 import com.krino.backend.security.CustomAccessDeniedHandler;
 import com.krino.backend.security.CustomAuthenticationEntryPoint;
 import com.krino.backend.security.JwtCookieAuthenticationFilter;
@@ -12,8 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -39,6 +43,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@EnableConfigurationProperties({AuthenticationProperties.class, CookieProperties.class})
 @RequiredArgsConstructor
 public class SecurityConfiguration {
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
@@ -104,12 +109,12 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public CookieCsrfTokenRepository csrfTokenRepository(@Value("${app.cookies.secure:true}") boolean cookieSecure) {
+    public CookieCsrfTokenRepository csrfTokenRepository(CookieProperties cookieProperties) {
         CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
         repository.setHeaderName("X-XSRF-TOKEN");
         repository.setCookiePath("/");
         repository.setCookieCustomizer(cookie -> cookie
-                .secure(cookieSecure)
+                .secure(cookieProperties.secure())
                 .sameSite("Strict")
                 .path("/"));
         return repository;
@@ -124,10 +129,14 @@ public class SecurityConfiguration {
 
     private static final class CsrfCookieFilter extends OncePerRequestFilter {
         @Override
-        protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response,
+        protected void doFilterInternal(HttpServletRequest request,
+                                        @NonNull HttpServletResponse response,
                                         @NonNull FilterChain filterChain) throws ServletException, IOException {
+
             CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-            if (csrfToken != null) csrfToken.getToken();
+            if (csrfToken != null) {
+                csrfToken.getToken();
+            }
 
             filterChain.doFilter(request, response);
         }

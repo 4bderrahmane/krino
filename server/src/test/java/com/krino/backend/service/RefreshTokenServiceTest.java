@@ -1,5 +1,6 @@
 package com.krino.backend.service;
 
+import com.krino.backend.configuration.properties.AuthenticationProperties;
 import com.krino.backend.entity.RefreshToken;
 import com.krino.backend.entity.User;
 import com.krino.backend.mapper.RefreshTokenMapper;
@@ -12,6 +13,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +37,7 @@ class RefreshTokenServiceTest
         ReflectionTestUtils.setField(tokenHasher, "hmacSecret", "0123456789abcdef0123456789abcdef");
         ReflectionTestUtils.invokeMethod(tokenHasher, "init");
         refreshTokenService = new RefreshTokenService(refreshTokenRepository,
-                Mappers.getMapper(RefreshTokenMapper.class), tokenHasher);
+                Mappers.getMapper(RefreshTokenMapper.class), tokenHasher, authenticationProperties());
     }
 
     @Test
@@ -56,6 +58,7 @@ class RefreshTokenServiceTest
         assertThat(saved.getDeviceInfo()).isEqualTo("JUnit");
         assertThat(saved.getIpAddress()).isEqualTo("203.0.113.20");
         assertThat(saved.isRevoked()).isFalse();
+        assertThat(Duration.between(saved.getCreatedAt(), saved.getExpiresAt())).isEqualTo(Duration.ofDays(30));
     }
 
     @Test
@@ -75,5 +78,17 @@ class RefreshTokenServiceTest
         assertThat(refreshTokenService.findValidRefreshToken("raw-token")).contains(token);
 
         verify(refreshTokenRepository).findValidTokenByHash(any(byte[].class), any());
+    }
+
+    private AuthenticationProperties authenticationProperties()
+    {
+        return new AuthenticationProperties(
+                "krino-test",
+                "0123456789abcdef0123456789abcdef",
+                Duration.ofMinutes(15),
+                Duration.ofDays(30),
+                "access_token",
+                "refresh_token"
+        );
     }
 }
