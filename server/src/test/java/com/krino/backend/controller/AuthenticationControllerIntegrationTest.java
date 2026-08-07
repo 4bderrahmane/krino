@@ -449,6 +449,58 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void refreshIsRefusedOnceTheAccountIsDeactivated() throws Exception {
+        Cookie refreshCookie = loginAndGetRefreshCookie();
+
+        // Deactivated straight through the repository, not through UserService#setApproval,
+        // which deletes the tokens as a side effect. Refresh has to reach the same verdict on
+        // its own, or a session outlives the account state that justified it.
+        deactivateAccount();
+
+        MvcResult result = mockMvc.perform(withCsrf(post("/api/auth/refresh")).cookie(refreshCookie))
+                .andExpect(status().isForbidden())
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsString()).contains("\"errorCode\":\"ACCOUNT_NOT_APPROVED\"");
+        assertSessionFamilyRevokedAndCookiesCleared(result);
+    }
+
+    @Test
+    void refreshIsRefusedOnceEmailVerificationIsWithdrawn() throws Exception {
+        Cookie refreshCookie = loginAndGetRefreshCookie();
+
+        User user = userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow();
+        user.setEmailVerified(false);
+        userRepository.save(user);
+
+        MvcResult result = mockMvc.perform(withCsrf(post("/api/auth/refresh")).cookie(refreshCookie))
+                .andExpect(status().isForbidden())
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsString()).contains("\"errorCode\":\"EMAIL_NOT_VERIFIED\"");
+        assertSessionFamilyRevokedAndCookiesCleared(result);
+    }
+
+    @Test
+    void refreshIsRefusedWhileATemporaryPasswordIsStillPending() throws Exception {
+        Cookie refreshCookie = loginAndGetRefreshCookie();
+
+        // Login deliberately still works in this state, so the user can reach the
+        // change-password endpoint. Renewal is where it stops, otherwise a staff account
+        // created with a temporary password could stay signed in on it indefinitely.
+        User user = userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow();
+        user.setMustChangePassword(true);
+        userRepository.save(user);
+
+        MvcResult result = mockMvc.perform(withCsrf(post("/api/auth/refresh")).cookie(refreshCookie))
+                .andExpect(status().isForbidden())
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsString()).contains("\"errorCode\":\"PASSWORD_CHANGE_REQUIRED\"");
+        assertSessionFamilyRevokedAndCookiesCleared(result);
+    }
+
+    @Test
     void refreshWithoutCookieReturnsProblemDetail() throws Exception {
         MvcResult result = mockMvc.perform(withCsrf(post("/api/auth/refresh")))
                 .andExpect(status().isUnauthorized())
@@ -484,6 +536,34 @@ class AuthenticationControllerIntegrationTest extends AbstractIntegrationTest {
         assertThat(setCookieHeaders(logoutResult)).anySatisfy(cookie -> assertThat(cookie)
                 .startsWith("refresh_token=")
                 .contains("Path=/api/auth")
+                .contains("Max-Age=0"));
+    }
+
+    private Cookie loginAndGetRefreshCookie() throws Exception {
+        createUser(true);
+        MvcResult loginResult = login(CANDIDATE_EMAIL, RAW_PASSWORD)
+                .andExpect(status().isOk())
+                .andReturn();
+        return cookie(loginResult, "refresh_token");
+    }
+
+    private void deactivateAccount() {
+        User user = userRepository.findByEmail(CANDIDATE_EMAIL).orElseThrow();
+        user.setApproved(false);
+        userRepository.save(user);
+    }
+
+    /**
+     * An account that may not hold a session should not be left holding usable refresh tokens
+     * either, so a refused renewal takes the whole family with it and clears the cookies.
+     */
+    private void assertSessionFamilyRevokedAndCookiesCleared(MvcResult result) {
+        assertThat(refreshTokenRepository.findAll()).allSatisfy(token -> assertThat(token.isRevoked()).isTrue());
+        assertThat(setCookieHeaders(result)).anySatisfy(cookie -> assertThat(cookie)
+                .startsWith("access_token=")
+                .contains("Max-Age=0"));
+        assertThat(setCookieHeaders(result)).anySatisfy(cookie -> assertThat(cookie)
+                .startsWith("refresh_token=")
                 .contains("Max-Age=0"));
     }
 

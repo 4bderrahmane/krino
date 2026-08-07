@@ -109,12 +109,16 @@ public class RefreshTokenService {
     }
 
     /**
-     * Response to refresh-token reuse: revoke every session in the user's family. Runs in
-     * its own transaction because the caller rejects the request by throwing right after —
-     * a rollback of the surrounding transaction must not undo the revocation.
+     * Revokes every session in a user's family, in its own transaction.
+     *
+     * <p>For callers that reject the current request by throwing immediately afterwards: a
+     * rollback of the surrounding transaction must not undo the revocation. Both users of this
+     * are in {@code AuthenticationService#refresh}, which explains at each call site why the
+     * family has to go: token reuse after rotation, and an account that may no longer hold a
+     * session at all.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handleCompromisedToken(Long userId) {
+    public void revokeAllSessionsInOwnTransaction(Long userId) {
         revokeAllTokensForUser(userId);
     }
 }

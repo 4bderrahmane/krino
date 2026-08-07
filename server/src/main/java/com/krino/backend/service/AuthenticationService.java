@@ -9,9 +9,11 @@ import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.entity.RefreshToken;
 import com.krino.backend.exception.AccountNotApprovedException;
+import com.krino.backend.exception.BaseException;
 import com.krino.backend.exception.EmailNotVerifiedException;
 import com.krino.backend.exception.InvalidCredentialsException;
 import com.krino.backend.exception.InvalidRefreshTokenException;
+import com.krino.backend.exception.PasswordChangeRequiredException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.service.email.EmailVerificationService;
@@ -93,10 +95,7 @@ public class AuthenticationService {
                         email)));
 
 
-        if (!user.isEmailVerified()) {
-            log.warn("Login blocked: email not verified for user {}", user.getId());
-            throw new EmailNotVerifiedException("Please verify your email address before signing in.");
-        }
+        assertAccountMayHoldSession(user);
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
         UserResponseDTO userResponse = userMapper.toResponse(user);
@@ -137,6 +136,16 @@ public class AuthenticationService {
                 .orElseThrow(() -> new InvalidRefreshTokenException("No refresh token provided"));
 
 
+        // Account state is settled before the row lock below is taken, and deliberately so.
+        // Rejecting revokes the whole token family in its own transaction, and that UPDATE
+        // would touch the very row this transaction had locked FOR UPDATE: the inner
+        // transaction would wait on a lock only the outer one can release, and the outer is
+        // suspended waiting for the inner. That is a hang with no timeout, not an error.
+        // An invalid or unknown token yields no user here and falls through to the normal
+        // rejection path below.
+        refreshTokenService.getUserFromRefreshToken(providedRefreshToken)
+                .ifPresent(user -> assertSessionMayBeRenewed(user, response));
+
         RefreshToken token = refreshTokenService.findValidRefreshTokenForUpdate(providedRefreshToken)
                 .orElseThrow(() -> rejectInvalidRefreshToken(providedRefreshToken, request));
 
@@ -171,6 +180,57 @@ public class AuthenticationService {
     }
 
     /**
+     * The account conditions a session depends on, checked wherever one is granted.
+     *
+     * <p>Approval is normally enforced before this by the {@link AuthenticationManager}, which
+     * reads it through {@link CustomUserDetails#isEnabled()}; it is restated here because
+     * {@link #refresh} has no authentication manager in its path and must not be allowed to
+     * drift from the login rules.
+     */
+    private void assertAccountMayHoldSession(User user) {
+        if (!user.isApproved()) {
+            log.warn("Session refused: account deactivated for user {}", user.getId());
+            throw new AccountNotApprovedException("Your account has been deactivated. Please contact an administrator.");
+        }
+
+        if (!user.isEmailVerified()) {
+            log.warn("Session refused: email not verified for user {}", user.getId());
+            throw new EmailNotVerifiedException("Please verify your email address before signing in.");
+        }
+    }
+
+    /**
+     * Renewal re-asks every question login asked, plus one of its own.
+     *
+     * <p>A refresh token is a 30-day licence to mint access tokens, and nothing else revisits
+     * the account's state while it lasts. Without this, deactivating or unverifying an account
+     * anywhere other than {@code UserService#setApproval}, which deletes tokens as a side
+     * effect, would leave its live sessions renewable until the token aged out. The extra
+     * question is the temporary password: login allows it so the user can reach the
+     * change-password endpoint, but renewing would turn "change this now" into "never".
+     *
+     * <p>Rejection revokes the whole family rather than merely refusing this call, because an
+     * account that cannot hold a session should not be left holding usable refresh tokens. The
+     * revocation runs in its own transaction, since throwing here rolls this one back. That is
+     * also why the caller runs this before locking the presented token: see {@link #refresh}.
+     */
+    private void assertSessionMayBeRenewed(User user, HttpServletResponse response) {
+        try {
+            assertAccountMayHoldSession(user);
+
+            if (user.isMustChangePassword()) {
+                log.warn("Refresh refused: password change still pending for user {}", user.getId());
+                throw new PasswordChangeRequiredException(
+                        "Please set a new password before continuing; sign in again to do so.");
+            }
+        } catch (BaseException rejection) {
+            refreshTokenService.revokeAllSessionsInOwnTransaction(user.getId());
+            cookieUtilities.clearAuthenticationCookies(response);
+            throw rejection;
+        }
+    }
+
+    /**
      * A refresh token that exists but was already consumed is the signature of replay after
      * rotation: either the legitimate client or a thief now holds the successor, and there is
      * no way to tell which party is asking. The whole session family is therefore revoked
@@ -185,7 +245,7 @@ public class AuthenticationService {
                     Long userId = replayed.getUser().getId();
                     log.warn("SECURITY: refresh token reuse detected for user {} (ip: {}, device: {}); revoking all"
                             + " sessions", userId, extractIpAddress(request), extractDeviceInfo(request));
-                    refreshTokenService.handleCompromisedToken(userId);
+                    refreshTokenService.revokeAllSessionsInOwnTransaction(userId);
                 });
 
         return new InvalidRefreshTokenException("Invalid or expired refresh token");
