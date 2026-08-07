@@ -15,6 +15,7 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.codec.ByteArrayCodec;
 import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.codec.StringCodec;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -43,18 +44,40 @@ public class RateLimitConfiguration {
     }
 
     @Bean
-    public RateLimiter rateLimiter(RateLimitProperties properties, StatefulRedisConnection<String, byte[]> rateLimitRedisConnection) {
-        ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(rateLimitRedisConnection)
+    public ProxyManager<String> rateLimitProxyManager(RateLimitProperties properties,
+                                                      StatefulRedisConnection<String, byte[]> rateLimitRedisConnection) {
+        return Bucket4jLettuce.casBasedBuilder(rateLimitRedisConnection)
                 .expirationAfterWrite(ExpirationAfterWriteStrategy
                         .basedOnTimeForRefillingBucketUpToMax(properties.idleExpiry()))
                 .build();
-        return new Bucket4jRateLimiter(properties, proxyManager);
+    }
+
+    /**
+     * Guards credential-bearing endpoints: a tight budget, because each request is an attempt.
+     */
+    @Bean
+    public RateLimiter authRateLimiter(RateLimitProperties properties, ProxyManager<String> rateLimitProxyManager) {
+        return new Bucket4jRateLimiter("auth", properties.capacity(), properties.refillPeriod(), rateLimitProxyManager);
+    }
+
+    /**
+     * Guards the anonymous catalogue endpoints. Browsing costs several requests per page view,
+     * so this budget is far looser than the authentication one; it exists to cap scraping, not
+     * to make the site feel broken.
+     */
+    @Bean
+    public RateLimiter publicBrowseRateLimiter(RateLimitProperties properties,
+                                               ProxyManager<String> rateLimitProxyManager) {
+        return new Bucket4jRateLimiter("public", properties.publicBrowse().capacity(),
+                properties.publicBrowse().refillPeriod(), rateLimitProxyManager);
     }
 
     @Bean
-    public RateLimitFilter rateLimitFilter(RateLimiter rateLimiter, ClientKeyResolver clientKeyResolver,
+    public RateLimitFilter rateLimitFilter(@Qualifier("authRateLimiter") RateLimiter authRateLimiter,
+                                           @Qualifier("publicBrowseRateLimiter") RateLimiter publicBrowseRateLimiter,
+                                           ClientKeyResolver clientKeyResolver,
                                            ExceptionProblemDetailFactory problemDetailFactory,
                                            ObjectMapper objectMapper) {
-        return new RateLimitFilter(rateLimiter, clientKeyResolver, problemDetailFactory, objectMapper);
+        return new RateLimitFilter(authRateLimiter, publicBrowseRateLimiter, clientKeyResolver, problemDetailFactory, objectMapper);
     }
 }

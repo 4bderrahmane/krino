@@ -45,13 +45,15 @@ class Bucket4jRateLimiterTest {
     }
 
     private static RateLimiter limiterWithCapacity(long capacity) {
-        RateLimitProperties properties = new RateLimitProperties(
-                true, capacity, Duration.ofHours(1), Duration.ofHours(2));
+        return limiterWithCapacity("auth", capacity);
+    }
+
+    private static RateLimiter limiterWithCapacity(String namespace, long capacity) {
         var proxyManager = Bucket4jLettuce.casBasedBuilder(connection)
                 .expirationAfterWrite(ExpirationAfterWriteStrategy
-                        .basedOnTimeForRefillingBucketUpToMax(properties.idleExpiry()))
+                        .basedOnTimeForRefillingBucketUpToMax(Duration.ofHours(2)))
                 .build();
-        return new Bucket4jRateLimiter(properties, proxyManager);
+        return new Bucket4jRateLimiter(namespace, capacity, Duration.ofHours(1), proxyManager);
     }
 
     private static String randomKey() {
@@ -70,6 +72,23 @@ class Bucket4jRateLimiterTest {
         assertThat(throttled.allowed()).isFalse();
         assertThat(throttled.remaining()).isZero();
         assertThat(throttled.retryAfter()).isPositive();
+    }
+
+    @Test
+    void tiersDoNotShareABucketForTheSameKey() {
+        // A bucket's capacity is fixed when Redis first creates it, so if the two tiers named
+        // the same bucket, the public tier would inherit the exhausted auth bucket and browsing
+        // would be throttled by the login budget.
+        RateLimiter authLimiter = limiterWithCapacity("auth", 1);
+        RateLimiter publicLimiter = limiterWithCapacity("public", 3);
+        String sharedKey = randomKey();
+
+        assertThat(authLimiter.tryConsume(sharedKey).allowed()).isTrue();
+        assertThat(authLimiter.tryConsume(sharedKey).allowed()).isFalse();
+
+        RateLimiter.RateLimitResult publicResult = publicLimiter.tryConsume(sharedKey);
+        assertThat(publicResult.allowed()).isTrue();
+        assertThat(publicResult.limit()).isEqualTo(3);
     }
 
     @Test

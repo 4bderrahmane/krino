@@ -1,6 +1,5 @@
 package com.krino.backend.security;
 
-import com.krino.backend.configuration.properties.RateLimitProperties;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConsumptionProbe;
@@ -10,31 +9,25 @@ import io.github.bucket4j.distributed.proxy.ProxyManager;
 import java.time.Duration;
 import java.util.function.Supplier;
 
-/**
- * Token-bucket rate limiter backed by Bucket4j, with one bucket per key held in Redis, so the
- * limit holds across application instances and restarts. The proxy manager's expiration
- * strategy keeps a bucket alive until it has fully refilled plus an idle margin (see
- * {@code RateLimitConfiguration}), so a throttled caller's bucket is never expired (and reset)
- * while it is still being limited; idle keys expire on their own, so memory stays bounded.
- */
 public class Bucket4jRateLimiter implements RateLimiter {
 
-    /** Namespaces bucket keys in Redis, away from the "krino::" cache entries. */
     private static final String KEY_PREFIX = "ratelimit:";
 
     private final ProxyManager<String> proxyManager;
     private final Supplier<BucketConfiguration> bucketConfiguration;
+    private final String keyNamespace;
     private final long limit;
 
-    public Bucket4jRateLimiter(RateLimitProperties properties, ProxyManager<String> proxyManager) {
+    public Bucket4jRateLimiter(String namespace, long capacity, Duration refillPeriod, ProxyManager<String> proxyManager) {
         this.proxyManager = proxyManager;
-        this.limit = properties.capacity();
+        this.keyNamespace = namespace + ":";
+        this.limit = capacity;
 
         // Refill exactly `capacity` tokens per refill-period, so a drained bucket takes the
         // whole period to recover and the sustained rate can never exceed the burst capacity.
         Bandwidth bandwidth = Bandwidth.builder()
-                .capacity(properties.capacity())
-                .refillGreedy(properties.capacity(), properties.refillPeriod())
+                .capacity(capacity)
+                .refillGreedy(capacity, refillPeriod)
                 .build();
         BucketConfiguration configuration = BucketConfiguration.builder().addLimit(bandwidth).build();
         this.bucketConfiguration = () -> configuration;
@@ -42,7 +35,7 @@ public class Bucket4jRateLimiter implements RateLimiter {
 
     @Override
     public RateLimitResult tryConsume(String key) {
-        BucketProxy bucket = proxyManager.builder().build(KEY_PREFIX + key, bucketConfiguration);
+        BucketProxy bucket = proxyManager.builder().build(KEY_PREFIX + keyNamespace + key, bucketConfiguration);
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 
         return new RateLimitResult(

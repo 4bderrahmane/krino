@@ -35,7 +35,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
             "/actuator/health"
     );
 
-    private final RateLimiter limiter;
+    private static final String PUBLIC_PATH_PREFIX = "/api/public/";
+
+    private final RateLimiter authLimiter;
+    private final RateLimiter publicBrowseLimiter;
     private final ClientKeyResolver keyResolver;
     private final ExceptionProblemDetailFactory problemDetailFactory;
     private final ObjectMapper objectMapper;
@@ -43,6 +46,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws ServletException, IOException {
+        RateLimiter limiter = limiterFor(request.getMethod(), request.getRequestURI());
+        if (limiter == null) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         String key = keyResolver.resolve(request);
         RateLimiter.RateLimitResult result = limiter.tryConsume(key);
 
@@ -61,12 +70,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-        return !isRateLimited(request.getMethod(), request.getRequestURI());
+        return limiterFor(request.getMethod(), request.getRequestURI()) == null;
     }
 
-    private static boolean isRateLimited(String method, String path) {
-        return (HttpMethod.POST.matches(method) && RATE_LIMITED_POST_PATHS.contains(path))
-                || (HttpMethod.GET.matches(method) && RATE_LIMITED_GET_PATHS.contains(path));
+    private RateLimiter limiterFor(String method, String path) {
+        if (HttpMethod.POST.matches(method) && RATE_LIMITED_POST_PATHS.contains(path)) {
+            return authLimiter;
+        }
+
+        if (HttpMethod.GET.matches(method)) {
+            if (RATE_LIMITED_GET_PATHS.contains(path)) return authLimiter;
+            if (path.startsWith(PUBLIC_PATH_PREFIX)) return publicBrowseLimiter;
+        }
+
+        return null;
     }
 
     private void writeRateLimitedResponse(HttpServletRequest request, HttpServletResponse response,

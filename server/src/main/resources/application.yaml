@@ -86,6 +86,9 @@ app:
     capacity: "${APP_RATE_LIMIT_AUTH_CAPACITY:10}"
     refill-period: "${APP_RATE_LIMIT_AUTH_REFILL_PERIOD:1m}"
     idle-expiry: 10m
+    public-browse:
+      capacity: "${APP_RATE_LIMIT_PUBLIC_CAPACITY:120}"
+      refill-period: "${APP_RATE_LIMIT_PUBLIC_REFILL_PERIOD:1m}"
   admin:
     email: "${APP_ADMIN_EMAIL:}"
     password: "${APP_ADMIN_PASSWORD:}"

@@ -51,6 +51,11 @@ app:
 
   ratelimit:
     enabled: false
+    # Bound even when disabled, so a test that flips `enabled` on does not have to restate
+    # the whole block (RateLimitProperties requires this tier whenever limiting is enabled).
+    public-browse:
+      capacity: 120
+      refill-period: 1m
 
   # Cookies: disable the Secure flag so tests don't assume HTTPS.
   cookies:
