@@ -7,6 +7,14 @@ spring:
       max-file-size: 5MB
       max-request-size: 5MB
 
+  # Mirrors application.yaml. This file shadows it wholesale rather than layering on top of
+  # it, so anything the tests need to exercise has to be restated here.
+  data:
+    web:
+      pageable:
+        max-page-size: 100
+        default-page-size: 20
+
   # Schema management mirrors production: Flyway runs the real migrations and Hibernate
   # only validates the entity mapping against the migrated schema.
   flyway:

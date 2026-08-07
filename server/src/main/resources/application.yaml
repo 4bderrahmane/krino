@@ -14,6 +14,12 @@ spring:
       host: "${REDIS_HOST:localhost}"
       port: "${REDIS_PORT:6379}"
       password: "${REDIS_PASSWORD:}"
+    web:
+      pageable:
+        # Caps ?size= on every paged endpoint. Without it a single caller can ask for the
+        # whole table in one query, and on /api/public/** that caller need not even log in.
+        max-page-size: 100
+        default-page-size: 20
   jpa:
     hibernate:
       ddl-auto: "${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}"
