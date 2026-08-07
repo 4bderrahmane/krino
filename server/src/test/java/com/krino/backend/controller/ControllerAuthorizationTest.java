@@ -46,14 +46,19 @@ import static org.mockito.Mockito.when;
  * authorities each role actually grants via {@link UserRole#getAuthorities()}.
  *
  * Intended matrix (C=create, R=read, U=update, D=delete):
- *   Job          ADMIN:CRUD  HR:CRUD   INTERVIEWER:R    CANDIDATE:R
+ *   Job          ADMIN:CRUD  HR:CRUD   INTERVIEWER:R    CANDIDATE:item R
  *   Slot         ADMIN:CRUD  HR:CRUD   INTERVIEWER:CRUD CANDIDATE:item R
- *   Department   ADMIN:CRUD  HR:CRUD   INTERVIEWER:R    CANDIDATE:R
+ *   Department   ADMIN:CRUD  HR:CRUD   INTERVIEWER:R    CANDIDATE:item R
  *   Application  ADMIN:CRUD  HR:RUD    INTERVIEWER:item R CANDIDATE:item CRUD
  *   Interview    ADMIN:CRUD  HR:CRUD   INTERVIEWER:item RU CANDIDATE:item R
  *
- * Collection endpoints for slots, applications, and interviews are intentionally staff-only.
- * Candidate/interviewer item access is filtered in the service layer by ownership/participation.
+ * Collection endpoints for jobs, departments, slots, applications, and interviews are
+ * intentionally staff-only. Candidate/interviewer item access is filtered in the service layer by
+ * ownership/participation.
+ *
+ * The published catalogue is a deliberate exception: the Public* controllers carry no
+ * @PreAuthorize because they serve anonymous visitors, and their OPEN-only rules are enforced in
+ * the services (see JobVisibilityIntegrationTest, DepartmentVisibilityIntegrationTest).
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ControllerAuthorizationTest.Config.class)
@@ -72,6 +77,8 @@ class ControllerAuthorizationTest
         @Bean DepartmentController departmentController(DepartmentService s) { return new DepartmentController(s); }
         @Bean InterviewController interviewController(InterviewService s) { return new InterviewController(s); }
         @Bean JobController jobController(JobService s) { return new JobController(s); }
+        @Bean PublicJobController publicJobController(JobService s) { return new PublicJobController(s); }
+        @Bean PublicDepartmentController publicDepartmentController(DepartmentService s) { return new PublicDepartmentController(s); }
         @Bean SlotController slotController(SlotService s) { return new SlotController(s); }
     }
 
@@ -79,6 +86,8 @@ class ControllerAuthorizationTest
     @Autowired DepartmentController departmentController;
     @Autowired InterviewController interviewController;
     @Autowired JobController jobController;
+    @Autowired PublicJobController publicJobController;
+    @Autowired PublicDepartmentController publicDepartmentController;
     @Autowired SlotController slotController;
     @Autowired ApplicationService applicationService;
     @Autowired DepartmentService departmentService;
@@ -200,16 +209,20 @@ class ControllerAuthorizationTest
     void candidate_browsesJobsAndManagesOwnApplications()
     {
         authenticateAs(UserRole.CANDIDATE);
-        allowed(() -> jobController.getAllJobs(PAGEABLE));
+        // Candidates browse the published catalogue, which needs no authentication at all.
+        allowed(() -> publicJobController.getOpenJobs(PAGEABLE));
         allowed(() -> applicationController.createApplication(null));
         allowed(() -> applicationController.getApplicationByPublicId(ID));
         allowed(() -> applicationController.updateApplication(ID, null));
         allowed(() -> applicationController.deleteApplication(ID));
         allowed(() -> slotController.getSlotByPublicId(ID));
         allowed(() -> interviewController.getInterviewByPublicId(ID));
-        allowed(() -> departmentController.getAllDepartments(PAGEABLE));
+        allowed(() -> publicDepartmentController.getPublicDepartments());
 
-        // candidates cannot author the catalogue or run interviews
+        // candidates cannot author the catalogue, run interviews, or read the internal
+        // catalogue and directory, which list drafts and unannounced work
+        denied(() -> jobController.getAllJobs(PAGEABLE));
+        denied(() -> departmentController.getAllDepartments());
         denied(() -> jobController.createJob(null));
         denied(() -> slotController.createSlot(null));
         denied(() -> slotController.getAllSlots(PAGEABLE));

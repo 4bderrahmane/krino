@@ -4,6 +4,7 @@ import com.krino.backend.dto.department.DepartmentCreateDTO;
 import com.krino.backend.dto.department.DepartmentResponseDTO;
 import com.krino.backend.dto.department.DepartmentUpdateDTO;
 import com.krino.backend.entity.Department;
+import com.krino.backend.entity.enums.JobStatus;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
 import com.krino.backend.mapper.DepartmentMapper;
@@ -131,6 +132,27 @@ public class DepartmentService {
         SecurityUtilities.requireAnyRole("ADMIN", "HR_MANAGER", "INTERVIEWER");
         return departmentRepository
                 .findAll(Sort.by(NAME))
+                .stream()
+                .map(departmentMapper::toResponse)
+                .toList();
+    }
+
+    /**
+     * The departments a visitor can filter the public catalogue by.
+     *
+     * <p>Restricted to departments with an {@code OPEN} posting, for two reasons: filtering by a
+     * department with nothing published would just return an empty list, and listing every
+     * department would re-leak the unannounced work that hiding drafts was meant to conceal.
+     *
+     * <p>Uncached, unlike the public job listing. That listing renders twenty full postings with
+     * their skills and departments on the busiest page of the site; this one is a handful of
+     * names over a small table behind an EXISTS. Caching it would buy very little and would owe
+     * an eviction to every job lifecycle method, since publishing or closing a posting changes
+     * the answer. Correct on every read is worth more than the query it saves.
+     */
+    public List<DepartmentResponseDTO> getPublicDepartments() {
+        return departmentRepository
+                .findHavingJobWithStatus(JobStatus.OPEN)
                 .stream()
                 .map(departmentMapper::toResponse)
                 .toList();

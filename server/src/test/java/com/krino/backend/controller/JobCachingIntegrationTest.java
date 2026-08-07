@@ -10,10 +10,13 @@ import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.http.MediaType;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.krino.backend.configuration.CachingConfiguration.JOBS_CACHE;
@@ -29,17 +32,22 @@ class JobCachingIntegrationTest extends AbstractControllerIntegrationTest {
     @Autowired
     private CacheManager cacheManager;
 
+    @Autowired
+    private RedisConnectionFactory redisConnectionFactory;
+
     @Test
-    void listingIsCachedAndEvictedOnMutation() throws Exception {
+    void publicListingIsServedFromCacheAndEvictedOnMutation() throws Exception {
         createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
-        Job job = job();
+        Job job = openJob();
         Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
 
-        // First read populates the cache; second read is served from Redis and must
-        // deserialize back to the same payload.
-        listJobs(accessCookie).andExpect(jsonPath("$.content[0].title").value("Backend Engineer"));
-        assertThat(Objects.requireNonNull(cacheManager.getCache(JOB_LISTINGS_CACHE)).get("all")).isNotNull();
-        listJobs(accessCookie).andExpect(jsonPath("$.content[0].title").value("Backend Engineer"));
+        listPublicJobs().andExpect(jsonPath("$.content[0].title").value("Backend Engineer"));
+
+        // Renaming through the repository skips the service, so nothing evicts the listing.
+        // The stale title coming back proves the response was deserialized out of Redis.
+        job.updateContent("Renamed Behind The Cache", job.getDescription());
+        jobRepository.save(job);
+        listPublicJobs().andExpect(jsonPath("$.content[0].title").value("Backend Engineer"));
 
         mockMvc.perform(withCsrf(patch("/api/jobs/" + job.getPublicId()))
                         .cookie(accessCookie)
@@ -51,9 +59,34 @@ class JobCachingIntegrationTest extends AbstractControllerIntegrationTest {
                                 """))
                 .andExpect(status().isOk());
 
-        // The mutation evicted the listing, so the next read sees the new title immediately.
-        assertThat(Objects.requireNonNull(cacheManager.getCache(JOB_LISTINGS_CACHE)).get("all")).isNull();
-        listJobs(accessCookie).andExpect(jsonPath("$.content[0].title").value("Platform Engineer"));
+        // Going through the service evicts, so the next read sees the new title immediately.
+        listPublicJobs().andExpect(jsonPath("$.content[0].title").value("Platform Engineer"));
+    }
+
+    @Test
+    void onlyTheFirstPageOfThePublicListingIsCached() throws Exception {
+        openJob();
+
+        // The listing is anonymous, so an unauthenticated caller controls the page number.
+        // Caching every page would let one client mint unbounded Redis keys by walking it.
+        mockMvc.perform(get("/api/public/jobs").param("page", "3")).andExpect(status().isOk());
+        assertThat(cachedListingKeys()).isEmpty();
+
+        listPublicJobs().andExpect(status().isOk());
+        assertThat(cachedListingKeys()).hasSize(1);
+    }
+
+    @Test
+    void staffListingIsNotCached() throws Exception {
+        createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
+        openJob();
+
+        mockMvc.perform(get("/api/jobs").cookie(loginAndGetAccessCookie(ADMIN_EMAIL)))
+                .andExpect(status().isOk());
+
+        // Staff results include drafts; caching them is one lookup mistake away from serving
+        // a draft to a candidate, so this listing deliberately has no cache entry at all.
+        assertThat(cachedListingKeys()).isEmpty();
     }
 
     @Test
@@ -80,9 +113,15 @@ class JobCachingIntegrationTest extends AbstractControllerIntegrationTest {
         getJob(accessCookie, job.getPublicId()).andExpect(jsonPath("$.title").value("Platform Engineer"));
     }
 
-    private org.springframework.test.web.servlet.ResultActions listJobs(Cookie accessCookie) throws Exception {
-        return mockMvc.perform(get("/api/jobs").cookie(accessCookie))
-                .andExpect(status().isOk());
+    private Set<byte[]> cachedListingKeys() {
+        try (RedisConnection connection = redisConnectionFactory.getConnection()) {
+            return connection.keyCommands()
+                    .keys(("krino::" + JOB_LISTINGS_CACHE + "*").getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    private org.springframework.test.web.servlet.ResultActions listPublicJobs() throws Exception {
+        return mockMvc.perform(get("/api/public/jobs")).andExpect(status().isOk());
     }
 
     private org.springframework.test.web.servlet.ResultActions getJob(Cookie accessCookie, UUID publicId) throws Exception {
@@ -100,6 +139,12 @@ class JobCachingIntegrationTest extends AbstractControllerIntegrationTest {
                 EmploymentType.FULL_TIME, ContractType.PERMANENT, RemotePolicy.REMOTE);
         job.updateContent("Backend Engineer", "Build APIs");
         job.updateTimeline(Instant.parse("2099-12-31T23:59:00Z"), null);
+        return jobRepository.save(job);
+    }
+
+    private Job openJob() {
+        Job job = job();
+        job.publish(Instant.now());
         return jobRepository.save(job);
     }
 }

@@ -5,6 +5,7 @@ import com.krino.backend.dto.job.JobCreateDTO;
 import com.krino.backend.dto.job.JobResponseDTO;
 import com.krino.backend.dto.job.JobSkillRequestDTO;
 import com.krino.backend.dto.job.JobUpdateDTO;
+import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.entity.enums.SalaryCurrency;
 import com.krino.backend.entity.enums.SalaryPeriod;
 import com.krino.backend.entity.Department;
@@ -21,11 +22,11 @@ import com.krino.backend.repository.DepartmentRepository;
 import com.krino.backend.repository.JobRepository;
 import com.krino.backend.repository.SkillRepository;
 import com.krino.backend.utility.ErrorCode;
+import com.krino.backend.utility.SecurityUtilities;
 import com.krino.backend.utility.Slugs;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,22 +47,27 @@ import java.util.function.Consumer;
 @Service
 @RequiredArgsConstructor
 public class JobService {
+    private static final String ADMIN = "ADMIN";
+    private static final String HR_MANAGER = "HR_MANAGER";
+    private static final String INTERVIEWER = "INTERVIEWER";
+
     private final JobRepository jobRepository;
     private final DepartmentRepository departmentRepository;
     private final ApplicationRepository applicationRepository;
     private final SkillRepository skillRepository;
     private final JobMapper jobMapper;
+    private final JobReader jobReader;
 
     @Caching(evict = {
             @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
-            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)
+    })
     public void deleteJobByPublicId(UUID publicId) {
         Job job = findJob(publicId);
 
         if (applicationRepository.existsByJob(job)) {
             throw new ResourceConflictException(
-                    String.format("Job '%s' has applications or interviews and cannot be deleted; close it instead.",
-                            job.getTitle()),
+                    String.format("Job '%s' has applications or interviews and cannot be deleted; close it instead.", job.getTitle()),
                     ErrorCode.OPERATION_NOT_ALLOWED,
                     Map.of("resource", "Job", "title", job.getTitle()));
         }
@@ -73,18 +79,25 @@ public class JobService {
     public JobResponseDTO createJob(JobCreateDTO dto) {
         Department department = findDepartment(dto.getDepartmentName());
 
-        Job job = new Job(generateReferenceCode(), generateSlug(dto.getTitle()), department,
-                dto.getTitle(), dto.getEmploymentType(), dto.getContractType(), dto.getRemotePolicy());
+        Job job = new Job(
+                generateReferenceCode(),
+                generateSlug(dto.getTitle()),
+                department,
+                dto.getTitle(),
+                dto.getEmploymentType(),
+                dto.getContractType(),
+                dto.getRemotePolicy()
+        );
 
         try {
             job.updateContent(dto.getTitle(), dto.getDescription());
             job.updateClassification(dto.getEmploymentType(), dto.getContractType(),
-                    dto.getExperienceLevel(), dto.getMinimumExperienceYears(),
-                    openPositionsOrDefault(dto.getOpenPositions()));
+                                     dto.getExperienceLevel(), dto.getMinimumExperienceYears(),
+                                     openPositionsOrDefault(dto.getOpenPositions()));
             job.updateWorkArrangement(dto.getRemotePolicy(), dto.getCity());
             job.updateTimeline(dto.getApplicationDeadline(), dto.getPlannedStartDate());
-            applySalary(job, dto.getSalaryMin(), dto.getSalaryMax(), dto.getSalaryCurrency(),
-                    dto.getSalaryPeriod(), dto.getSalaryNegotiable());
+
+            applySalary(job, dto.getSalaryMin(), dto.getSalaryMax(), dto.getSalaryCurrency(), dto.getSalaryPeriod(), dto.getSalaryNegotiable());
             job.replaceSkills(resolveJobSkills(dto.getSkills()));
             return jobMapper.toResponse(jobRepository.save(job));
         } catch (IllegalStateException ex) {
@@ -92,63 +105,110 @@ public class JobService {
         }
     }
 
-    @Cacheable(cacheNames = JOBS_CACHE, key = "#publicId")
+    /**
+     * The authenticated detail view. Staff see any posting; everyone else sees a posting only
+     * while it is {@link JobStatus#OPEN}, or afterwards if they applied to it, so that a
+     * candidate's own application list never points at a 404.
+     */
     public JobResponseDTO getJobByPublicId(UUID publicId) {
-        return jobMapper.toResponse(findJob(publicId));
+        JobResponseDTO job = jobReader.readByPublicId(publicId);
+        requireVisible(job);
+        return job;
     }
 
-    // Offers are intentionally NOT paginated. The offer catalogue is small and
-    // bounded by design, I keep only the offers we currently need and delete
-    // stale ones, so it never grows large enough to justify server-side paging.
-    // I therefore ignore the incoming Pageable and return the WHOLE list in a
-    // single page; the web client fetches everything and does its own filtering.
-    // Larger collections (applications, interviews, ...)
-    // DO paginate on the server, so they keep a real Pageable.
-    // The Pageable is ignored (see above), so one constant key covers the whole catalogue.
-    @Cacheable(cacheNames = JOB_LISTINGS_CACHE, key = "'all'")
+    /**
+     * The anonymous detail view: published postings only, and nothing else exists.
+     */
+    public JobResponseDTO getPublicJobByPublicId(UUID publicId) {
+        JobResponseDTO job = jobReader.readByPublicId(publicId);
+        if (job.getStatus() != JobStatus.OPEN) {
+            throw notFound(publicId);
+        }
+        return job;
+    }
+
+    /**
+     * The anonymous catalogue: published postings only, paginated in the database.
+     */
+    public PageResponse<JobResponseDTO> getOpenJobs(Pageable pageable) {
+        return jobReader.readOpenListing(pageable);
+    }
+
+    /**
+     * The staff catalogue: every posting in every status, drafts included.
+     *
+     * <p>Deliberately uncached. Its results are staff-visible only, so a cache entry here is one
+     * lookup mistake away from serving a draft to a candidate, and the page/sort/filter spread
+     * makes the hit rate poor anyway.
+     */
     public PageResponse<JobResponseDTO> getAllJobs(Pageable pageable) {
-        return PageResponse.from(jobRepository.findAll(Pageable.unpaged()),
-                jobMapper::toResponse);
+        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER, INTERVIEWER);
+        return PageResponse.from(jobRepository.findAll(pageable), jobMapper::toResponse);
+    }
+
+    // Authorization deliberately runs on the rendered DTO rather than inside the cached read:
+    // see JobReader. 404 rather than 403, because 403 on an unpublished posting confirms that
+    // it exists, which is exactly what a draft should not leak.
+    private void requireVisible(JobResponseDTO job) {
+        if (SecurityUtilities.hasAnyRole(ADMIN, HR_MANAGER, INTERVIEWER)
+                || job.getStatus() == JobStatus.OPEN) {
+            return;
+        }
+
+        CustomUserDetails currentUser = SecurityUtilities.requireCurrentCustomUser();
+        if (!applicationRepository.existsByJob_PublicIdAndCandidate_PublicId(job.getId(), currentUser.getPublicId())) {
+            throw notFound(job.getId());
+        }
+    }
+
+    private ResourceNotFoundException notFound(UUID publicId) {
+        return new ResourceNotFoundException(String.format("Job with public ID '%s' not found.", publicId));
     }
 
     @Caching(evict = {
             @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
-            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)
+    })
     public JobResponseDTO updateJob(UUID publicId, JobUpdateDTO dto) {
         return mutate(publicId, job -> applyFullUpdate(job, dto));
     }
 
     @Caching(evict = {
             @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
-            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)
+    })
     public JobResponseDTO patchJob(UUID publicId, JobUpdateDTO dto) {
         return mutate(publicId, job -> applyPatch(job, dto));
     }
 
     @Caching(evict = {
             @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
-            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)
+    })
     public JobResponseDTO publishJob(UUID publicId) {
         return mutate(publicId, job -> job.publish(Instant.now()));
     }
 
     @Caching(evict = {
             @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
-            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)
+    })
     public JobResponseDTO pauseJob(UUID publicId) {
         return mutate(publicId, Job::pause);
     }
 
     @Caching(evict = {
             @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
-            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)
+    })
     public JobResponseDTO closeJob(UUID publicId, JobStatus closingStatus) {
         return mutate(publicId, job -> job.close(closingStatus, Instant.now()));
     }
 
     @Caching(evict = {
             @CacheEvict(cacheNames = JOBS_CACHE, key = "#publicId"),
-            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)})
+            @CacheEvict(cacheNames = JOB_LISTINGS_CACHE, allEntries = true)
+    })
     public JobResponseDTO archiveJob(UUID publicId) {
         return mutate(publicId, job -> job.archive(Instant.now()));
     }
@@ -248,12 +308,14 @@ public class JobService {
 
     private Job findJob(UUID publicId) {
         return jobRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format("Job with public ID '%s' not found.", publicId)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("Job with public ID '%s' not found.",
+                        publicId)));
     }
 
     private Department findDepartment(String name) {
         return departmentRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format("Department with name '%s' not found.", name)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("Department with name '%s' not found."
+                        , name)));
     }
 
     private ResourceConflictException notAllowed(IllegalStateException ex) {

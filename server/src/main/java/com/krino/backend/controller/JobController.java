@@ -6,6 +6,7 @@ import com.krino.backend.dto.job.JobCreateDTO;
 import com.krino.backend.dto.job.JobResponseDTO;
 import com.krino.backend.dto.job.JobUpdateDTO;
 import com.krino.backend.service.JobService;
+import com.krino.backend.utility.SortWhitelist;
 import com.krino.backend.validation.ValidationGroups;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,6 +29,9 @@ public class JobController {
 
     private final JobService jobService;
 
+    private static final SortWhitelist SORT_WHITELIST = SortWhitelist.of(
+            "id", "title", "status", "publishedAt", "applicationDeadline", "createdDate", "lastModifiedDate");
+
     @PostMapping
     @PreAuthorize("hasAuthority('job:create')")
     public ResponseEntity<JobResponseDTO> createJob(@Valid @RequestBody JobCreateDTO jobRequest) {
@@ -42,12 +46,12 @@ public class JobController {
         return ResponseEntity.ok(job);
     }
 
-    // NOTE: offers are returned in full — this endpoint does not really paginate.
-    // The Pageable is accepted for API consistency but ignored; see JobService#getAllJobs.
+    // The internal catalogue: every status, drafts included, so it is staff-only.
+    // Candidates browse GET /api/public/jobs instead.
     @GetMapping
-    @PreAuthorize("hasAuthority('job:read')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'INTERVIEWER')")
     public ResponseEntity<PageResponse<JobResponseDTO>> getAllJobs(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        PageResponse<JobResponseDTO> jobs = jobService.getAllJobs(pageable);
+        PageResponse<JobResponseDTO> jobs = jobService.getAllJobs(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(jobs);
     }
 

@@ -3,6 +3,8 @@ package com.krino.backend.repository;
 import com.krino.backend.entity.Department;
 import com.krino.backend.entity.Job;
 import com.krino.backend.entity.enums.JobStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -18,5 +20,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     List<Job> findByDepartment(Department department);
 
     List<Job> findByStatus(JobStatus status);
+
+    Page<Job> findByStatus(JobStatus status, Pageable pageable);
 
 }

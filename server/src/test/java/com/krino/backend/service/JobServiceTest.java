@@ -44,6 +44,7 @@ class JobServiceTest
     private ApplicationRepository applicationRepository;
     private SkillRepository skillRepository;
     private JobMapper jobMapper;
+    private JobReader jobReader;
     private JobService jobService;
 
     @BeforeEach
@@ -54,8 +55,9 @@ class JobServiceTest
         applicationRepository = mock(ApplicationRepository.class);
         skillRepository = mock(SkillRepository.class);
         jobMapper = mock(JobMapper.class);
+        jobReader = mock(JobReader.class);
         jobService = new JobService(jobRepository, departmentRepository, applicationRepository, skillRepository,
-                jobMapper);
+                jobMapper, jobReader);
     }
 
     @Test
@@ -145,8 +147,11 @@ class JobServiceTest
     @Test
     void getJobByPublicId_unknown_throwsResourceNotFound()
     {
+        // The lookup itself lives in JobReader, which owns the cache boundary; JobService only
+        // authorizes what comes back (see JobVisibilityIntegrationTest for those rules).
         UUID publicId = UUID.randomUUID();
-        when(jobRepository.findByPublicId(publicId)).thenReturn(Optional.empty());
+        when(jobReader.readByPublicId(publicId))
+                .thenThrow(new ResourceNotFoundException("Job with public ID '%s' not found.".formatted(publicId)));
 
         assertThatThrownBy(() -> jobService.getJobByPublicId(publicId))
                 .isInstanceOf(ResourceNotFoundException.class);

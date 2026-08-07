@@ -62,6 +62,10 @@ public class SecurityConfiguration {
             "/swagger-ui.html",
     };
 
+    private static final String[] PUBLIC_GET_ENDPOINTS = {
+            "/api/public/**",
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    CorsConfigurationSource corsConfigurationSource,
@@ -74,6 +78,8 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS)
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS)
                         .permitAll()
                         .anyRequest()
                         .authenticated())
