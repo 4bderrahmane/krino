@@ -1,6 +1,5 @@
 package com.krino.backend.service;
 
-import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.department.DepartmentCreateDTO;
 import com.krino.backend.dto.department.DepartmentResponseDTO;
 import com.krino.backend.dto.department.DepartmentUpdateDTO;
@@ -10,14 +9,16 @@ import com.krino.backend.exception.ResourceNotFoundException;
 import com.krino.backend.mapper.DepartmentMapper;
 import com.krino.backend.repository.DepartmentRepository;
 import com.krino.backend.utility.ErrorCode;
+import com.krino.backend.utility.SecurityUtilities;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -29,6 +30,7 @@ import static com.krino.backend.configuration.CachingConfiguration.JOB_LISTINGS_
 @AllArgsConstructor
 @Transactional
 public class DepartmentService {
+
     public static final String RESOURCE = Department.class.getSimpleName();
     private static final String DEPARTMENT_ALREADY_EXISTS = "Department '%s' already exists";
     public static final String PUBLIC_ID = "publicId";
@@ -38,7 +40,6 @@ public class DepartmentService {
     private final DepartmentRepository departmentRepository;
     private final DepartmentMapper departmentMapper;
 
-    // Deletion is only allowed for departments without jobs, so the job caches can't hold it.
     @CacheEvict(cacheNames = DEPARTMENTS_CACHE, allEntries = true)
     public void deleteDepartmentByPublicId(UUID publicId) {
         Department department = departmentRepository.findByPublicId(publicId)
@@ -115,10 +116,23 @@ public class DepartmentService {
         return departmentMapper.toResponse(department);
     }
 
-    // Unlike jobs, this endpoint really paginates, so the key carries the page coordinates.
-    @Cacheable(cacheNames = DEPARTMENTS_CACHE,
-            key = "#pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort")
-    public PageResponse<DepartmentResponseDTO> getAllDepartments(Pageable pageable) {
-        return PageResponse.from(departmentRepository.findAll(pageable), departmentMapper::toResponse);
+    /**
+     * The internal directory: every department, including ones that exist only to hold
+     * unannounced work. Staff-only for the same reason the draft job listing is.
+     *
+     * <p>Returned whole rather than paged. A company has tens of departments, not thousands, so
+     * the entire table is one small query, and every caller wants all of it anyway: the directory
+     * page renders it, the job form uses it as a picker. Paging would only make each of them walk
+     * the pages back. One cached list under a single key is cheaper than the paged version was,
+     * and simpler to evict.
+     */
+    @Cacheable(cacheNames = DEPARTMENTS_CACHE, key = "'all'")
+    public List<DepartmentResponseDTO> getAllDepartments() {
+        SecurityUtilities.requireAnyRole("ADMIN", "HR_MANAGER", "INTERVIEWER");
+        return departmentRepository
+                .findAll(Sort.by(NAME))
+                .stream()
+                .map(departmentMapper::toResponse)
+                .toList();
     }
 }

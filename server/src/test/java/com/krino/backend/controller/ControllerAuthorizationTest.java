@@ -185,7 +185,7 @@ class ControllerAuthorizationTest
         // read context to assess candidates
         allowed(() -> jobController.getAllJobs(PAGEABLE));
         allowed(() -> applicationController.getApplicationByPublicId(ID));
-        allowed(() -> departmentController.getAllDepartments(PAGEABLE));
+        allowed(() -> departmentController.getAllDepartments());
 
         denied(() -> interviewController.createInterview(null));
         denied(() -> interviewController.deleteInterview(ID));

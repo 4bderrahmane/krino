@@ -1,23 +1,20 @@
 package com.krino.backend.controller;
 
-import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.department.DepartmentCreateDTO;
 import com.krino.backend.dto.department.DepartmentResponseDTO;
 import com.krino.backend.dto.department.DepartmentUpdateDTO;
 import com.krino.backend.service.DepartmentService;
-import com.krino.backend.utility.SortWhitelist;
 import com.krino.backend.validation.ValidationGroups;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -26,9 +23,6 @@ import java.util.UUID;
 @RequestMapping("/api/departments")
 public class DepartmentController {
     private final DepartmentService departmentService;
-
-    private static final SortWhitelist SORT_WHITELIST = SortWhitelist.of(
-            "id", "name", "createdDate", "lastModifiedDate");
 
     @PostMapping
     @PreAuthorize("hasAuthority('department:create')")
@@ -47,16 +41,17 @@ public class DepartmentController {
     @PutMapping("/{publicId}")
     @PreAuthorize("hasAuthority('department:update')")
     public ResponseEntity<DepartmentResponseDTO> editDepartmentCompletelyByPublicId(
-                            @PathVariable UUID publicId,
-                            @Validated(ValidationGroups.FullUpdate.class)
-                            @RequestBody DepartmentUpdateDTO request) {
+            @PathVariable UUID publicId,
+            @Validated(ValidationGroups.FullUpdate.class)
+            @RequestBody DepartmentUpdateDTO request) {
         DepartmentResponseDTO department = departmentService.updateDepartment(publicId, request);
         return ResponseEntity.ok(department);
     }
 
     @PatchMapping("/{publicId}")
     @PreAuthorize("hasAuthority('department:update')")
-    public ResponseEntity<DepartmentResponseDTO> editDepartmentPartiallyByPublicId(@PathVariable UUID publicId, @Valid @RequestBody DepartmentUpdateDTO request) {
+    public ResponseEntity<DepartmentResponseDTO> editDepartmentPartiallyByPublicId(@PathVariable UUID publicId,
+                                                                                   @Valid @RequestBody DepartmentUpdateDTO request) {
         DepartmentResponseDTO department = departmentService.patchDepartment(publicId, request);
         return ResponseEntity.ok(department);
     }
@@ -69,9 +64,8 @@ public class DepartmentController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('department:read')")
-    public ResponseEntity<PageResponse<DepartmentResponseDTO>> getAllDepartments(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        PageResponse<DepartmentResponseDTO> departments = departmentService.getAllDepartments(SORT_WHITELIST.sanitize(pageable));
-        return ResponseEntity.ok(departments);
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'INTERVIEWER')")
+    public ResponseEntity<List<DepartmentResponseDTO>> getAllDepartments() {
+        return ResponseEntity.ok(departmentService.getAllDepartments());
     }
 }
