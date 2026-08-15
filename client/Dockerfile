@@ -1,6 +1,6 @@
 # Replaced minimal ENTRYPOINT image with a multi-stage Dockerfile for building a Vite + React (TypeScript) app and serving it with nginx
 # Build stage. Node 22 matches CI; Vite 7 requires Node 20.19+ / 22.12+.
-FROM node:25-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 
