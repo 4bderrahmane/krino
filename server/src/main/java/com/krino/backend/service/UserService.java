@@ -21,21 +21,20 @@ import com.krino.backend.repository.UserRepository;
 import com.krino.backend.security.PasswordGenerator;
 import com.krino.backend.service.email.EmailDispatcher;
 import com.krino.backend.service.email.EmailVerificationService;
+import com.krino.backend.service.resume.ResumeDownload;
 import com.krino.backend.service.resume.ResumeStorageService;
 import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.SecurityUtilities;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Transactional
 @Service
@@ -45,8 +44,7 @@ public class UserService {
     public static final String EMAIL = "email";
     public static final String FIELD = "field";
     public static final String VALUE = "value";
-    private static final String ADMIN = "ADMIN";
-    private static final String HR_MANAGER = "HR_MANAGER";
+    public static final String RESOURCE = "resource";
     private static final String EMAIL_ALREADY_TAKEN_MESSAGE = "Email '%s' is already taken.";
 
     private final EmailDispatcher emailDispatcher;
@@ -76,7 +74,8 @@ public class UserService {
 
         String normalizedEmail = request.getEmail().trim().toLowerCase();
         if (userRepository.findByEmail(normalizedEmail).isPresent()) {
-            throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE, normalizedEmail),
+            throw new ResourceConflictException(
+                    String.format(EMAIL_ALREADY_TAKEN_MESSAGE, normalizedEmail),
                     ErrorCode.DATA_CONFLICT,
                     Map.of(FIELD, EMAIL, VALUE, normalizedEmail));
         }
@@ -86,18 +85,22 @@ public class UserService {
         String phoneNumber = request.getPhoneNumber() == null ? null : request.getPhoneNumber().trim();
         String initialPassword = passwordGenerator.generate();
 
-        User user = new User(normalizedEmail, passwordEncoder.encode(initialPassword), firstName, lastName, phoneNumber);
-        user.addRole(request.getRole());
-        user.setApproved(true);
-        // Receiving the emailed initial password already proves inbox ownership, so staff
-        // accounts skip the explicit verification link.
-        user.setEmailVerified(true);
-        user.setMustChangePassword(true);
+        User user = User.builder()
+                .email(normalizedEmail)
+                .password(passwordEncoder.encode(initialPassword))
+                .firstName(firstName)
+                .lastName(lastName)
+                .phoneNumber(phoneNumber)
+                .isApproved(true)
+                .emailVerified(true)
+                .mustChangePassword(true)
+                .roles(EnumSet.of(request.getRole()))
+                .build();
 
         User savedUser = userRepository.save(user);
 
-        // The initial password reaches the new staff member by email only; it is never
-        // returned over the API.
+        // The initial password reaches the new staff member by email only;
+        // it is never returned over the API.
         emailDispatcher.sendInitialPassword(savedUser.getEmail(), savedUser.getFirstName(), initialPassword);
 
         return userMapper.toResponse(savedUser);
@@ -118,19 +121,19 @@ public class UserService {
     }
 
     public UserResponseDTO getUserResponseByPublicId(UUID publicId) {
-        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, ADMIN, HR_MANAGER);
+        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, UserRole.ADMIN, UserRole.HR_MANAGER);
         return userMapper.toResponse(getUserByPublicId(publicId));
     }
 
-    public ApplicationService.ResumeDownload downloadResume(UUID publicId) {
-        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, ADMIN, HR_MANAGER);
+    public ResumeDownload downloadResume(UUID publicId) {
+        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, UserRole.ADMIN, UserRole.HR_MANAGER);
         User user = getUserByPublicId(publicId);
         if (!StringUtils.hasText(user.getResumeObjectKey())) {
             throw new ResourceNotFoundException("Resume file not found for this user.");
         }
 
         InputStream inputStream = resumeStorageService.downloadResume(user.getResumeObjectKey());
-        return new ApplicationService.ResumeDownload(
+        return new ResumeDownload(
                 StringUtils.hasText(user.getResumeOriginalFilename())
                         ? user.getResumeOriginalFilename()
                         : "resume.pdf",
@@ -142,15 +145,17 @@ public class UserService {
     }
 
     public PageResponse<UserResponseDTO> getAllUsers(Pageable pageable) {
-        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         return PageResponse.from(userRepository.findAll(pageable),
                 userMapper::toResponse);
     }
 
     public UserResponseDTO updateUserPartially(UUID publicId, UserUpdateDTO userUpdateDTO) {
-        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, ADMIN, HR_MANAGER);
+        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, UserRole.ADMIN, UserRole.HR_MANAGER);
         User currentUser = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
+
+        requireAdministratorPrivilegeForAdminTarget(currentUser);
 
         String normalizedEmail = null;
         boolean emailChanged = false;
@@ -161,8 +166,7 @@ public class UserService {
                 String emailToValidate = normalizedEmail;
                 userRepository.findByEmail(emailToValidate)
                         .filter(user -> !user.getPublicId().equals(publicId))
-                        .ifPresent(user ->
-                        {
+                        .ifPresent(user -> {
                             throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE,
                                     emailToValidate), ErrorCode.DATA_CONFLICT,
                                     Map.of(FIELD, EMAIL, VALUE, emailToValidate));
@@ -180,12 +184,15 @@ public class UserService {
     }
 
     public UserResponseDTO updateUserFully(UUID publicId, UserUpdateDTO userUpdateDTO) {
-        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, ADMIN, HR_MANAGER);
+        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, UserRole.ADMIN, UserRole.HR_MANAGER);
         User existingUser = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
 
+        requireAdministratorPrivilegeForAdminTarget(existingUser);
+
         if (userUpdateDTO.getEmail() == null
-                || userUpdateDTO.getFirstName() == null || userUpdateDTO.getLastName() == null
+                || userUpdateDTO.getFirstName() == null
+                || userUpdateDTO.getLastName() == null
                 || userUpdateDTO.getPhoneNumber() == null) {
             throw new IllegalArgumentException("All fields must be provided for a full update.");
         }
@@ -196,18 +203,16 @@ public class UserService {
         if (emailChanged) {
             userRepository.findByEmail(normalizedEmail)
                     .filter(user -> !user.getPublicId().equals(publicId))
-                    .ifPresent(user ->
-                    {
-                        throw new ResourceConflictException(String.format(EMAIL_ALREADY_TAKEN_MESSAGE,
+                    .ifPresent(user -> {
+                        throw new ResourceConflictException(
+                                String.format(EMAIL_ALREADY_TAKEN_MESSAGE,
                                 normalizedEmail), ErrorCode.DATA_CONFLICT,
                                 Map.of(FIELD, EMAIL, VALUE, normalizedEmail));
                     });
         }
 
         userMapper.updateEntity(userUpdateDTO, normalizedEmail, existingUser);
-        if (emailChanged) {
-            requireVerificationOfNewEmail(existingUser);
-        }
+        if (emailChanged) requireVerificationOfNewEmail(existingUser);
 
         User updatedUser = userRepository.save(existingUser);
         return userMapper.toResponse(updatedUser);
@@ -226,21 +231,25 @@ public class UserService {
             throw new InvalidCredentialsException("New password and confirmation do not match.");
         }
 
+        if (existingUser.isMustChangePassword()
+                && passwordEncoder.matches(passwordChangeDTO.getNewPassword(), existingUser.getPassword())) {
+            throw new IllegalArgumentException("The new password must differ from the initial password.");
+        }
+
         existingUser.setPassword(passwordEncoder.encode(passwordChangeDTO.getNewPassword()));
-        // They've chosen their own password, the initial-password reminder is done.
         existingUser.setMustChangePassword(false);
 
         userRepository.save(existingUser);
-
-        // Revoke every session, including the caller's, so one stolen before the change
-        // can't outlive it. Same as a reset (see PasswordResetService.resetPassword).
         refreshTokenRepository.revokeAllUserTokens(existingUser.getId());
     }
 
     public void deleteUserByPublicId(UUID publicId) {
-        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, ADMIN);
+        SecurityUtilities.requireCurrentUserOrAnyRole(publicId, UserRole.ADMIN);
         User userToDelete = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
+
+        requireAdministratorPrivilegeForAdminTarget(userToDelete);
+        requireAnotherAdministratorSurvives(userToDelete, "deleted");
 
         // Applications, interviews and slots keep the recruitment history; deleting a
         // user that owns any of them would orphan those records (FK violation). A candidate's
@@ -251,7 +260,7 @@ public class UserService {
             throw new ResourceConflictException(
                     "User has applications, interviews or slots and cannot be deleted.",
                     ErrorCode.OPERATION_NOT_ALLOWED,
-                    Map.of("resource", "User"));
+                    Map.of(RESOURCE, "User"));
         }
 
         refreshTokenRepository.deleteAllByUserId(userToDelete.getId());
@@ -262,9 +271,17 @@ public class UserService {
     }
 
     public void setApproval(UUID publicId, boolean approved) {
-        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         User user = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
+
+        requireAdministratorPrivilegeForAdminTarget(user);
+
+        // Reactivating is always safe; only the deactivating direction can lock somebody out.
+        if (!approved) {
+            rejectSelfDeactivation(user);
+            requireAnotherAdministratorSurvives(user, "deactivated");
+        }
 
         user.setApproved(approved);
 
@@ -272,7 +289,7 @@ public class UserService {
     }
 
     public PageResponse<UserResponseDTO> getNonApprovedUsers(Pageable pageable) {
-        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         return PageResponse.from(userRepository.findByIsApprovedFalse(pageable),
                 userMapper::toResponse);
     }
@@ -283,13 +300,44 @@ public class UserService {
         return new CustomUserDetails(user);
     }
 
-    /**
-     * A changed email address is as unproven as at registration: drop the verified flag and
-     * send a fresh verification link to the new address. Sessions issued before the change
-     * keep working (token refresh does not re-check the flag), but the next password login is
-     * blocked until the link is used — so a mistyped address can still be corrected from the
-     * surviving session instead of locking the account out.
-     */
+    private void requireAdministratorPrivilegeForAdminTarget(User target) {
+        if (isAdministrator(target) && !SecurityUtilities.hasAnyRole(UserRole.ADMIN)) {
+            throw new AccessDeniedException("Only an administrator can manage an administrator account.");
+        }
+    }
+
+    // this is basically so we don't left with no Admin to administrate the app.
+    private void requireAnotherAdministratorSurvives(User target, String attemptedAction) {
+        if (!isAdministrator(target)) {
+            return;
+        }
+
+        long remainingAdministrators = userRepository.countByRolesContainingAndIsApprovedTrueAndIdNot(UserRole.ADMIN, target.getId());
+        if (remainingAdministrators == 0) {
+            throw new ResourceConflictException(
+                    "The last active administrator cannot be " + attemptedAction + ". Grant the ADMIN role to another account first.",
+                    ErrorCode.OPERATION_NOT_ALLOWED,
+                    Map.of(RESOURCE, "User"));
+        }
+    }
+
+    private void rejectSelfDeactivation(User target) {
+        boolean actingOnSelf = SecurityUtilities.getCurrentUserId()
+                .map(currentUserId -> currentUserId.equals(target.getId()))
+                .orElse(false);
+
+        if (actingOnSelf) {
+            throw new ResourceConflictException(
+                    "You cannot deactivate your own account.",
+                    ErrorCode.OPERATION_NOT_ALLOWED,
+                    Map.of(RESOURCE, "User"));
+        }
+    }
+
+    private static boolean isAdministrator(User user) {
+        return user.hasRole(UserRole.ADMIN);
+    }
+
     private void requireVerificationOfNewEmail(User user) {
         user.setEmailVerified(false);
         emailVerificationService.sendVerificationEmail(user);
