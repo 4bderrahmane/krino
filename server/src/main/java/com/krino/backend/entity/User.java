@@ -36,18 +36,15 @@ public class User extends AbstractPublicEntity {
 
     private String phoneNumber;
 
-    private boolean isApproved = false;
-
-    // Proven ownership of the email address (via the verification link, or implicitly for
-    // staff/admin accounts whose initial password is delivered by email). Login is refused
-    // until this is true; is_approved stays the separate admin activation toggle.
-    @Column(nullable = false)
-    @ColumnDefault("false")
-    private boolean emailVerified = false;
+    private boolean isApproved;
 
     @Column(nullable = false)
     @ColumnDefault("false")
-    private boolean mustChangePassword = false;
+    private boolean emailVerified;
+
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private boolean mustChangePassword;
 
     @Column(length = 512)
     private String resumeObjectKey;
@@ -62,12 +59,12 @@ public class User extends AbstractPublicEntity {
     private Instant resumeUploadedAt;
 
     public User(String email, String password, String firstName, String lastName, String phoneNumber) {
+        this(); // this calls the constructor that takes no arguments (it's generated using Lombok at compile time)
         this.email = email;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
         this.phoneNumber = phoneNumber;
-        this.roles = new HashSet<>();
     }
 
     @ElementCollection(targetClass = UserRole.class, fetch = FetchType.EAGER)
@@ -80,10 +77,12 @@ public class User extends AbstractPublicEntity {
             })
     @Column(name = "roles", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Set<UserRole> roles;
+    @Builder.Default
+    private Set<UserRole> roles = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
+    @Builder.Default
     private transient Collection<RefreshToken> refreshTokens = new HashSet<>();
 
     public boolean hasPermission(Permission permission) {
