@@ -36,7 +36,6 @@ import org.springframework.util.StringUtils;
 import java.io.InputStream;
 import java.util.*;
 
-@Transactional
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -67,6 +66,7 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    @Transactional
     public UserResponseDTO createStaff(StaffCreateDTO request) {
         if (request.getRole() != UserRole.HR_MANAGER && request.getRole() != UserRole.INTERVIEWER) {
             throw new IllegalArgumentException("Staff role must be HR_MANAGER or INTERVIEWER.");
@@ -107,6 +107,7 @@ public class UserService {
     }
 
 
+    @Transactional
     public User addRoleToUser(Long userId, UserRole role) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
@@ -120,6 +121,7 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
     }
 
+    @Transactional(readOnly = true)
     public UserResponseDTO getUserResponseByPublicId(UUID publicId) {
         SecurityUtilities.requireCurrentUserOrAnyRole(publicId, UserRole.ADMIN, UserRole.HR_MANAGER);
         return userMapper.toResponse(getUserByPublicId(publicId));
@@ -144,12 +146,14 @@ public class UserService {
                 inputStream);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<UserResponseDTO> getAllUsers(Pageable pageable) {
         SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         return PageResponse.from(userRepository.findAll(pageable),
                 userMapper::toResponse);
     }
 
+    @Transactional
     public UserResponseDTO updateUserPartially(UUID publicId, UserUpdateDTO userUpdateDTO) {
         SecurityUtilities.requireCurrentUserOrAnyRole(publicId, UserRole.ADMIN, UserRole.HR_MANAGER);
         User currentUser = userRepository.findByPublicId(publicId)
@@ -183,6 +187,7 @@ public class UserService {
         return userMapper.toResponse(updatedPartially);
     }
 
+    @Transactional
     public UserResponseDTO updateUserFully(UUID publicId, UserUpdateDTO userUpdateDTO) {
         SecurityUtilities.requireCurrentUserOrAnyRole(publicId, UserRole.ADMIN, UserRole.HR_MANAGER);
         User existingUser = userRepository.findByPublicId(publicId)
@@ -218,6 +223,7 @@ public class UserService {
         return userMapper.toResponse(updatedUser);
     }
 
+    @Transactional
     public void changePassword(UUID publicId, UserUpdatePasswordDTO passwordChangeDTO) {
         SecurityUtilities.requireCurrentUser(publicId);
         User existingUser = userRepository.findByPublicId(publicId)
@@ -243,6 +249,7 @@ public class UserService {
         refreshTokenRepository.revokeAllUserTokens(existingUser.getId());
     }
 
+    @Transactional
     public void deleteUserByPublicId(UUID publicId) {
         SecurityUtilities.requireCurrentUserOrAnyRole(publicId, UserRole.ADMIN);
         User userToDelete = userRepository.findByPublicId(publicId)
@@ -270,6 +277,7 @@ public class UserService {
         }
     }
 
+    @Transactional
     public void setApproval(UUID publicId, boolean approved) {
         SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         User user = userRepository.findByPublicId(publicId)
@@ -288,12 +296,14 @@ public class UserService {
         if (!approved) refreshTokenRepository.deleteAllByUserId(user.getId());
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<UserResponseDTO> getNonApprovedUsers(Pageable pageable) {
         SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         return PageResponse.from(userRepository.findByIsApprovedFalse(pageable),
                 userMapper::toResponse);
     }
 
+    @Transactional(readOnly = true)
     public CustomUserDetails loadUserById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), "id", userId));
