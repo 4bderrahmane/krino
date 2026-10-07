@@ -161,10 +161,6 @@ CREATE INDEX idx_job_skills_skill_importance ON job_skills (skill_id, importance
 CREATE INDEX idx_job_skills_required_skill ON job_skills (skill_id, job_id)
     WHERE importance = 'REQUIRED';
 
--- Keeping an interviewer's slots from overlapping means indexing a scalar (the interviewer)
--- next to a range in the same GiST index; btree_gist supplies the scalar operator classes.
--- It is a trusted extension since PostgreSQL 13, so the database owner installs it without
--- superuser rights.
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 CREATE TABLE slots
@@ -173,9 +169,7 @@ CREATE TABLE slots
     public_id          UUID                        NOT NULL CONSTRAINT uk_slots_public_id UNIQUE,
     interviewer_id     BIGINT                      NOT NULL CONSTRAINT fk_slots_interviewer REFERENCES users (id),
     is_available       BOOLEAN                     NOT NULL,
-    -- Absolute points on the timeline, stored in UTC. A slot is an agreement between two
-    -- people who may sit in different zones, so the wall-clock reading is left to the
-    -- client and nothing here depends on the server's zone.
+    -- Absolute points on the timeline, stored in UTC.
     start_at           TIMESTAMP(6) WITH TIME ZONE NOT NULL,
     end_at             TIMESTAMP(6) WITH TIME ZONE NOT NULL,
     created_by         VARCHAR(255)                NOT NULL DEFAULT 'system',
@@ -185,7 +179,6 @@ CREATE TABLE slots
     version            BIGINT                      NOT NULL DEFAULT 0,
 
     CONSTRAINT ck_slots_time_range CHECK (end_at > start_at),
-    -- Nobody can be in two interviews at once: no two slots of the same interviewer may share a moment.
     -- The range is half-open so back-to-back slots touch without overlapping,
     -- and the constraint holds under concurrency where a SELECT-then-INSERT check cannot.
     CONSTRAINT ex_slots_interviewer_no_overlap EXCLUDE USING gist (
