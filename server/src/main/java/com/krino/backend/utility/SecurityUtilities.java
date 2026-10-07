@@ -1,6 +1,7 @@
 package com.krino.backend.utility;
 
 import com.krino.backend.entity.CustomUserDetails;
+import com.krino.backend.entity.enums.UserRole;
 import lombok.experimental.UtilityClass;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -17,8 +18,7 @@ public class SecurityUtilities {
 
     public static Optional<String> getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() &&
-                !"anonymousUser".equals(authentication.getPrincipal())) {
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
             return Optional.of(authentication.getName());
         }
         return Optional.empty();
@@ -53,18 +53,7 @@ public class SecurityUtilities {
         return getCurrentCustomUser().map(CustomUserDetails::getEmail);
     }
 
-    public static boolean hasRole(String role) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return false;
-        }
-
-        return authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority).filter(Objects::nonNull)
-                .anyMatch(auth -> auth.equals("ROLE_" + role) || auth.equals(role));
-    }
-
-    public static boolean hasAnyRole(String... roles) {
+    public static boolean hasAnyRole(UserRole... roles) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
@@ -75,7 +64,7 @@ public class SecurityUtilities {
                 .collect(Collectors.toSet());
 
         return Arrays.stream(roles)
-                .anyMatch(role -> userRoles.contains("ROLE_" + role) || userRoles.contains(role));
+                .anyMatch(role -> userRoles.contains("ROLE_" + role.name()) || userRoles.contains(role.name()));
     }
 
     public static boolean isAuthenticated() {
@@ -85,7 +74,7 @@ public class SecurityUtilities {
                 !(authentication instanceof AnonymousAuthenticationToken);
     }
 
-    public static void requireAnyRole(String... roles) {
+    public static void requireAnyRole(UserRole... roles) {
         if (!hasAnyRole(roles)) {
             throw new AccessDeniedException("You do not have permission to perform this action.");
         }
@@ -98,7 +87,7 @@ public class SecurityUtilities {
         }
     }
 
-    public static void requireCurrentUserOrAnyRole(UUID publicId, String... roles) {
+    public static void requireCurrentUserOrAnyRole(UUID publicId, UserRole... roles) {
         CustomUserDetails currentUser = requireCurrentCustomUser();
         if (!currentUser.getPublicId().equals(publicId) && !hasAnyRole(roles)) {
             throw new AccessDeniedException("You do not have permission to access this resource.");
