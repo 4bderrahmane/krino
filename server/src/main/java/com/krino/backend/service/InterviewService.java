@@ -9,6 +9,7 @@ import com.krino.backend.entity.Slot;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.ApplicationStatus;
 import com.krino.backend.entity.enums.InterviewStatus;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
 import com.krino.backend.mapper.InterviewMapper;
@@ -33,8 +34,6 @@ import java.util.UUID;
 public class InterviewService {
 
     public static final String FIELD = "field";
-    private static final String ADMIN = "ADMIN";
-    private static final String HR_MANAGER = "HR_MANAGER";
     private static final String PUBLIC_ID = "publicId";
     private final InterviewRepository interviewRepository;
     private final UserRepository userRepository;
@@ -43,7 +42,7 @@ public class InterviewService {
     private final InterviewMapper interviewMapper;
 
     public InterviewResponseDTO createInterview(InterviewRequestDTO interviewRequestDTO) {
-        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         Application application = resolveApplication(interviewRequestDTO.getApplicationId());
         requireSchedulableApplication(application);
 
@@ -66,7 +65,7 @@ public class InterviewService {
     }
 
     public PageResponse<InterviewResponseDTO> getAllInterviews(Pageable pageable) {
-        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         return PageResponse.from(interviewRepository.findAll(pageable),
                 interviewMapper::toResponse);
     }
@@ -123,7 +122,7 @@ public class InterviewService {
     }
 
     public void deleteInterview(UUID publicId) {
-        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         Interview interview = findInterview(publicId);
         interview.setSlot(null); // free the slot
         interviewRepository.delete(interview);
@@ -250,7 +249,7 @@ public class InterviewService {
     }
 
     private void requireInterviewParticipantOrStaff(Interview interview) {
-        if (SecurityUtilities.hasAnyRole(ADMIN, HR_MANAGER)) {
+        if (SecurityUtilities.hasAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER)) {
             return;
         }
         User candidate = interview.getCandidate();
@@ -263,7 +262,7 @@ public class InterviewService {
     }
 
     private void requireInterviewInterviewerOrStaff(Interview interview) {
-        if (SecurityUtilities.hasAnyRole(ADMIN, HR_MANAGER)) {
+        if (SecurityUtilities.hasAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER)) {
             return;
         }
         User interviewer = interview.getInterviewer();
@@ -274,7 +273,7 @@ public class InterviewService {
     }
 
     private void requireSlotInterviewerOrStaff(Slot slot) {
-        if (SecurityUtilities.hasAnyRole(ADMIN, HR_MANAGER)) {
+        if (SecurityUtilities.hasAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER)) {
             return;
         }
         if (slot == null) {

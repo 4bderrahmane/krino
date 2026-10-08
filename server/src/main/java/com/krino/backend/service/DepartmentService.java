@@ -10,6 +10,7 @@ import com.krino.backend.exception.ResourceNotFoundException;
 import com.krino.backend.mapper.DepartmentMapper;
 import com.krino.backend.repository.DepartmentRepository;
 import com.krino.backend.utility.ErrorCode;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.utility.SecurityUtilities;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
@@ -129,7 +130,7 @@ public class DepartmentService {
      */
     @Cacheable(cacheNames = DEPARTMENTS_CACHE, key = "'all'")
     public List<DepartmentResponseDTO> getAllDepartments() {
-        SecurityUtilities.requireAnyRole("ADMIN", "HR_MANAGER", "INTERVIEWER");
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER);
         return departmentRepository
                 .findAll(Sort.by(NAME))
                 .stream()

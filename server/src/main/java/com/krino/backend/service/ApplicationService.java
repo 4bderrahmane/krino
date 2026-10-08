@@ -9,6 +9,7 @@ import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.entity.Job;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.JobStatus;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
 import com.krino.backend.mapper.ApplicationMapper;
@@ -37,8 +38,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ApplicationService {
 
-    private static final String ADMIN = "ADMIN";
-    private static final String HR_MANAGER = "HR_MANAGER";
     private static final String JOB_TITLE = "jobTitle";
     private static final String PUBLIC_ID = "publicId";
     private static final String DEFAULT_RESUME_FILENAME = "resume.pdf";
@@ -100,7 +99,7 @@ public class ApplicationService {
     }
 
     public PageResponse<ApplicationResponseDTO> getAllApplications(Pageable pageable) {
-        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         return PageResponse.from(applicationRepository.findAll(pageable),
                 applicationMapper::toResponse);
     }
@@ -263,7 +262,7 @@ public class ApplicationService {
      * cannot change it, so we drop the field and let the mapper preserve the existing value.
      */
     private void enforceStatusUpdatePolicy(ApplicationUpdateDTO applicationUpdateDTO) {
-        if (!SecurityUtilities.hasAnyRole(ADMIN, HR_MANAGER)) {
+        if (!SecurityUtilities.hasAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER)) {
             applicationUpdateDTO.setStatus(null);
         }
     }
@@ -289,7 +288,7 @@ public class ApplicationService {
     }
 
     private void requireApplicationOwnerOrStaff(Application application) {
-        if (SecurityUtilities.hasAnyRole(ADMIN, HR_MANAGER)) {
+        if (SecurityUtilities.hasAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER)) {
             return;
         }
         User candidate = application.getCandidate();

@@ -14,6 +14,7 @@ import com.krino.backend.entity.JobSkill;
 import com.krino.backend.entity.Skill;
 import com.krino.backend.entity.enums.JobStatus;
 import com.krino.backend.entity.enums.SkillImportance;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
 import com.krino.backend.mapper.JobMapper;
@@ -47,9 +48,6 @@ import java.util.function.Consumer;
 @Service
 @RequiredArgsConstructor
 public class JobService {
-    private static final String ADMIN = "ADMIN";
-    private static final String HR_MANAGER = "HR_MANAGER";
-    private static final String INTERVIEWER = "INTERVIEWER";
 
     private final JobRepository jobRepository;
     private final DepartmentRepository departmentRepository;
@@ -142,7 +140,7 @@ public class JobService {
      * makes the hit rate poor anyway.
      */
     public PageResponse<JobResponseDTO> getAllJobs(Pageable pageable) {
-        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER, INTERVIEWER);
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER);
         return PageResponse.from(jobRepository.findAll(pageable), jobMapper::toResponse);
     }
 
@@ -150,7 +148,7 @@ public class JobService {
     // see JobReader. 404 rather than 403, because 403 on an unpublished posting confirms that
     // it exists, which is exactly what a draft should not leak.
     private void requireVisible(JobResponseDTO job) {
-        if (SecurityUtilities.hasAnyRole(ADMIN, HR_MANAGER, INTERVIEWER)
+        if (SecurityUtilities.hasAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER)
                 || job.getStatus() == JobStatus.OPEN) {
             return;
         }

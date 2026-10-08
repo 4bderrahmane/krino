@@ -7,6 +7,7 @@ import com.krino.backend.dto.slot.SlotUpdateDTO;
 import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.entity.Slot;
 import com.krino.backend.entity.User;
+import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.exception.ResourceNotFoundException;
 import com.krino.backend.mapper.SlotMapper;
@@ -28,8 +29,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SlotService {
 
-    private static final String ADMIN = "ADMIN";
-    private static final String HR_MANAGER = "HR_MANAGER";
     private static final String PUBLIC_ID = "publicId";
     private final SlotRepository slotRepository;
     private final UserRepository userRepository;
@@ -46,7 +45,7 @@ public class SlotService {
         CustomUserDetails currentUser = SecurityUtilities.requireCurrentCustomUser();
         if (interviewerPublicId != null) {
             if (!currentUser.getPublicId().equals(interviewerPublicId)) {
-                SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
+                SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
             }
             return userRepository.findByPublicId(interviewerPublicId)
                     .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, interviewerPublicId));
@@ -64,7 +63,7 @@ public class SlotService {
     }
 
     public PageResponse<SlotResponseDTO> getAllSlots(Pageable pageable) {
-        SecurityUtilities.requireAnyRole(ADMIN, HR_MANAGER);
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         return PageResponse.from(slotRepository.findAll(pageable),
                 slotMapper::toResponse);
     }
@@ -106,7 +105,7 @@ public class SlotService {
     }
 
     private void requireSlotOwnerOrStaff(Slot slot) {
-        if (SecurityUtilities.hasAnyRole(ADMIN, HR_MANAGER)) {
+        if (SecurityUtilities.hasAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER)) {
             return;
         }
         User interviewer = slot.getInterviewer();
