@@ -6,8 +6,8 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -100,8 +100,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return respond(ex, ErrorCode.DATA_CONFLICT, "Data integrity constraint violated.", request, null);
     }
 
-    @ExceptionHandler(OptimisticLockingFailureException.class)
-    public ResponseEntity<ProblemDetail> handleOptimisticLocking(OptimisticLockingFailureException ex, HttpServletRequest request) {
+    // Covers both sides of contention: a stale @Version (OptimisticLockingFailureException)
+    // and a lock the database refused to grant (PessimisticLockingFailureException, including
+    // the deadlock PostgreSQL raises when concurrent writers wait on each other while checking
+    // an exclusion constraint). Neither is a server fault: the request lost a race and can be
+    // sent again.
+    @ExceptionHandler(ConcurrencyFailureException.class)
+    public ResponseEntity<ProblemDetail> handleConcurrencyFailure(ConcurrencyFailureException ex, HttpServletRequest request) {
         return respond(ex, ErrorCode.DATA_CONFLICT, "Concurrent modification detected. Retry the request.", request,
                 null);
     }

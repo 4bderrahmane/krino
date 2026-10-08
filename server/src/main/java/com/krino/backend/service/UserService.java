@@ -25,6 +25,7 @@ import com.krino.backend.service.resume.ResumeDownload;
 import com.krino.backend.service.resume.ResumeStorageService;
 import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.SecurityUtilities;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -211,7 +212,7 @@ public class UserService {
                     .ifPresent(user -> {
                         throw new ResourceConflictException(
                                 String.format(EMAIL_ALREADY_TAKEN_MESSAGE,
-                                normalizedEmail), ErrorCode.DATA_CONFLICT,
+                                        normalizedEmail), ErrorCode.DATA_CONFLICT,
                                 Map.of(FIELD, EMAIL, VALUE, normalizedEmail));
                     });
         }
@@ -249,7 +250,7 @@ public class UserService {
         refreshTokenRepository.revokeAllUserTokens(existingUser.getId());
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public void deleteUserByPublicId(UUID publicId) {
         SecurityUtilities.requireCurrentUserOrAnyRole(publicId, UserRole.ADMIN);
         User userToDelete = userRepository.findByPublicId(publicId)
@@ -277,7 +278,7 @@ public class UserService {
         }
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public void setApproval(UUID publicId, boolean approved) {
         SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         User user = userRepository.findByPublicId(publicId)
@@ -322,10 +323,12 @@ public class UserService {
             return;
         }
 
-        long remainingAdministrators = userRepository.countByRolesContainingAndIsApprovedTrueAndIdNot(UserRole.ADMIN, target.getId());
+        long remainingAdministrators = userRepository.countByRolesContainingAndIsApprovedTrueAndIdNot(UserRole.ADMIN,
+                target.getId());
         if (remainingAdministrators == 0) {
             throw new ResourceConflictException(
-                    "The last active administrator cannot be " + attemptedAction + ". Grant the ADMIN role to another account first.",
+                    "The last active administrator cannot be " + attemptedAction + ". Grant the ADMIN role to another" +
+                            " account first.",
                     ErrorCode.OPERATION_NOT_ALLOWED,
                     Map.of(RESOURCE, "User"));
         }

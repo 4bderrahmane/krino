@@ -9,6 +9,7 @@ import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.exception.IncorrectPasswordException;
 import com.krino.backend.exception.InvalidCredentialsException;
+import com.krino.backend.exception.ResourceConflictException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.ApplicationRepository;
 import com.krino.backend.repository.InterviewRepository;
@@ -24,6 +25,7 @@ import com.krino.backend.service.resume.ResumeStorageService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,6 +36,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import org.mockito.ArgumentCaptor;
 
@@ -357,10 +360,140 @@ class UserServiceTest
         verify(resumeStorageService).deleteResumeAfterCommit(objectKey);
     }
 
+    // --- Administrator hierarchy invariants -------------------------------------------------
+
+    @Test
+    void setApproval_hrManagerCannotDeactivateAnAdministrator()
+    {
+        UUID adminPublicId = UUID.randomUUID();
+        User administrator = administrator(42L, adminPublicId);
+        authenticateAs(UUID.randomUUID(), UserRole.HR_MANAGER);
+        when(userRepository.findByPublicId(adminPublicId)).thenReturn(Optional.of(administrator));
+
+        assertThatThrownBy(() -> userService.setApproval(adminPublicId, false))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Only an administrator can manage an administrator account");
+
+        assertThat(administrator.isApproved()).isTrue();
+        verify(refreshTokenRepository, never()).deleteAllByUserId(anyLong());
+    }
+
+    @Test
+    void updateUserPartially_hrManagerCannotEditAnAdministrator()
+    {
+        UUID adminPublicId = UUID.randomUUID();
+        User administrator = administrator(42L, adminPublicId);
+        authenticateAs(UUID.randomUUID(), UserRole.HR_MANAGER);
+        when(userRepository.findByPublicId(adminPublicId)).thenReturn(Optional.of(administrator));
+
+        UserUpdateDTO update = new UserUpdateDTO();
+        update.setFirstName("Renamed");
+
+        assertThatThrownBy(() -> userService.updateUserPartially(adminPublicId, update))
+                .isInstanceOf(AccessDeniedException.class);
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void setApproval_lastActiveAdministratorCannotBeDeactivated()
+    {
+        UUID targetPublicId = UUID.randomUUID();
+        User administrator = administrator(42L, targetPublicId);
+        authenticateAs(UUID.randomUUID(), UserRole.ADMIN);
+        when(userRepository.findByPublicId(targetPublicId)).thenReturn(Optional.of(administrator));
+        when(userRepository.countByRolesContainingAndIsApprovedTrueAndIdNot(UserRole.ADMIN, 42L)).thenReturn(0L);
+
+        assertThatThrownBy(() -> userService.setApproval(targetPublicId, false))
+                .isInstanceOf(ResourceConflictException.class)
+                .hasMessageContaining("The last active administrator cannot be deactivated");
+
+        assertThat(administrator.isApproved()).isTrue();
+    }
+
+    @Test
+    void setApproval_administratorCanBeDeactivatedWhileAnotherRemains()
+    {
+        UUID targetPublicId = UUID.randomUUID();
+        User administrator = administrator(42L, targetPublicId);
+        authenticateAs(UUID.randomUUID(), UserRole.ADMIN);
+        when(userRepository.findByPublicId(targetPublicId)).thenReturn(Optional.of(administrator));
+        when(userRepository.countByRolesContainingAndIsApprovedTrueAndIdNot(UserRole.ADMIN, 42L)).thenReturn(1L);
+
+        userService.setApproval(targetPublicId, false);
+
+        assertThat(administrator.isApproved()).isFalse();
+        verify(refreshTokenRepository).deleteAllByUserId(42L);
+    }
+
+    @Test
+    void setApproval_administratorCannotDeactivateThemselves()
+    {
+        UUID selfPublicId = UUID.randomUUID();
+        User administrator = administrator(7L, selfPublicId);
+        authenticateAs(7L, selfPublicId, UserRole.ADMIN);
+        when(userRepository.findByPublicId(selfPublicId)).thenReturn(Optional.of(administrator));
+
+        assertThatThrownBy(() -> userService.setApproval(selfPublicId, false))
+                .isInstanceOf(ResourceConflictException.class)
+                .hasMessageContaining("You cannot deactivate your own account");
+
+        assertThat(administrator.isApproved()).isTrue();
+    }
+
+    /** Reactivating can never lock anyone out, so none of the guards apply to it. */
+    @Test
+    void setApproval_reactivatingTheOnlyAdministratorIsAllowed()
+    {
+        UUID targetPublicId = UUID.randomUUID();
+        User administrator = administrator(42L, targetPublicId);
+        administrator.setApproved(false);
+        authenticateAs(UUID.randomUUID(), UserRole.ADMIN);
+        when(userRepository.findByPublicId(targetPublicId)).thenReturn(Optional.of(administrator));
+
+        userService.setApproval(targetPublicId, true);
+
+        assertThat(administrator.isApproved()).isTrue();
+        verify(userRepository, never()).countByRolesContainingAndIsApprovedTrueAndIdNot(any(), anyLong());
+    }
+
+    @Test
+    void deleteUserByPublicId_lastActiveAdministratorCannotBeDeleted()
+    {
+        UUID selfPublicId = UUID.randomUUID();
+        User administrator = administrator(7L, selfPublicId);
+        authenticateAs(7L, selfPublicId, UserRole.ADMIN);
+        when(userRepository.findByPublicId(selfPublicId)).thenReturn(Optional.of(administrator));
+        when(userRepository.countByRolesContainingAndIsApprovedTrueAndIdNot(UserRole.ADMIN, 7L)).thenReturn(0L);
+
+        assertThatThrownBy(() -> userService.deleteUserByPublicId(selfPublicId))
+                .isInstanceOf(ResourceConflictException.class)
+                .hasMessageContaining("The last active administrator cannot be deleted");
+
+        verify(userRepository, never()).delete(any(User.class));
+    }
+
+    private User administrator(Long id, UUID publicId)
+    {
+        return User.builder()
+                .id(id)
+                .publicId(publicId)
+                .email("admin-" + id + "@test.local")
+                .password("encoded")
+                .roles(Set.of(UserRole.ADMIN))
+                .isApproved(true)
+                .build();
+    }
+
     private void authenticateAs(UUID publicId, UserRole role)
     {
+        authenticateAs(1L, publicId, role);
+    }
+
+    private void authenticateAs(Long id, UUID publicId, UserRole role)
+    {
         User user = User.builder()
-                .id(1L)
+                .id(id)
                 .publicId(publicId)
                 .email("principal@test.local")
                 .password("encoded")
