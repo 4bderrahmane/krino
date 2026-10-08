@@ -4,14 +4,11 @@ import com.krino.backend.dto.user.UserRegistrationDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.entity.User;
-import org.mapstruct.AfterMapping;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
-
-import java.util.HashSet;
 
 @Mapper(config = MapperConfiguration.class)
 public interface UserMapper {
@@ -85,11 +82,4 @@ public interface UserMapper {
     @Mapping(target = "resumeSizeBytes", ignore = true)
     @Mapping(target = "resumeUploadedAt", ignore = true)
     void patchEntity(UserUpdateDTO dto, String email, @MappingTarget User user);
-
-    @AfterMapping
-    default void initializeRoles(@MappingTarget User user) {
-        if (user.getRoles() == null) {
-            user.setRoles(new HashSet<>());
-        }
-    }
 }
