@@ -11,5 +11,5 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ApplicationCreateDTO {
     @NotNull(message = "Job ID cannot be null")
-    private UUID jobId;
+    private UUID jobPublicId;
 }
