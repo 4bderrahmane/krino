@@ -1,11 +1,11 @@
 package com.krino.backend.dto.slot;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -15,23 +15,19 @@ import lombok.*;
 @AllArgsConstructor
 
 public class SlotRequestDTO {
-    // Optional: HR can create a slot on behalf of an interviewer.
-    // When absent, the slot belongs to the authenticated user.
     private UUID interviewerId;
 
-    @NotNull(message = "Interview date cannot be null")
-    private LocalDate interviewDate;
-
     @NotNull(message = "Start time cannot be null")
-    private LocalTime startTime;
+    @Future(message = "A slot must start in the future")
+    private Instant startAt;
 
     @NotNull(message = "End time cannot be null")
-    private LocalTime endTime;
+    @Future(message = "A slot must end in the future")
+    private Instant endAt;
 
-    // Cross-field rule: a window has to move forward. Null parts are left to @NotNull above.
     @AssertTrue(message = "End time must be after start time")
     @JsonIgnore
     public boolean isEndAfterStart() {
-        return startTime == null || endTime == null || endTime.isAfter(startTime);
+        return startAt == null || endAt == null || endAt.isAfter(startAt);
     }
 }

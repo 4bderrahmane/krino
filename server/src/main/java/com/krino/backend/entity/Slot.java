@@ -4,8 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -25,9 +24,11 @@ public class Slot extends AbstractPublicEntity {
     @Column(name = "is_available", nullable = false)
     private boolean available = true;
 
-    private LocalDate interviewDate;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    @Column(name = "start_at", nullable = false)
+    private Instant startAt;
+
+    @Column(name = "end_at", nullable = false)
+    private Instant endAt;
 
     @Version
     @Column(nullable = false)
@@ -44,21 +45,13 @@ public class Slot extends AbstractPublicEntity {
     }
 
     public Integer getDurationInMinutes() {
-        if (startTime == null || endTime == null) return null;
-        return (int) Duration.between(startTime, endTime).toMinutes();
+        if (startAt == null || endAt == null) return null;
+        return (int) Duration.between(startAt, endAt).toMinutes();
     }
 
     @PrePersist
     @PreUpdate
-    private void validateInvariants() {
-        boolean anySet = interviewDate != null || startTime != null || endTime != null;
-        boolean allSet = interviewDate != null && startTime != null && endTime != null;
-        if (anySet && !allSet)
-            throw new IllegalStateException("A slot must have its date, start time and end time set together, or none at all");
-
-        if (startTime != null && endTime != null && !endTime.isAfter(startTime))
-            throw new IllegalStateException("Slot end time must be after its start time");
-
+    private void validateAvailability() {
         if (available != (interview == null))
             throw new IllegalStateException("A slot is available exactly when no interview is booked into it");
     }

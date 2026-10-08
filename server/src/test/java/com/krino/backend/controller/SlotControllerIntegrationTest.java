@@ -8,9 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.Month;
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,9 +35,8 @@ class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
                         .content("""
                                 {
                                   "interviewerId": "%s",
-                                  "interviewDate": "2099-01-01",
-                                  "startTime": "09:00:00",
-                                  "endTime": "09:45:00"
+                                  "startAt": "2099-01-01T09:00:00Z",
+                                  "endAt": "2099-01-01T09:45:00Z"
                                 }
                                 """.formatted(interviewer.getPublicId())))
                 .andExpect(status().isCreated());
@@ -112,9 +109,8 @@ class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
                         .content("""
                                 {
                                   "interviewerId": "%s",
-                                  "interviewDate": "2099-01-01",
-                                  "startTime": "09:00:00",
-                                  "endTime": "09:45:00"
+                                  "startAt": "2099-01-01T09:00:00Z",
+                                  "endAt": "2099-01-01T09:45:00Z"
                                 }
                                 """.formatted(candidate.getPublicId())))
                 .andExpect(status().isForbidden());
@@ -133,9 +129,8 @@ class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
                         .content("""
                                 {
                                   "interviewerId": "%s",
-                                  "interviewDate": "2099-01-01",
-                                  "startTime": "09:00:00",
-                                  "endTime": "09:45:00"
+                                  "startAt": "2099-01-01T09:00:00Z",
+                                  "endAt": "2099-01-01T09:45:00Z"
                                 }
                                 """.formatted(otherInterviewer.getPublicId())))
                 .andExpect(status().isForbidden());
@@ -156,9 +151,8 @@ class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
                         .content("""
                                 {
                                   "interviewerId": "%s",
-                                  "interviewDate": "2099-01-01",
-                                  "startTime": "10:00:00",
-                                  "endTime": "09:00:00"
+                                  "startAt": "2099-01-01T10:00:00Z",
+                                  "endAt": "2099-01-01T09:00:00Z"
                                 }
                                 """.formatted(interviewer.getPublicId())))
                 .andExpect(status().isBadRequest());
@@ -167,34 +161,33 @@ class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
     }
 
     @Test
-    void persistingSlotWithInvertedWindowIsRejectedByEntityInvariant()
+    void persistingSlotWithInvertedWindowIsRejectedByCheckConstraint()
     {
         User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
         Slot slot = slotFor(interviewer);
-        slot.setEndTime(LocalTime.of(8, 0)); // earlier than the 09:00 start
+        slot.setEndAt(Instant.parse("2099-01-01T08:00:00Z")); // earlier than the 09:00 start
 
         assertThatThrownBy(() -> slotRepository.saveAndFlush(slot))
-                .hasStackTraceContaining("after its start time");
+                .hasStackTraceContaining("ck_slots_time_range");
     }
 
     @Test
-    void persistingSlotWithHalfFilledWindowIsRejectedByEntityInvariant()
+    void persistingSlotWithMissingEndIsRejectedByNotNullConstraint()
     {
         User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
         Slot slot = slotFor(interviewer);
-        slot.setEndTime(null); // date + start set, end missing
+        slot.setEndAt(null);
 
         assertThatThrownBy(() -> slotRepository.saveAndFlush(slot))
-                .hasStackTraceContaining("set together");
+                .hasStackTraceContaining("end_at");
     }
 
     private Slot slotFor(User interviewer)
     {
         Slot slot = new Slot();
         slot.setInterviewer(interviewer);
-        slot.setInterviewDate(LocalDate.of(2099, Month.JANUARY, 1));
-        slot.setStartTime(LocalTime.of(9, 0));
-        slot.setEndTime(LocalTime.of(9, 45));
+        slot.setStartAt(Instant.parse("2099-01-01T09:00:00Z"));
+        slot.setEndAt(Instant.parse("2099-01-01T09:45:00Z"));
         return slot;
     }
 }

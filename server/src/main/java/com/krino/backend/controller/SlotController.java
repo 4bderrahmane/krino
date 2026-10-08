@@ -6,13 +6,16 @@ import com.krino.backend.dto.slot.SlotResponseDTO;
 import com.krino.backend.dto.slot.SlotUpdateDTO;
 import com.krino.backend.service.SlotService;
 import com.krino.backend.utility.SortWhitelist;
+import com.krino.backend.validation.ValidationGroups;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -27,7 +30,7 @@ public class SlotController {
     private final SlotService slotService;
 
     private static final SortWhitelist SORT_WHITELIST = SortWhitelist.of(
-            "id", "interviewDate", "startTime", "endTime", "available", "createdDate", "lastModifiedDate");
+            "id", "startAt", "endAt", "available", "createdDate", "lastModifiedDate");
 
     @PostMapping
     @PreAuthorize("hasAuthority('slot:create')")
@@ -52,7 +55,9 @@ public class SlotController {
 
     @PutMapping("/{publicId}")
     @PreAuthorize("hasAuthority('slot:update')")
-    public ResponseEntity<SlotResponseDTO> updateSlot(@PathVariable UUID publicId, @Valid @RequestBody SlotUpdateDTO slotUpdateDTO) {
+    public ResponseEntity<SlotResponseDTO> updateSlot(@PathVariable UUID publicId,
+                                                      @Validated({Default.class, ValidationGroups.FullUpdate.class})
+                                                      @RequestBody SlotUpdateDTO slotUpdateDTO) {
         SlotResponseDTO updatedSlot = slotService.updateSlot(publicId, slotUpdateDTO);
         return ResponseEntity.ok(updatedSlot);
     }

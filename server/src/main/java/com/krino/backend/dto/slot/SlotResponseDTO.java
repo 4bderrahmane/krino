@@ -1,7 +1,6 @@
 package com.krino.backend.dto.slot;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import com.krino.backend.dto.user.UserResponseDTO;
@@ -17,7 +16,7 @@ public class SlotResponseDTO {
     private UserResponseDTO interviewer;
     private Integer durationInMinutes;
     private boolean available = true;
-    private LocalDate interviewDate;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    // Always serialized in UTC (…Z); the client renders it in whichever zone it displays.
+    private Instant startAt;
+    private Instant endAt;
 }

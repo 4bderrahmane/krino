@@ -14,9 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.Month;
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -197,9 +195,8 @@ class InterviewControllerIntegrationTest extends AbstractControllerIntegrationTe
     {
         Slot slot = new Slot();
         slot.setInterviewer(interviewer);
-        slot.setInterviewDate(LocalDate.of(2999, Month.JANUARY, 1));
-        slot.setStartTime(LocalTime.of(9, 0));
-        slot.setEndTime(LocalTime.of(9, 45));
+        slot.setStartAt(Instant.parse("2999-01-01T09:00:00Z"));
+        slot.setEndAt(Instant.parse("2999-01-01T09:45:00Z"));
         return slot;
     }
 
