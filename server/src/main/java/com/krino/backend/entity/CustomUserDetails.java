@@ -21,6 +21,7 @@ public class CustomUserDetails implements UserDetails {
     private final String email;
     private final String password;
     private final boolean enabled;
+    private final boolean mustChangePassword;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(User u) {
@@ -30,6 +31,7 @@ public class CustomUserDetails implements UserDetails {
         email = user.getEmail();
         password = user.getPassword();
         enabled = user.isApproved();
+        mustChangePassword = user.isMustChangePassword();
         authorities = user.getRoles()
                 .stream()
                 .flatMap(role -> role.getAuthorities()
