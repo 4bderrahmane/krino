@@ -2,9 +2,8 @@ package com.krino.backend.security;
 
 import com.krino.backend.utility.SecurityUtilities;
 import org.springframework.data.domain.AuditorAware;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
-
 import java.util.Optional;
 
 /**
