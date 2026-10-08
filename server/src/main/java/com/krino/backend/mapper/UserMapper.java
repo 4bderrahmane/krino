@@ -2,6 +2,7 @@ package com.krino.backend.mapper;
 
 import com.krino.backend.dto.user.UserRegistrationDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
+import com.krino.backend.dto.user.UserSummaryDTO;
 import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.entity.User;
 import org.mapstruct.BeanMapping;
@@ -15,6 +16,10 @@ public interface UserMapper {
     @Mapping(target = "id", source = "publicId")
     @Mapping(target = "resumeFilename", source = "resumeOriginalFilename")
     UserResponseDTO toResponse(User user);
+
+    /** Name and identity only; see {@link UserSummaryDTO} for why this is a separate mapping. */
+    @Mapping(target = "id", source = "publicId")
+    UserSummaryDTO toSummary(User user);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publicId", ignore = true)
