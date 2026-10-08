@@ -16,6 +16,7 @@ import com.krino.backend.mapper.ApplicationMapper;
 import com.krino.backend.repository.ApplicationRepository;
 import com.krino.backend.repository.JobRepository;
 import com.krino.backend.repository.UserRepository;
+import com.krino.backend.service.resume.ResumeDownload;
 import com.krino.backend.service.resume.ResumeStorageService;
 import com.krino.backend.service.resume.StoredResume;
 import com.krino.backend.utility.ErrorCode;
@@ -298,11 +299,4 @@ public class ApplicationService {
         SecurityUtilities.requireCurrentUser(candidate.getPublicId());
     }
 
-    public record ResumeDownload(
-            String originalFilename,
-            String contentType,
-            Long sizeBytes,
-            InputStream inputStream
-    ) {
-    }
 }

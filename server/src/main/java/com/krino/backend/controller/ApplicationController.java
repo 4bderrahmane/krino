@@ -5,6 +5,7 @@ import com.krino.backend.dto.application.ApplicationResponseDTO;
 import com.krino.backend.dto.application.ApplicationUpdateDTO;
 import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.service.ApplicationService;
+import com.krino.backend.service.resume.ResumeDownload;
 import com.krino.backend.utility.SortWhitelist;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -109,12 +110,12 @@ public class ApplicationController {
     @GetMapping("/{publicId}/resume")
     @PreAuthorize("hasAuthority('application:read')")
     public ResponseEntity<Resource> downloadResume(@PathVariable UUID publicId) {
-        ApplicationService.ResumeDownload resume = applicationService.downloadResume(publicId);
+        ResumeDownload resume = applicationService.downloadResume(publicId);
         return getResourceResponseEntity(resume);
     }
 
     @NonNull
-    static ResponseEntity<Resource> getResourceResponseEntity(ApplicationService.ResumeDownload resume) {
+    static ResponseEntity<Resource> getResourceResponseEntity(ResumeDownload resume) {
         InputStreamResource resource = new InputStreamResource(resume.inputStream());
         MediaType mediaType = MediaType.parseMediaType(resume.contentType());
         ContentDisposition contentDisposition = ContentDisposition.attachment()

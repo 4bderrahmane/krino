@@ -9,6 +9,7 @@ import com.krino.backend.dto.user.StaffCreateDTO;
 import com.krino.backend.entity.CustomUserDetails;
 import com.krino.backend.service.ApplicationService;
 import com.krino.backend.service.UserService;
+import com.krino.backend.service.resume.ResumeDownload;
 import com.krino.backend.utility.SortWhitelist;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -72,7 +73,7 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Resource> downloadMyResume(Authentication authentication) {
         CustomUserDetails customUserDetails = currentUser(authentication);
-        ApplicationService.ResumeDownload resume = userService.downloadResume(customUserDetails.getPublicId());
+        ResumeDownload resume = userService.downloadResume(customUserDetails.getPublicId());
         return getResourceResponseEntity(resume);
     }
 
