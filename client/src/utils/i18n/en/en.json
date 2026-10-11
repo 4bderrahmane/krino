@@ -594,7 +594,8 @@
     "changeDataSentence": "To change your account details, please contact your administrator or visit the",
     "updateSuccess": "Profile updated successfully!",
     "fetchError": "Failed to load your profile. Please try again.",
-    "updateError": "Failed to update profile. Please try again."
+    "updateError": "Failed to update profile. Please try again.",
+    "staleFormError": "Your profile changed since you opened this form. Reload the page to review the latest values before saving."
   },
   "settings": {
     "confirmDeletion": "Are you sure you want to delete your account?",

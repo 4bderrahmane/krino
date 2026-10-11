@@ -17,7 +17,7 @@ export const updatePartialProfile = async (updateData: UserUpdateDTO): Promise<U
     return data;
 };
 
-export const updateFullProfile = async (updateData: Partial<UserUpdateDTO>): Promise<UserResponseDTO> => {
+export const updateFullProfile = async (updateData: UserUpdateDTO): Promise<UserResponseDTO> => {
     const {data} = await api.put<UserResponseDTO>(ENDPOINTS.profile, updateData);
     return data;
 };

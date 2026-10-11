@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
 import {getCurrentUser, updatePartialProfile, updateFullProfile} from '@/features/user-management/services/UserManagementService';
 import '@/features/user-management/styles/settings/SettingsForm.css';
+import {getServerErrorCode} from '@/shared/services/errors';
 import {useSuccessToast} from "@/shared/hooks/useSuccessToast.ts";
 
 const ProfileSettings = () => {
@@ -13,6 +14,7 @@ const ProfileSettings = () => {
         phoneNumber: ''
     });
     const [initialForm, setInitialForm] = useState(form);
+    const [version, setVersion] = useState<number | null>(null);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -30,6 +32,7 @@ const ProfileSettings = () => {
                 };
                 setForm(userData);
                 setInitialForm(userData);
+                setVersion(user.version);
             } catch {
                 setError(t('profile.fetchError'));
             }
@@ -62,21 +65,25 @@ const ProfileSettings = () => {
             }
         });
 
-        if (changedCount === 0) {
+        if (changedCount === 0 || version === null) {
             setLoading(false);
             return;
         }
 
         try {
             if (changedCount === formKeys.length) {
-                await updateFullProfile(form);
+                const updated = await updateFullProfile({...form, version});
+                setVersion(updated.version);
             } else {
-                await updatePartialProfile(changedData);
+                const updated = await updatePartialProfile({...changedData, version});
+                setVersion(updated.version);
             }
             setInitialForm(form);
             handleShowToast(t('profile.updateSuccess'), 3000);
-        } catch {
-            setError(t('profile.updateError'));
+        } catch (error) {
+            setError(getServerErrorCode(error) === 'STALE_PROFILE'
+                ? t('profile.staleFormError')
+                : t('profile.updateError'));
         } finally {
             setLoading(false);
         }
@@ -137,7 +144,7 @@ const ProfileSettings = () => {
                     </div>
                 </div>
                 <div className="form-footer">
-                    <button type="submit" className="settings-button" disabled={loading}>
+                    <button type="submit" className="settings-button" disabled={loading || version === null}>
                         {loading ? t('app.loading') : t('profile.saveChanges')}
                     </button>
                 </div>

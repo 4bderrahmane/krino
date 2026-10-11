@@ -20,7 +20,8 @@ CREATE TABLE users
     created_by               VARCHAR(255) NOT NULL DEFAULT 'system',
     created_date             TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_modified_by         VARCHAR(255) NOT NULL DEFAULT 'system',
-    last_modified_date       TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    last_modified_date       TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version                  BIGINT       NOT NULL DEFAULT 0
 );
 
 CREATE INDEX idx_users_pending_approval ON users (id)

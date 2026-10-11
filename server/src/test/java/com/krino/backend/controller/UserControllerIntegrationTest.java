@@ -169,7 +169,7 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
     @Test
     void candidateUpdatesOwnAccountPartially() throws Exception
     {
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
 
         mockMvc.perform(withCsrf(patch("/api/users/me"))
@@ -177,9 +177,10 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
+                                  "version": %d,
                                   "firstName": "Updated"
                                 }
-                                """))
+                                """.formatted(candidate.getVersion())))
                 .andExpect(status().isOk());
 
         assertThat(userRepository.findByEmail(CANDIDATE_EMAIL)).get()
@@ -190,7 +191,7 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
     void changingEmailResetsVerificationAndBlocksNextLogin() throws Exception
     {
         String newEmail = "new-address@test.local";
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
 
         mockMvc.perform(withCsrf(patch("/api/users/me"))
@@ -198,9 +199,10 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
+                                  "version": %d,
                                   "email": "%s"
                                 }
-                                """.formatted(newEmail)))
+                                """.formatted(candidate.getVersion(), newEmail)))
                 .andExpect(status().isOk());
 
         // The new address is unproven until its emailed link is used.
@@ -247,9 +249,10 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
+                                  "version": %d,
                                   "firstName": "Updated"
                                 }
-                                """))
+                                """.formatted(candidate.getVersion())))
                 .andExpect(status().isOk());
 
         assertThat(userRepository.findByPublicId(candidate.getPublicId()).orElseThrow().getFirstName())
@@ -268,9 +271,10 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
+                                  "version": %d,
                                   "firstName": "Stolen"
                                 }
-                                """))
+                                """.formatted(otherCandidate.getVersion())))
                 .andExpect(status().isForbidden());
 
         assertThat(userRepository.findByPublicId(otherCandidate.getPublicId()).orElseThrow().getFirstName())
@@ -303,9 +307,10 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
+                                  "version": %d,
                                   "firstName": "Updated"
                                 }
-                                """))
+                                """.formatted(candidate.getVersion())))
                 .andExpect(status().isOk());
 
         User reloaded = userRepository.findByPublicId(candidate.getPublicId()).orElseThrow();

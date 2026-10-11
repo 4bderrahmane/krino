@@ -14,6 +14,7 @@ import java.util.UUID;
 public class UserResponseDTO {
 
     private UUID id;
+    private long version;
     private String firstName;
     private String lastName;
     private String email;

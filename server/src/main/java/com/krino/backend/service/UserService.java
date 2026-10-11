@@ -161,6 +161,7 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
 
         requireAdministratorPrivilegeForAdminTarget(currentUser);
+        requireCurrentVersion(userUpdateDTO, currentUser);
 
         String normalizedEmail = null;
         boolean emailChanged = false;
@@ -184,7 +185,7 @@ public class UserService {
             requireVerificationOfNewEmail(currentUser);
         }
 
-        User updatedPartially = userRepository.save(currentUser);
+        User updatedPartially = userRepository.saveAndFlush(currentUser);
         return userMapper.toResponse(updatedPartially);
     }
 
@@ -195,6 +196,7 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
 
         requireAdministratorPrivilegeForAdminTarget(existingUser);
+        requireCurrentVersion(userUpdateDTO, existingUser);
 
         if (userUpdateDTO.getEmail() == null
                 || userUpdateDTO.getFirstName() == null
@@ -220,7 +222,7 @@ public class UserService {
         userMapper.updateEntity(userUpdateDTO, normalizedEmail, existingUser);
         if (emailChanged) requireVerificationOfNewEmail(existingUser);
 
-        User updatedUser = userRepository.save(existingUser);
+        User updatedUser = userRepository.saveAndFlush(existingUser);
         return userMapper.toResponse(updatedUser);
     }
 
@@ -349,6 +351,15 @@ public class UserService {
 
     private static boolean isAdministrator(User user) {
         return user.hasRole(UserRole.ADMIN);
+    }
+
+    private static void requireCurrentVersion(UserUpdateDTO request, User user) {
+        if (request.getVersion() == null) {
+            throw new IllegalArgumentException("Profile version is required.");
+        }
+        if (request.getVersion() != user.getVersion()) {
+            throw new ResourceConflictException("Profile changed since it was loaded.", ErrorCode.STALE_PROFILE);
+        }
     }
 
     private void requireVerificationOfNewEmail(User user) {

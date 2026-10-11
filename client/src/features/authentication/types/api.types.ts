@@ -24,6 +24,7 @@ export interface UserRegistrationDTO {
 export interface UserResponseDTO {
     // Public UUID (the API exposes publicId as `id`), not a numeric id.
     id: string;
+    version: number;
     firstName: string;
     lastName: string;
     email: string;

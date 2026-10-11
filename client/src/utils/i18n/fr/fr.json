@@ -594,7 +594,8 @@
     "changeDataSentence": "Pour modifier vos informations de compte, veuillez contacter votre administrateur ou visitez la",
     "updateSuccess": "Profil mis à jour avec succès !",
     "fetchError": "Échec du chargement de votre profil. Veuillez réessayer.",
-    "updateError": "Échec de la mise à jour du profil. Veuillez réessayer."
+    "updateError": "Échec de la mise à jour du profil. Veuillez réessayer.",
+    "staleFormError": "Votre profil a changé depuis l’ouverture de ce formulaire. Rechargez la page pour consulter les dernières valeurs avant d’enregistrer."
   },
   "settings": {
     "confirmDeletion": "Êtes-vous sûr de vouloir supprimer votre compte ?",

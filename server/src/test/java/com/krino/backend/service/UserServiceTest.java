@@ -210,11 +210,12 @@ class UserServiceTest
         authenticateAs(publicId, UserRole.CANDIDATE);
 
         UserUpdateDTO dto = new UserUpdateDTO();
+        dto.setVersion(0L);
         dto.setEmail("New@TEST.Local");
 
         when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail("new@test.local")).thenReturn(Optional.empty());
-        when(userRepository.save(user)).thenReturn(user);
+        when(userRepository.saveAndFlush(user)).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(new UserResponseDTO());
         doAnswer(invocation ->
         {
@@ -238,11 +239,11 @@ class UserServiceTest
         user.setEmail("old@test.local");
         authenticateAs(publicId, UserRole.CANDIDATE);
 
-        UserUpdateDTO dto = new UserUpdateDTO("Test", "User", "New@TEST.Local", "123456789");
+        UserUpdateDTO dto = new UserUpdateDTO(0L, "Test", "User", "New@TEST.Local", "123456789");
 
         when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail("new@test.local")).thenReturn(Optional.empty());
-        when(userRepository.save(user)).thenReturn(user);
+        when(userRepository.saveAndFlush(user)).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(new UserResponseDTO());
         doAnswer(invocation ->
         {
@@ -268,11 +269,12 @@ class UserServiceTest
         authenticateAs(publicId, UserRole.CANDIDATE);
 
         UserUpdateDTO dto = new UserUpdateDTO();
+        dto.setVersion(0L);
         dto.setEmail("new@test.local");
 
         when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail("new@test.local")).thenReturn(Optional.empty());
-        when(userRepository.save(user)).thenReturn(user);
+        when(userRepository.saveAndFlush(user)).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(new UserResponseDTO());
         doAnswer(invocation ->
         {
@@ -299,10 +301,11 @@ class UserServiceTest
         authenticateAs(publicId, UserRole.CANDIDATE);
 
         UserUpdateDTO dto = new UserUpdateDTO();
+        dto.setVersion(0L);
         dto.setEmail("Old@TEST.Local");
 
         when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
-        when(userRepository.save(user)).thenReturn(user);
+        when(userRepository.saveAndFlush(user)).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(new UserResponseDTO());
 
         userService.updateUserPartially(publicId, dto);
@@ -321,11 +324,11 @@ class UserServiceTest
         user.setEmailVerified(true);
         authenticateAs(publicId, UserRole.CANDIDATE);
 
-        UserUpdateDTO dto = new UserUpdateDTO("Test", "User", "New@TEST.Local", "123456789");
+        UserUpdateDTO dto = new UserUpdateDTO(0L, "Test", "User", "New@TEST.Local", "123456789");
 
         when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail("new@test.local")).thenReturn(Optional.empty());
-        when(userRepository.save(user)).thenReturn(user);
+        when(userRepository.saveAndFlush(user)).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(new UserResponseDTO());
         doAnswer(invocation ->
         {

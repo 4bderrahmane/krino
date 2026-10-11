@@ -17,6 +17,7 @@ export type ServerErrorCode =
     | 'ACCOUNT_NOT_APPROVED'
     | 'EMAIL_NOT_VERIFIED'
     | 'DATA_CONFLICT'
+    | 'STALE_PROFILE'
     | 'OPERATION_NOT_ALLOWED'
     | 'METHOD_NOT_ALLOWED'
     | 'NOT_ACCEPTABLE'

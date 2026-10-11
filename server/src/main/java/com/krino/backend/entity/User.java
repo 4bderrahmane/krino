@@ -58,6 +58,11 @@ public class User extends AbstractPublicEntity {
 
     private Instant resumeUploadedAt;
 
+    @Version
+    @Column(nullable = false)
+    @Setter(AccessLevel.NONE)
+    private long version;
+
     public User(String email, String password, String firstName, String lastName, String phoneNumber) {
         this(); // this calls the constructor that takes no arguments (it's generated using Lombok at compile time)
         this.email = email;

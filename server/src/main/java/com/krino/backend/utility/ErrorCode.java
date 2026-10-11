@@ -21,6 +21,7 @@ public enum ErrorCode {
     EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN, "email-not-verified"),
     PASSWORD_CHANGE_REQUIRED(HttpStatus.FORBIDDEN, "password-change-required"),
     DATA_CONFLICT(HttpStatus.CONFLICT, "data-conflict"),
+    STALE_PROFILE(HttpStatus.CONFLICT, "stale-profile"),
     OPERATION_NOT_ALLOWED(HttpStatus.CONFLICT, "operation-not-allowed"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "method-not-allowed"),
     NOT_ACCEPTABLE(HttpStatus.NOT_ACCEPTABLE, "not-acceptable"),
