@@ -50,7 +50,7 @@ public class ApplicationService {
     private final ResumeStorageService resumeStorageService;
 
     public ApplicationResponseDTO createApplication(ApplicationCreateDTO applicationCreateDTO) {
-        Job job = resolveJob(applicationCreateDTO.getJobId());
+        Job job = resolveJob(applicationCreateDTO.getJobPublicId());
 
         if (job.getStatus() != JobStatus.OPEN) {
             throw new ResourceConflictException(

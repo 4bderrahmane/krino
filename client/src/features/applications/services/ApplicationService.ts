@@ -99,9 +99,9 @@ export const getApplicationById = async (id: string): Promise<Application> => {
     return toApplication(data);
 };
 
-/** Apply to an offer: creates the application (backend expects the offer id as `jobId`). */
+/** Apply to an offer: the backend expects the offer public ID as `jobPublicId`. */
 export const createApplication = async (offerId: string): Promise<Application> => {
-    const {data} = await api.post<ApplicationResponseDTO>(APPLICATIONS_ENDPOINT, {jobId: offerId});
+    const {data} = await api.post<ApplicationResponseDTO>(APPLICATIONS_ENDPOINT, {jobPublicId: offerId});
     return toApplication(data);
 };
 

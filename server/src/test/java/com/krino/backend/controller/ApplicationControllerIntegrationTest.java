@@ -25,7 +25,7 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
     @Test
     void candidateAppliesToOpenJobReturnsCreatedAndPersists() throws Exception
     {
-        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         Job job = openJob();
         Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
 
@@ -34,11 +34,12 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "jobId": "%s"
+                                  "jobPublicId": "%s"
                                 }
                                 """.formatted(job.getPublicId())))
                 .andExpect(status().isCreated());
 
+        assertThat(applicationRepository.findByJobAndCandidate(job, candidate)).isPresent();
         assertThat(applicationRepository.count()).isEqualTo(1);
     }
 
@@ -51,7 +52,7 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
 
         String body = """
                 {
-                  "jobId": "%s"
+                  "jobPublicId": "%s"
                 }
                 """.formatted(job.getPublicId());
 
@@ -79,7 +80,7 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "jobId": "%s"
+                                  "jobPublicId": "%s"
                                 }
                                 """.formatted(UUID.randomUUID())))
                 .andExpect(status().isNotFound());
