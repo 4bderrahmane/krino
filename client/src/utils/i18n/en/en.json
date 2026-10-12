@@ -348,9 +348,9 @@
     },
     "create": {
       "cardTitle": "Create an offer",
-      "cardHint": "Post a new opening",
+      "cardHint": "Create a draft opening",
       "title": "Create a new offer",
-      "subtitle": "Fill in the details of the position you want to publish.",
+      "subtitle": "Fill in the details, then publish the draft when it is ready.",
       "draftRestored": "We restored your unsaved draft.",
       "discardDraft": "Discard draft",
       "sections": {
@@ -388,7 +388,7 @@
       "skillsHint": "List the skills this role calls for and how important each one is.",
       "addSkill": "Add skill",
       "removeSkill": "Remove skill",
-      "submit": "Publish offer",
+      "submit": "Create draft",
       "success": "Offer created successfully!",
       "errors": {
         "departmentRequired": "Please choose a department.",

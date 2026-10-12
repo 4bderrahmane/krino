@@ -348,9 +348,9 @@
     },
     "create": {
       "cardTitle": "Créer une offre",
-      "cardHint": "Publier un nouveau poste",
+      "cardHint": "Créer un poste en brouillon",
       "title": "Créer une nouvelle offre",
-      "subtitle": "Renseignez les détails du poste que vous souhaitez publier.",
+      "subtitle": "Renseignez les détails, puis publiez le brouillon lorsqu'il est prêt.",
       "draftRestored": "Nous avons restauré votre brouillon non enregistré.",
       "discardDraft": "Supprimer le brouillon",
       "sections": {
@@ -388,7 +388,7 @@
       "skillsHint": "Indiquez les compétences requises pour ce poste et leur importance.",
       "addSkill": "Ajouter une compétence",
       "removeSkill": "Supprimer la compétence",
-      "submit": "Publier l'offre",
+      "submit": "Créer le brouillon",
       "success": "Offre créée avec succès !",
       "errors": {
         "departmentRequired": "Veuillez choisir un département.",
