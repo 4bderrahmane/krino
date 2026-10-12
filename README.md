@@ -15,7 +15,7 @@ The repository is a monorepo of two independently deployable services:
 | Path | Service | Stack |
 |------|---------|-------|
 | [`server/`](./server) | REST API | Java 25, Spring Boot 4.1, Spring Security, Spring Data JPA, PostgreSQL 18, Flyway, Redis, MinIO, MapStruct, Resend, springdoc OpenAPI |
-| [`client/`](./client) | Web frontend | React 19, TypeScript, Vite 7, Tailwind CSS 4, TanStack Query, React Router 7, axios, i18next |
+| [`client/`](./client) | Web frontend | React 19, TypeScript, Vite 7, CSS (PostCSS + Autoprefixer), TanStack Query, React Router 7, Axios, i18next |
 
 > This repository was created by merging two previously separate repositories. The full
 > commit history of both projects is preserved under the `client/` and `server/` paths.
@@ -44,8 +44,8 @@ The repository is a monorepo of two independently deployable services:
 
 ## What it does
 
-**Anonymous visitors** browse the published catalogue: paginated job listings and
-departments, with no account and no session required.
+**Anonymous visitors** browse the published catalogue: paginated job listings and the
+departments that are hiring, with no account and no session required.
 
 **Candidates** register with a CV, verify their email, and apply to openings. That CV
 becomes the *base* CV on their profile, reusable for a new application in one call or
@@ -56,13 +56,16 @@ can delete it.
 **Interviewers** publish availability slots, see the interviews assigned to them, and
 record outcome notes and a hiring recommendation.
 
-**HR managers** own the opening lifecycle (draft, scheduled, open, paused, closed, filled,
+**HR managers** create draft openings and publish them manually. They own the opening
+lifecycle (draft, open, paused, closed, filled,
 cancelled, archived), triage applications, approve pending accounts, and schedule
 interviews into open slots. The lifecycle is a real state machine implemented on the `Job`
 entity itself: publication requires a title, a description, and a department; only an open
 posting can be paused; a posting must be closed before it can be archived; an archived
 posting cannot be modified; and a posting with applications or interviews cannot be
-deleted at all, only closed.
+deleted at all, only closed. Timed publication is
+deferred from v1: the domain model has a scheduled state, but no API or worker activates
+an opening at a scheduled time.
 
 **Admins** additionally create staff accounts. A generated initial password is emailed to
 the new account, which is then forced through a password change on first sign-in.
@@ -97,21 +100,22 @@ serialized to a client.
 
 ## API surface
 
-All routes are prefixed with `/api`. Authorization is expressed with method-level
-`@PreAuthorize`, using colon-namespaced permission authorities (`job:create`,
-`interview:update`, ...) rather than raw role checks wherever a permission exists.
+Application routes are prefixed with `/api`; Actuator and OpenAPI retain their conventional
+root paths. Authorization is expressed with method-level `@PreAuthorize`, using
+colon-namespaced permission authorities (`job:create`, `interview:update`, ...) rather than
+raw role checks wherever a permission exists.
 
 | Area | Routes | Access |
 |------|--------|--------|
-| Auth | `POST /auth/register` (multipart), `/auth/login`, `/auth/logout`, `/auth/refresh`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/verify-email`, `/auth/resend-verification`, `GET /auth/csrf` | Public, rate-limited |
+| Auth | `POST /auth/register` (multipart), `/auth/login`, `/auth/logout`, `/auth/refresh`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/verify-email`, `/auth/resend-verification`, `GET /auth/csrf` | Public; all listed `POST`s except logout are rate-limited |
 | Public catalogue | `GET /public/jobs`, `GET /public/jobs/{publicId}`, `GET /public/departments` | Anonymous, `GET` only |
 | Jobs | CRUD on `/jobs` plus `/jobs/{publicId}/publish`, `/pause`, `/close`, `/archive` | `job:*` permissions |
 | Departments | CRUD on `/departments` | `department:*` permissions |
-| Applications | CRUD on `/applications`, `GET /applications/me`, `PUT /applications/{publicId}/resume` (multipart), `PUT .../resume/from-base`, `GET .../resume`, `DELETE .../resume` | `application:*` permissions |
-| Interviews | CRUD on `/interviews`, `GET /interviews/me` | `interview:*` permissions |
-| Slots | CRUD on `/slots` | `slot:*` permissions |
-| Users | `/users`, `/users/me`, `/users/me/password`, `/users/me/resume`, `PATCH /users/{publicId}/approval`, `GET /users/non-approved` | Self, or `ADMIN` / `HR_MANAGER` |
-| Ops | `GET /actuator/health` | Public, status only |
+| Applications | CRUD on `/applications`, `GET /applications/me`, `GET /applications/me/by-job/{jobPublicId}`, staff `GET /applications/scheduling-options`, `PUT /applications/{publicId}/resume` (multipart), `PUT .../resume/from-base`, `GET .../resume`, `DELETE .../resume` | `application:*` permissions; candidate lookup is owner-scoped |
+| Interviews | CRUD on `/interviews`, `GET /interviews/me` | `interview:*` permissions; interviewers see only their assigned interviews |
+| Slots | CRUD on `/slots`, `GET /slots/me`, staff `GET /slots/scheduling-options` | `slot:*` permissions; interviewers manage their own slots |
+| Users | `/users`, `/users/me`, `/users/me/password`, `/users/me/resume`, `PATCH /users/{publicId}/approval`, `GET /users/non-approved` | Self, or `ADMIN` / `HR_MANAGER` where authorized |
+| Ops | `GET /actuator/health` | Public, status only, rate-limited |
 
 Interactive docs: Swagger UI at `/swagger-ui.html`, spec at `/v3/api-docs`. Both are on in
 dev and off in production unless `SPRINGDOC_ENABLED=true` is set explicitly.
@@ -120,6 +124,10 @@ Every paged endpoint caps `?size=` at 100 (default 20) and runs the incoming `Pa
 through a per-endpoint [`SortWhitelist`](server/src/main/java/com/krino/backend/utility/SortWhitelist.java),
 so a client cannot sort by an arbitrary persistent property such as a password hash or a
 lazily-joined relation.
+
+The two department lists are the exception: they are returned whole, ordered by name. A
+company has tens of departments, and every caller wants all of them, so paging would only
+buy a page-walk. The internal directory is served from a single cache entry instead.
 
 ## Domain model and data integrity
 
@@ -130,9 +138,16 @@ and correctness is pushed into the database wherever it can be:
 - **One interview per slot**: `uk_interviews_slot UNIQUE (slot_id)`, which is what makes
   double-booking impossible under concurrency.
 - **One application per candidate per job**: `uk_applications_job_candidate UNIQUE (job_id, user_id)`.
-- **One role per user**: composite primary key on `user_roles (user_id, roles)`.
-- **Coherent slots**: `CHECK (end_time > start_time)`, plus an all-or-none check on the
-  booking window columns.
+- **No duplicate role assignment**: composite primary key on `user_roles (user_id, roles)`.
+- **Coherent slots**: `CHECK (end_at > start_at)` on a window that is `NOT NULL` at both ends.
+- **No double-booked interviewer**: `ex_slots_interviewer_no_overlap`, a GiST exclusion
+  constraint (`interviewer_id WITH =, tstzrange(start_at, end_at, '[)') WITH &&`) that makes
+  two overlapping slots for the same interviewer unrepresentable. The service still runs a
+  friendly pre-check, but that check races; the constraint is what settles a concurrent
+  create, and its violation is translated back into the same `409`. Under heavy contention
+  PostgreSQL breaks the waiting writers apart with its deadlock detector instead, which
+  answers `409` "retry" rather than a `500`. The range is half-open, so back-to-back slots
+  touch without colliding. Needs the `btree_gist` extension, which the migration installs.
 - **Token hashes are hashes**: `CHECK (octet_length(token_hash) = 32)` on all three token
   tables, so a raw token can never be stored where a digest belongs.
 - **Optimistic locking**: `@Version` on `Job`, `Application`, `Interview`, `Slot`, and
@@ -146,6 +161,13 @@ Entities follow a dual-ID convention: an internal `BIGINT` surrogate key that ne
 the server, and a public `UUID` (`public_id`) used in every URL and payload, so row counts
 and insertion order are not inferable from the API.
 
+Scheduling is stated in absolute time. A slot is a pair of instants (`timestamptz`, `Instant`
+in Java) rather than a date plus two wall-clock times, because an interview is an appointment
+between people who may sit in different zones and because a zone's offset can change between
+the day a slot is published and the day it is held. Requests carry an ISO-8601 offset
+(`2026-06-25T09:00:00+01:00`), responses come back in UTC, and rendering the local reading is
+the client's job.
+
 ## Security
 
 Design-level threat coverage lives in [THREAT_MODEL.md](./THREAT_MODEL.md) (threat, vector,
@@ -156,14 +178,14 @@ BouncyCastle declared explicitly rather than inherited transitively).
 
 **Sessions.** Access tokens are short-lived JWTs (15 min default) delivered in
 `HttpOnly` cookies, never in `localStorage`. The subject is the user's public UUID, and a
-`type` claim pins the token to the access role so a refresh token cannot be replayed as an
-access token. Refresh tokens (30 d default) are 64-byte random values stored only as
+`type` claim pins the JWT to access-token use so another token type cannot be replayed as
+an access token. Refresh tokens (30 d default) are 64-byte random values stored only as
 **HMAC-SHA256 digests**; they are rotated on use, and reuse of a consumed token revokes the
 entire family. Sessions are also revoked wholesale on password change.
 
 **Authorization.** Four roles (`ADMIN`, `HR_MANAGER`, `INTERVIEWER`, `CANDIDATE`) expand to
-granular permission authorities. Ownership checks are expressed in the same layer
-(`#publicId == authentication.principal.publicId`), and the public catalogue is matched on
+granular permission authorities. Controller authorization is backed by service-level
+ownership checks, and the public catalogue is matched on
 `GET` alone, so a write endpoint later added under `/api/public/**` falls through to
 `.authenticated()` instead of inheriting anonymous access by accident.
 
@@ -186,6 +208,14 @@ is still enabled.
 details suppressed, so the public probe returns at most `{"status":"UP"}`. A nightly job
 purges expired and revoked tokens.
 
+**Known limitations.** Unsuccessful login distinguishes deactivated accounts from other
+credential failures. Registration and recovery flows also do different work depending on
+account state, which may expose timing differences; network timing has not been measured.
+Some auth paths log email addresses at info level. Revoked sessions can keep using an
+already-issued access JWT until its 15-minute expiry, and uploaded PDFs are not malware
+scanned. See [ISSUES.md](./ISSUES.md#deferred-authentication-enumeration-work) and
+[THREAT_MODEL.md](./THREAT_MODEL.md) for scope and status.
+
 ## Caching and rate limiting
 
 Redis backs both.
@@ -199,16 +229,18 @@ instead of being invented with untyped defaults.
 |-------|----------|-----|
 | `jobListings` | Paged public job listings | 2 min |
 | `jobs` | Single job by public ID | 10 min |
-| `departments` | Paged departments | 1 hour |
+| `departments` | The whole department directory, one entry | 1 hour |
 
 Writes are synchronous and transaction-aware, so a rolled-back mutation can never leave
 phantom state in the cache, and "the mutation returned, therefore the cache is consistent"
 actually holds.
 
-Rate limiting is per-IP token buckets (Bucket4j over Lettuce) with two separate budgets:
-**10 requests/min** on the auth endpoints, and a looser **120 requests/min** on the
-anonymous catalogue, because one page view costs several requests and the auth budget
-would break ordinary browsing while doing nothing extra against a scraper.
+Rate limiting is per-IP token buckets (Bucket4j over Lettuce) with two separate budgets.
+The strict **10 requests/min** bucket covers registration, sign-in, token refresh, password
+recovery, email verification, and `/actuator/health`; CSRF initialization and logout are
+outside it. A looser **120 requests/min** bucket covers the anonymous catalogue, because
+one page view costs several requests and the strict budget would break ordinary browsing
+while doing nothing extra against a scraper.
 
 ## Consistency and side effects
 
@@ -238,7 +270,7 @@ is logged rather than returned.
 ### Prerequisites
 
 - **JDK 25** (the Maven wrapper `./mvnw` is included, so a local Maven install is optional)
-- **Node.js 22+** (Vite 7 requires 20.19+ / 22.12+; CI builds on 22)
+- **Node.js 22 LTS** (use an up-to-date 22.x release; CI builds on Node 22)
 - **Docker** and **Docker Compose** (required for the integration tests, and the easiest way
   to get PostgreSQL, Redis, and MinIO)
 
@@ -255,14 +287,15 @@ docker compose --profile app up --build
 | Service | URL |
 |---------|-----|
 | Client (nginx) | http://localhost:5173 |
-| API | http://localhost:8080 |
-| Swagger UI | http://localhost:8080/swagger-ui.html |
+| API (through nginx) | http://localhost:5173/api/... |
 | MinIO console | http://localhost:9001 |
 | PostgreSQL | `localhost:5432` |
 | Redis | `localhost:6379` |
 
-`minio-init` creates the CV bucket (`krino-cvs`) before the server starts. To reset all
-containerized data:
+The containerized backend has no host port; browser API requests go through nginx.
+Swagger UI is available when running the backend directly (below), not through the
+Compose entrypoint. `minio-init` creates the CV bucket (`krino-cvs`) before the server
+starts. To reset all containerized data:
 
 ```bash
 docker compose --profile app down -v
@@ -284,10 +317,10 @@ cd server && ./mvnw spring-boot:run
 cd client && npm install && npm run dev
 ```
 
-The API listens on `http://localhost:8080`, the Vite dev server on
-`http://localhost:5000` (see `client/vite.config.ts`), and the client's API base URL is set
-in `client/src/shared/services/api.ts`. Both `5000` and `5173` are in the default dev CORS
-allow-list.
+The API listens on `http://localhost:8080` and the Vite dev server on
+`http://localhost:5000` (see `client/vite.config.ts`). The client uses the relative `/api`
+base URL defined in `client/src/shared/services/api.ts`; both Vite and nginx proxy that
+prefix to the backend, keeping browser requests same-origin.
 
 Under the `dev` profile, email is **log-only** by default: verification links, password
 reset links, and generated initial passwords are printed to the console instead of being
@@ -298,9 +331,11 @@ while prod runs Flyway with `validate`.
 Other client scripts:
 
 ```bash
-npm run build   # type-check (tsc -b) + production build into client/dist
-npm run lint    # ESLint
-npm run preview # serve the production build on :5000
+npm run build      # type-check (tsc -b) + production build into client/dist
+npm run lint       # ESLint
+npm test           # run the Vitest suite once
+npm run test:watch # run Vitest in watch mode
+npm run preview    # serve the production build on :5000
 ```
 
 ## Configuration
@@ -328,20 +363,34 @@ the full git history for committed secrets.
 
 ## Testing
 
+### Backend
+
 ```bash
 cd server && ./mvnw verify
 ```
 
-Roughly **290 tests across 47 classes**, split between fast unit tests over services,
-mappers, and security components, and integration tests that exercise the real stack:
-PostgreSQL (with Flyway applied), MinIO, and Redis are started in **Testcontainers**, so
-nothing needs to be installed or seeded beyond a running Docker daemon.
+The latest local Docker-backed verification passed **435 tests across 53 suites**,
+split between fast unit tests over services, mappers, and security components, and
+integration tests that exercise the real stack: PostgreSQL (with Flyway applied), MinIO,
+and Redis are started in **Testcontainers**, so nothing needs to be installed or seeded
+beyond a running Docker daemon.
 
 The integration suite covers the parts that are easy to get wrong and hard to notice:
 per-endpoint authorization for every role, visibility of unpublished jobs and departments
 to anonymous callers, rate-limit behaviour on both the auth and public budgets, cache
 population and eviction, resume storage rollback, and the production configuration
 validator.
+
+### Frontend
+
+```bash
+cd client && npm test
+```
+
+The latest local frontend run passed **144 tests across 14 files**. It uses Vitest,
+Testing Library, and MSW to cover route protection, API error handling, offer filtering
+and transitions, form mapping,
+and CV validation. Use `npm run test:watch` while developing.
 
 ## Continuous integration
 
@@ -350,7 +399,7 @@ validator.
 | Job | What it does |
 |-----|--------------|
 | Backend | JDK 25, `./mvnw verify`, uploads surefire reports |
-| Frontend | Node 22, `npm ci`, lint, production build |
+| Frontend | Node 22, `npm ci`, lint, `npm test`, production build |
 | Secret scan | gitleaks over the **full** git history |
 | Docker images | Buildx builds both Dockerfiles (never pushed from CI) |
 
@@ -371,6 +420,7 @@ always complete.
 │       │                #   interviews, offers, slots, user-management
 │       ├── routes/      # React Router route tree with lazy-loaded pages
 │       ├── shared/      # components, contexts, hooks, services, types
+│       ├── test/        # shared Vitest setup, fixtures, and MSW server
 │       └── utils/i18n/  # en, fr
 ├── server/              # Spring Boot REST API
 │   └── src/main/
@@ -384,12 +434,13 @@ always complete.
 │       │   ├── repository/
 │       │   ├── security/       # JWT filter, rate limiter, token hashing, auditing
 │       │   ├── service/        # transactions and business rules (+ email/, resume/)
-│       │   └── utility/
+│       │   ├── utility/
+│       │   └── validation/     # reusable Jakarta Bean Validation constraints
 │       └── resources/
 │           ├── db/migration/   # Flyway
 │           ├── db/seed/        # dev seed data
 │           └── templates/mail/ # Thymeleaf email templates
-├── docker-compose.yml
+├── compose.yml
 ├── LICENSE
 ├── SECURITY.md          # how to report a vulnerability
 └── THREAT_MODEL.md      # threat, vector, control, status, with file references
