@@ -165,7 +165,8 @@ const UserManagementPage: React.FC = () => {
                                     <div className="admin-user-email">{u.email}</div>
                                     <div className="admin-user-roles">
                                         {u.roles.map((role) => (
-                                            <span key={role} className="admin-user-role">{t(`admin.roles.${role}`)}</span>
+                                            <span key={role}
+                                                  className="admin-user-role">{t(`admin.roles.${role}`)}</span>
                                         ))}
                                     </div>
                                 </div>
@@ -183,7 +184,8 @@ const UserManagementPage: React.FC = () => {
                                     ) : u.approved ? (
                                         confirmingRevokeId === u.id ? (
                                             <>
-                                                <span className="admin-user-confirm">{t('admin.users.revokeConfirm')}</span>
+                                                <span
+                                                    className="admin-user-confirm">{t('admin.users.revokeConfirm')}</span>
                                                 <button
                                                     type="button"
                                                     className="admin-user-button admin-user-danger"
