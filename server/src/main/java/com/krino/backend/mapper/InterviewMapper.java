@@ -1,5 +1,6 @@
 package com.krino.backend.mapper;
 
+import com.krino.backend.dto.interview.CandidateInterviewResponseDTO;
 import com.krino.backend.dto.interview.InterviewRequestDTO;
 import com.krino.backend.dto.interview.InterviewResponseDTO;
 import com.krino.backend.entity.Application;
@@ -17,6 +18,15 @@ public interface InterviewMapper {
     @Mapping(target = "id", source = "publicId")
     @Mapping(target = "applicationId", source = "application.publicId")
     InterviewResponseDTO toResponse(Interview interview);
+
+    /**
+     * The candidate's redacted view. Notes, recommendation and the candidate's own record have no
+     * counterpart on the target type, so they cannot be mapped in by accident; the interviewer and
+     * the slot resolve to their summary types through {@code UserMapper} and {@code SlotMapper}.
+     */
+    @Mapping(target = "id", source = "publicId")
+    @Mapping(target = "applicationId", source = "application.publicId")
+    CandidateInterviewResponseDTO toCandidateResponse(Interview interview);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publicId", ignore = true)

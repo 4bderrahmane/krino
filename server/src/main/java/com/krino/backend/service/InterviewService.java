@@ -3,10 +3,8 @@ package com.krino.backend.service;
 import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.interview.InterviewRequestDTO;
 import com.krino.backend.dto.interview.InterviewResponseDTO;
-import com.krino.backend.entity.Application;
-import com.krino.backend.entity.Interview;
-import com.krino.backend.entity.Slot;
-import com.krino.backend.entity.User;
+import com.krino.backend.dto.interview.InterviewView;
+import com.krino.backend.entity.*;
 import com.krino.backend.entity.enums.ApplicationStatus;
 import com.krino.backend.entity.enums.InterviewStatus;
 import com.krino.backend.entity.enums.UserRole;
@@ -58,10 +56,10 @@ public class InterviewService {
         return interviewMapper.toResponse(savedInterview);
     }
 
-    public InterviewResponseDTO getInterviewByPublicId(UUID publicId) {
+    public InterviewView getInterviewByPublicId(UUID publicId) {
         Interview interview = findInterview(publicId);
         requireInterviewParticipantOrStaff(interview);
-        return interviewMapper.toResponse(interview);
+        return toPermittedView(interview);
     }
 
     public PageResponse<InterviewResponseDTO> getAllInterviews(Pageable pageable) {
@@ -70,11 +68,32 @@ public class InterviewService {
                 interviewMapper::toResponse);
     }
 
-    public PageResponse<InterviewResponseDTO> getMyInterviews(Pageable pageable) {
+    /** The query is the gate here: it returns only the interviews the caller takes part in. */
+    public PageResponse<InterviewView> getMyInterviews(Pageable pageable) {
         User currentUser = getCurrentUser();
         return PageResponse.from(
                 interviewRepository.findByApplication_CandidateOrInterviewer(currentUser, currentUser, pageable),
-                interviewMapper::toResponse);
+                this::toPermittedView);
+    }
+
+    /**
+     * Picks the representation the caller is entitled to, having already been cleared to read the
+     * interview at all. Staff and interviewers get the full record; a candidate gets logistics only,
+     * since the notes and the recommendation are the interviewer's working record and the other
+     * party's contact details are not theirs to read.
+     *
+     * <p>A role check is enough because the caller has already been narrowed to a participant or to
+     * staff: an interviewer with no part in this interview is turned away by
+     * {@link #requireInterviewParticipantOrStaff}, and never appears in {@link #getMyInterviews}.
+     * It also takes an account to hold a single role, so that nobody is staff on one interview and
+     * a candidate on another.
+     */
+    private InterviewView toPermittedView(Interview interview) {
+        if (SecurityUtilities.hasAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER)) {
+            return interviewMapper.toResponse(interview);
+        }
+
+        return interviewMapper.toCandidateResponse(interview);
     }
 
     private User getCurrentUser() {

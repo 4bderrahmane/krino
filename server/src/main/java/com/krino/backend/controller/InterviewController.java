@@ -3,6 +3,7 @@ package com.krino.backend.controller;
 import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.interview.InterviewRequestDTO;
 import com.krino.backend.dto.interview.InterviewResponseDTO;
+import com.krino.backend.dto.interview.InterviewView;
 import com.krino.backend.service.InterviewService;
 import com.krino.backend.utility.SortWhitelist;
 import com.krino.backend.validation.ValidationGroups;
@@ -40,24 +41,22 @@ public class InterviewController {
 
     @GetMapping("/{publicId}")
     @PreAuthorize("hasAuthority('interview:read')")
-    public ResponseEntity<InterviewResponseDTO> getInterviewByPublicId(@PathVariable UUID publicId) {
-        InterviewResponseDTO interview = interviewService.getInterviewByPublicId(publicId);
+    public ResponseEntity<InterviewView> getInterviewByPublicId(@PathVariable UUID publicId) {
+        InterviewView interview = interviewService.getInterviewByPublicId(publicId);
         return ResponseEntity.ok(interview);
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
-    public ResponseEntity<PageResponse<InterviewResponseDTO>> getAllInterviews(@PageableDefault(size = 20, sort = "id"
-    ) Pageable pageable) {
+    public ResponseEntity<PageResponse<InterviewResponseDTO>> getAllInterviews(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
         PageResponse<InterviewResponseDTO> interviews = interviewService.getAllInterviews(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(interviews);
     }
 
     @GetMapping("/me")
     @PreAuthorize("hasAuthority('interview:read')")
-    public ResponseEntity<PageResponse<InterviewResponseDTO>> getMyInterviews(@PageableDefault(size = 20, sort = "id"
-    ) Pageable pageable) {
-        PageResponse<InterviewResponseDTO> interviews = interviewService.getMyInterviews(SORT_WHITELIST.sanitize(pageable));
+    public ResponseEntity<PageResponse<InterviewView>> getMyInterviews(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        PageResponse<InterviewView> interviews = interviewService.getMyInterviews(SORT_WHITELIST.sanitize(pageable));
         return ResponseEntity.ok(interviews);
     }
 

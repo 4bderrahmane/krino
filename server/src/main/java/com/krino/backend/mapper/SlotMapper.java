@@ -2,6 +2,7 @@ package com.krino.backend.mapper;
 
 import com.krino.backend.dto.slot.SlotRequestDTO;
 import com.krino.backend.dto.slot.SlotResponseDTO;
+import com.krino.backend.dto.slot.SlotSummaryDTO;
 import com.krino.backend.dto.slot.SlotUpdateDTO;
 import com.krino.backend.entity.Slot;
 import com.krino.backend.entity.User;
@@ -15,6 +16,10 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface SlotMapper {
     @Mapping(target = "id", source = "publicId")
     SlotResponseDTO toResponse(Slot slot);
+
+    /** Timing only, with no interviewer attached; see {@link SlotSummaryDTO}. */
+    @Mapping(target = "id", source = "publicId")
+    SlotSummaryDTO toSummary(Slot slot);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publicId", ignore = true)

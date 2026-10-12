@@ -13,8 +13,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
-public class InterviewResponseDTO {
+public final class InterviewResponseDTO implements InterviewView {
 
     private UUID id;
     private UUID applicationId;

@@ -7,6 +7,8 @@ import com.krino.backend.entity.Job;
 import com.krino.backend.entity.Slot;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.ApplicationStatus;
+import com.krino.backend.entity.enums.InterviewRecommendation;
+import com.krino.backend.entity.enums.InterviewStatus;
 import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.support.TestJobs;
 import jakarta.servlet.http.Cookie;
@@ -19,12 +21,14 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class InterviewControllerIntegrationTest extends AbstractControllerIntegrationTest
 {
     private static final String OTHER_CANDIDATE_EMAIL = "other-candidate@test.local";
+    private static final String OTHER_INTERVIEWER_EMAIL = "other-interviewer@test.local";
 
     @Test
     void adminBooksInterviewIntoFreeSlotReturnsCreatedAndPersists() throws Exception
@@ -119,6 +123,159 @@ class InterviewControllerIntegrationTest extends AbstractControllerIntegrationTe
                 "\"title\":\"Backend Engineer\"",
                 "\"email\":\"" + CANDIDATE_EMAIL + "\""
         );
+    }
+
+    /**
+     * A candidate reading their own interview gets logistics and nothing else. Asserted against the
+     * raw response body rather than parsed fields, because the point is what is absent from the
+     * wire, not what a deserializer happens to populate.
+     */
+    @Test
+    void candidateReadsOwnInterviewWithoutInternalOrContactFields() throws Exception
+    {
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Job job = openJob();
+        Application application = applicationFor(candidate, job);
+        Slot slot = slotRepository.save(slotFor(interviewer));
+        Interview interview = interviewFor(interviewer, application, slot);
+        interview.setStatus(InterviewStatus.COMPLETED);
+        interview.setNotes("Weak on system design, strong on fundamentals");
+        interview.setRecommendation(InterviewRecommendation.NO);
+        interviewRepository.save(interview);
+        Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+
+        MvcResult result = mockMvc.perform(get("/api/interviews/" + interview.getPublicId())
+                        .cookie(accessCookie))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String body = result.getResponse().getContentAsString();
+        assertThat(body).contains(
+                "\"id\":\"" + interview.getPublicId() + "\"",
+                "\"applicationId\":\"" + application.getPublicId() + "\"",
+                "\"title\":\"Backend Engineer\"",
+                "\"startAt\":\"2999-01-01T09:00:00Z\"");
+        assertThat(body).doesNotContain(
+                "Weak on system design",
+                "\"notes\"",
+                "\"recommendation\"",
+                INTERVIEWER_EMAIL,
+                CANDIDATE_EMAIL);
+    }
+
+    /** The interviewer conducting it keeps the full record, notes included. */
+    @Test
+    void interviewerReadsOwnInterviewWithInternalFields() throws Exception
+    {
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Job job = openJob();
+        Application application = applicationFor(candidate, job);
+        Slot slot = slotRepository.save(slotFor(interviewer));
+        Interview interview = interviewFor(interviewer, application, slot);
+        interview.setStatus(InterviewStatus.COMPLETED);
+        interview.setNotes("Weak on system design, strong on fundamentals");
+        interview.setRecommendation(InterviewRecommendation.NO);
+        interviewRepository.save(interview);
+        Cookie accessCookie = loginAndGetAccessCookie(INTERVIEWER_EMAIL);
+
+        MvcResult result = mockMvc.perform(get("/api/interviews/" + interview.getPublicId())
+                        .cookie(accessCookie))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsString()).contains(
+                "Weak on system design",
+                "\"recommendation\":\"NO\"",
+                "\"email\":\"" + CANDIDATE_EMAIL + "\"");
+    }
+
+    @Test
+    void interviewerListsAndRecordsOutcomeForOwnInterview() throws Exception
+    {
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        User other = createUser(OTHER_INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Job job = openJob();
+        Application application = applicationFor(candidate, job);
+        Interview own = interviewRepository.save(interviewFor(interviewer, application,
+                slotRepository.save(slotFor(interviewer))));
+        Interview foreign = interviewRepository.save(interviewFor(other, application,
+                slotRepository.save(slotFor(other))));
+        Cookie accessCookie = loginAndGetAccessCookie(INTERVIEWER_EMAIL);
+
+        MvcResult listing = mockMvc.perform(get("/api/interviews/me").cookie(accessCookie))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(listing.getResponse().getContentAsString())
+                .contains(own.getPublicId().toString(), "\"totalElements\":1")
+                .doesNotContain(foreign.getPublicId().toString());
+
+        mockMvc.perform(withCsrf(patch("/api/interviews/" + own.getPublicId()))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"COMPLETED","recommendation":"YES","notes":"Strong problem solving"}
+                                """))
+                .andExpect(status().isOk());
+
+        Interview updated = interviewRepository.findByPublicId(own.getPublicId()).orElseThrow();
+        assertThat(updated.getStatus()).isEqualTo(InterviewStatus.COMPLETED);
+        assertThat(updated.getRecommendation()).isEqualTo(InterviewRecommendation.YES);
+        assertThat(updated.getNotes()).isEqualTo("Strong problem solving");
+    }
+
+    @Test
+    void interviewerCannotRecordOutcomeForAnotherInterviewersInterview() throws Exception
+    {
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        User other = createUser(OTHER_INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Application application = applicationFor(candidate, openJob());
+        Interview foreign = interviewRepository.save(interviewFor(other, application,
+                slotRepository.save(slotFor(other))));
+        Cookie accessCookie = loginAndGetAccessCookie(INTERVIEWER_EMAIL);
+
+        mockMvc.perform(withCsrf(patch("/api/interviews/" + foreign.getPublicId()))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"COMPLETED","recommendation":"YES","notes":"Unauthorized"}
+                                """))
+                .andExpect(status().isForbidden());
+        assertThat(interviewRepository.findByPublicId(foreign.getPublicId()).orElseThrow().getNotes())
+                .isNull();
+    }
+
+    /** Same redaction on the list endpoint, which is how a candidate normally arrives. */
+    @Test
+    void candidateListingOwnInterviewsGetsTheRedactedView() throws Exception
+    {
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Job job = openJob();
+        Application application = applicationFor(candidate, job);
+        Slot slot = slotRepository.save(slotFor(interviewer));
+        Interview interview = interviewFor(interviewer, application, slot);
+        interview.setStatus(InterviewStatus.COMPLETED);
+        interview.setNotes("Weak on system design, strong on fundamentals");
+        interview.setRecommendation(InterviewRecommendation.NO);
+        interviewRepository.save(interview);
+        Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+
+        MvcResult result = mockMvc.perform(get("/api/interviews/me").cookie(accessCookie))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String body = result.getResponse().getContentAsString();
+        assertThat(body).contains("\"id\":\"" + interview.getPublicId() + "\"");
+        assertThat(body).doesNotContain(
+                "Weak on system design",
+                "\"notes\"",
+                "\"recommendation\"",
+                INTERVIEWER_EMAIL,
+                CANDIDATE_EMAIL);
     }
 
     @Test
