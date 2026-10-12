@@ -28,6 +28,9 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
+import java.time.Clock;
+import java.time.Instant;
+import jakarta.persistence.EntityManager;
 import java.util.Set;
 import java.util.UUID;
 
@@ -57,7 +60,7 @@ class InterviewServiceTest
         applicationRepository = mock(ApplicationRepository.class);
         interviewMapper = mock(InterviewMapper.class);
         interviewService = new InterviewService(interviewRepository, userRepository, slotRepository,
-                applicationRepository, interviewMapper);
+                applicationRepository, interviewMapper, Clock.systemUTC(), mock(EntityManager.class));
     }
 
     @AfterEach
@@ -213,6 +216,7 @@ class InterviewServiceTest
 
         Interview existing = new Interview();
         existing.setId(1L);
+        existing.setApplication(application(UUID.randomUUID(), ApplicationStatus.INTERVIEW_SCHEDULED));
 
         Interview otherBooking = new Interview();
         otherBooking.setId(99L);
@@ -242,6 +246,7 @@ class InterviewServiceTest
 
         Interview existing = new Interview();
         existing.setId(1L);
+        existing.setApplication(application(UUID.randomUUID(), ApplicationStatus.INTERVIEW_SCHEDULED));
         existing.setStatus(InterviewStatus.COMPLETED); // completed but no hiring signal recorded
 
         Slot slot = freeSlot(new User());
@@ -268,6 +273,7 @@ class InterviewServiceTest
 
         Interview existing = new Interview();
         existing.setId(1L);
+        existing.setApplication(application(UUID.randomUUID(), ApplicationStatus.INTERVIEW_SCHEDULED));
         existing.setStatus(InterviewStatus.SCHEDULED);
         existing.setRecommendation(InterviewRecommendation.YES); // a recommendation on an interview that has not happened
 
@@ -295,6 +301,7 @@ class InterviewServiceTest
 
         Interview existing = new Interview();
         existing.setId(1L);
+        existing.setApplication(application(UUID.randomUUID(), ApplicationStatus.INTERVIEW_SCHEDULED));
         existing.setStatus(InterviewStatus.COMPLETED);
         existing.setRecommendation(InterviewRecommendation.STRONG_YES);
 
@@ -363,6 +370,7 @@ class InterviewServiceTest
         Slot slot = freeSlot(new User());
         Interview existing = new Interview();
         existing.setId(1L);
+        existing.setApplication(application(UUID.randomUUID(), ApplicationStatus.INTERVIEW_SCHEDULED));
         existing.setSlot(slot);
 
         when(interviewRepository.findByPublicId(publicId)).thenReturn(Optional.of(existing));
@@ -407,7 +415,11 @@ class InterviewServiceTest
     private Slot freeSlot(User interviewer)
     {
         Slot slot = new Slot();
+        interviewer.setApproved(true);
+        interviewer.addRole(UserRole.INTERVIEWER);
         slot.setInterviewer(interviewer);
+        slot.setStartAt(Instant.parse("2999-01-01T09:00:00Z"));
+        slot.setEndAt(Instant.parse("2999-01-01T10:00:00Z"));
         return slot;
     }
 

@@ -1,6 +1,8 @@
 package com.krino.backend.repository;
 
 import com.krino.backend.entity.Interview;
+import com.krino.backend.entity.Application;
+import com.krino.backend.entity.enums.InterviewStatus;
 import com.krino.backend.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,4 +17,6 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
     Page<Interview> findByApplication_CandidateOrInterviewer(User candidate, User interviewer, Pageable pageable);
 
     boolean existsByInterviewer(User interviewer);
+
+    boolean existsByApplicationAndStatusAndIdNot(Application application, InterviewStatus status, Long id);
 }

@@ -17,6 +17,8 @@ import com.krino.backend.repository.SlotRepository;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.SecurityUtilities;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.UUID;
+import java.time.Clock;
 
 @Service
 @Transactional
@@ -38,21 +41,28 @@ public class InterviewService {
     private final SlotRepository slotRepository;
     private final ApplicationRepository applicationRepository;
     private final InterviewMapper interviewMapper;
+    private final Clock clock;
+    private final EntityManager entityManager;
 
     public InterviewResponseDTO createInterview(InterviewRequestDTO interviewRequestDTO) {
         SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         Application application = resolveApplication(interviewRequestDTO.getApplicationId());
+        lockApplication(application);
         requireSchedulableApplication(application);
 
         Slot slot = resolveSlot(interviewRequestDTO.getSlotId());
-        validateBooking(slot, null);
+        validateBooking(slot, null, interviewRequestDTO.getStatus());
 
         Interview interview = interviewMapper.toEntity(interviewRequestDTO, slot.getInterviewer(), application, slot);
         requireMeetingConsistency(interview);
         requireRecommendationConsistency(interview);
 
         Interview savedInterview = interviewRepository.save(interview);
-        markApplicationScheduled(application);
+        if (savedInterview.getStatus() == InterviewStatus.CANCELLED) {
+            savedInterview.setSlot(null);
+        } else if (savedInterview.getStatus() == InterviewStatus.SCHEDULED) {
+            markApplicationScheduled(application);
+        }
         return interviewMapper.toResponse(savedInterview);
     }
 
@@ -106,14 +116,19 @@ public class InterviewService {
         Interview existingInterview = findInterview(publicId);
         requireInterviewInterviewerOrStaff(existingInterview);
         requireApplicationUnchanged(existingInterview, interviewRequestDTO.getApplicationId());
-        Slot slot = resolveSlot(interviewRequestDTO.getSlotId());
+        lockApplication(existingInterview.getApplication());
+        InterviewStatus targetStatus = targetStatus(existingInterview, interviewRequestDTO);
+        Slot slot = targetStatus == InterviewStatus.CANCELLED
+                ? existingInterview.getSlot() : resolveSlot(interviewRequestDTO.getSlotId());
         requireSlotInterviewerOrStaff(slot);
 
-        validateBooking(slot, existingInterview);
+        validateBooking(slot, existingInterview, targetStatus);
 
-        interviewMapper.updateEntity(interviewRequestDTO, slot.getInterviewer(), slot, existingInterview);
+        User interviewer = slot != null ? slot.getInterviewer() : existingInterview.getInterviewer();
+        interviewMapper.updateEntity(interviewRequestDTO, interviewer, slot, existingInterview);
         requireMeetingConsistency(existingInterview);
         requireRecommendationConsistency(existingInterview);
+        reconcileBooking(existingInterview);
 
         Interview updatedInterview = interviewRepository.save(existingInterview);
         return interviewMapper.toResponse(updatedInterview);
@@ -123,18 +138,21 @@ public class InterviewService {
         Interview existingInterview = findInterview(publicId);
         requireInterviewInterviewerOrStaff(existingInterview);
         requireApplicationUnchanged(existingInterview, interviewRequestDTO.getApplicationId());
+        lockApplication(existingInterview.getApplication());
+        InterviewStatus targetStatus = targetStatus(existingInterview, interviewRequestDTO);
 
-        Slot slot = interviewRequestDTO.getSlotId() != null
+        Slot slot = targetStatus != InterviewStatus.CANCELLED && interviewRequestDTO.getSlotId() != null
                 ? resolveSlot(interviewRequestDTO.getSlotId())
                 : existingInterview.getSlot();
         requireSlotInterviewerOrStaff(slot);
 
-        validateBooking(slot, existingInterview);
+        validateBooking(slot, existingInterview, targetStatus);
 
         User interviewer = slot != null ? slot.getInterviewer() : existingInterview.getInterviewer();
         interviewMapper.patchEntity(interviewRequestDTO, interviewer, slot, existingInterview);
         requireMeetingConsistency(existingInterview);
         requireRecommendationConsistency(existingInterview);
+        reconcileBooking(existingInterview);
 
         Interview patchedInterview = interviewRepository.save(existingInterview);
         return interviewMapper.toResponse(patchedInterview);
@@ -143,8 +161,39 @@ public class InterviewService {
     public void deleteInterview(UUID publicId) {
         SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         Interview interview = findInterview(publicId);
+        lockApplication(interview.getApplication());
         interview.setSlot(null); // free the slot
         interviewRepository.delete(interview);
+        returnApplicationToReviewIfUnscheduled(interview);
+    }
+
+    private InterviewStatus targetStatus(Interview interview, InterviewRequestDTO request) {
+        return request.getStatus() != null ? request.getStatus() : interview.getStatus();
+    }
+
+    private void lockApplication(Application application) {
+        // Serialize bookings/cancellations for one application. Two concurrent cancellations
+        // must not both see the other's interview and leave the application scheduled forever.
+        // Refresh also discards an application snapshot loaded before waiting for the lock.
+        entityManager.refresh(application, LockModeType.PESSIMISTIC_WRITE);
+    }
+
+    private void reconcileBooking(Interview interview) {
+        if (interview.getStatus() == InterviewStatus.CANCELLED) {
+            interview.setSlot(null);
+            returnApplicationToReviewIfUnscheduled(interview);
+        } else if (interview.getStatus() == InterviewStatus.SCHEDULED) {
+            markApplicationScheduled(interview.getApplication());
+        }
+    }
+
+    private void returnApplicationToReviewIfUnscheduled(Interview interview) {
+        Application application = interview.getApplication();
+        if (application.getStatus() == ApplicationStatus.INTERVIEW_SCHEDULED
+                && !interviewRepository.existsByApplicationAndStatusAndIdNot(
+                        application, InterviewStatus.SCHEDULED, interview.getId())) {
+            application.setStatus(ApplicationStatus.UNDER_REVIEW);
+        }
     }
 
     private Interview findInterview(UUID publicId) {
@@ -202,13 +251,41 @@ public class InterviewService {
      * so no interviewer matching is needed. This is a friendly early check; the unique
      * constraint on {@code interviews.slot_id} is the real guard against concurrent bookings.
      */
-    private void validateBooking(Slot slot, Interview existingInterview) {
-        if (slot == null)
+    private void validateBooking(Slot slot, Interview existingInterview, InterviewStatus targetStatus) {
+        if (existingInterview != null && targetStatus == InterviewStatus.CANCELLED) {
             return;
+        }
+        if (slot == null) {
+            throw new IllegalArgumentException("A non-cancelled interview requires a slot.");
+        }
 
         Interview bookedInterview = slot.getInterview();
         if (bookedInterview != null && (existingInterview == null || !bookedInterview.getId().equals(existingInterview.getId()))) {
-            throw new ResourceConflictException("Slot is already booked by another interview.", ErrorCode.DATA_CONFLICT);
+            throw new ResourceConflictException("Slot is already booked by another interview.",
+                    ErrorCode.DATA_CONFLICT);
+        }
+
+        boolean newBooking = existingInterview == null
+                || existingInterview.getSlot() == null
+                || !slot.getPublicId().equals(existingInterview.getSlot().getPublicId())
+                || (targetStatus == InterviewStatus.SCHEDULED && existingInterview.getStatus() != InterviewStatus.SCHEDULED);
+        if (!newBooking) {
+            return; // Editing an existing appointment's notes/outcome must still work after it starts.
+        }
+        if (slot.getStartAt() == null || !slot.getStartAt().isAfter(clock.instant())) {
+            throw new ResourceConflictException("Cannot book a slot that has already started.",
+                    ErrorCode.OPERATION_NOT_ALLOWED);
+        }
+        User interviewer = slot.getInterviewer();
+        // Hold the current account state stable until booking commits. Deactivation cannot
+        // slip between the eligibility check and the write; historical edits need no such lock.
+        entityManager.refresh(interviewer, LockModeType.PESSIMISTIC_READ);
+        if (!interviewer.isApproved() || !interviewer.hasRole(UserRole.INTERVIEWER)) {
+            throw new ResourceConflictException("The slot's owner must be an active interviewer.",
+                    ErrorCode.OPERATION_NOT_ALLOWED);
+        }
+        if (existingInterview != null && targetStatus == InterviewStatus.SCHEDULED) {
+            requireSchedulableApplication(existingInterview.getApplication());
         }
     }
 
@@ -259,10 +336,14 @@ public class InterviewService {
 
     private Application resolveApplication(UUID publicId) {
         return applicationRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID,
+                        publicId));
     }
 
     private Slot resolveSlot(UUID publicId) {
+        if (publicId == null) {
+            throw new IllegalArgumentException("Slot ID cannot be null.");
+        }
         return slotRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(Slot.class.getSimpleName(), PUBLIC_ID, publicId));
     }

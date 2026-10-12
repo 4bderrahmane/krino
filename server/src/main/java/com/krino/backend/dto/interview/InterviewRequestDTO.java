@@ -25,7 +25,7 @@ public class InterviewRequestDTO {
     @NotNull(message = "Application ID cannot be null", groups = ValidationGroups.FullUpdate.class)
     private UUID applicationId;
 
-    @NotNull(message = "Slot ID cannot be null", groups = ValidationGroups.FullUpdate.class)
+    // Cancelled interviews release their slot; the service requires one for other states.
     private UUID slotId;
 
     private InterviewStatus status;
