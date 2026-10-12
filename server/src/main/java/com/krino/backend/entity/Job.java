@@ -346,51 +346,6 @@ public class Job extends AbstractPublicEntity {
             throw new IllegalArgumentException("A city is required for on-site or hybrid postings");
     }
 
-    @PrePersist
-    private void beforeInsert() {
-        normalizeValues();
-        validateInvariants();
-    }
-
-    @PreUpdate
-    private void beforeUpdate() {
-        normalizeValues();
-        validateInvariants();
-    }
-
-    private void normalizeValues() {
-        referenceCode = requireText(referenceCode, "referenceCode");
-        slug = requireText(slug, "slug");
-        title = requireText(title, TITLE_STRING);
-
-        description = normalizeNullable(description);
-    }
-
-    private void validateInvariants() {
-        validateSalary(salaryMin, salaryMax, salaryCurrency, salaryPeriod);
-        validateLocation(remotePolicy, city);
-
-        if (publishedAt != null && applicationDeadline != null && !applicationDeadline.isAfter(publishedAt)) {
-            throw new IllegalStateException("applicationDeadline must be after publishedAt");
-        }
-
-        if ((status == JobStatus.OPEN || status == JobStatus.PAUSED) && publishedAt == null) {
-            throw new IllegalStateException("An open or paused posting must have publishedAt");
-        }
-
-        if (status == JobStatus.SCHEDULED && scheduledPublishAt == null) {
-            throw new IllegalStateException("A scheduled posting must have scheduledPublishAt");
-        }
-
-        if (isTerminalStatus(status) && closedAt == null) {
-            throw new IllegalStateException("A closed posting must have closedAt");
-        }
-    }
-
-    private static boolean isTerminalStatus(JobStatus status) {
-        return status == JobStatus.CLOSED || status == JobStatus.FILLED || status == JobStatus.CANCELLED || status == JobStatus.ARCHIVED;
-    }
-
     private static String requireText(String value, String fieldName) {
         if (isBlank(value)) {
             throw new IllegalArgumentException(fieldName + " must not be blank");
