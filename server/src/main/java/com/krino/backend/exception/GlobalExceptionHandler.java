@@ -65,17 +65,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ProblemDetail> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
-                                                            HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
         String detail = "Invalid value for parameter '" + ex.getName() + "'.";
         return respond(ex, ErrorCode.VALIDATION_ERROR, detail, request, null);
     }
 
-    // Thrown by Spring Data when a ?sort= (or derived-query) property does not exist on the
-    // entity — a client input problem, not a server fault, so answer 400 instead of 500.
+    // Thrown by Spring Data when a ?sort= (or derived-query) property does not exist on the entity
     @ExceptionHandler(PropertyReferenceException.class)
-    public ResponseEntity<ProblemDetail> handlePropertyReference(PropertyReferenceException ex,
-                                                                 HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handlePropertyReference(PropertyReferenceException ex, HttpServletRequest request) {
         String detail = "Unknown property '" + ex.getPropertyName() + "' in sort or query parameter.";
         return respond(ex, ErrorCode.VALIDATION_ERROR, detail, request, null);
     }
@@ -91,8 +88,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ex.getConstraintViolations().forEach(violation ->
                 addValidationError(errors, violation.getPropertyPath().toString(), violation.getMessage())
         );
-        return respond(ex, ErrorCode.VALIDATION_ERROR, "Validation failed for one or more parameters.", request,
-                errors);
+        return respond(ex, ErrorCode.VALIDATION_ERROR, "Validation failed for one or more parameters.", request, errors);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

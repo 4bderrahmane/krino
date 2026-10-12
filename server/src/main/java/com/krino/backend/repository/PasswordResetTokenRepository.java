@@ -17,14 +17,28 @@ import java.util.UUID;
 public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, UUID> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT t FROM PasswordResetToken t WHERE t.tokenHash = :tokenHash AND t.used = false " + "AND t.expiresAt > :now")
-    Optional<PasswordResetToken> findValidByHashForUpdate(@Param("tokenHash") byte[] tokenHash, @Param("now") Instant now);
+    @Query("""
+            SELECT t FROM PasswordResetToken t
+            WHERE t.tokenHash = :tokenHash
+              AND t.used = false
+              AND t.expiresAt > :now
+            """)
+    Optional<PasswordResetToken> findValidByHashForUpdate(@Param("tokenHash") byte[] tokenHash,
+                                                          @Param("now") Instant now);
 
     @Modifying
-    @Query("UPDATE PasswordResetToken t SET t.used = true WHERE t.user.id = :userId AND t.used = false")
+    @Query("""
+            UPDATE PasswordResetToken t
+            SET t.used = true
+            WHERE t.user.id = :userId
+              AND t.used = false
+            """)
     void markAllUsedForUser(@Param("userId") Long userId);
 
     @Modifying
-    @Query("DELETE FROM PasswordResetToken t WHERE t.expiresAt < :now")
+    @Query("""
+            DELETE FROM PasswordResetToken t
+            WHERE t.expiresAt < :now
+            """)
     void deleteExpired(@Param("now") Instant now);
 }

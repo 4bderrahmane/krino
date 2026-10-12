@@ -93,8 +93,7 @@ public class ApplicationService {
 
     public ApplicationResponseDTO getApplicationByPublicId(UUID publicId) {
         Application application = applicationRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID,
-                        publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
         requireApplicationOwnerOrStaff(application);
         return applicationMapper.toResponse(application);
     }
@@ -110,8 +109,7 @@ public class ApplicationService {
 
     public PageResponse<ApplicationResponseDTO> getAllApplications(Pageable pageable) {
         SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
-        return PageResponse.from(applicationRepository.findAll(pageable),
-                applicationMapper::toResponse);
+        return PageResponse.from(applicationRepository.findAll(pageable), applicationMapper::toResponse);
     }
 
     public PageResponse<ApplicationResponseDTO> getSchedulingApplications(String search, Pageable pageable) {
@@ -122,8 +120,7 @@ public class ApplicationService {
 
     public PageResponse<ApplicationResponseDTO> getMyApplications(Pageable pageable) {
         User candidate = getCurrentUser();
-        return PageResponse.from(applicationRepository.findByCandidate(candidate, pageable),
-                applicationMapper::toResponse);
+        return PageResponse.from(applicationRepository.findByCandidate(candidate, pageable), applicationMapper::toResponse);
     }
 
     public ApplicationResponseDTO updateApplication(UUID publicId, ApplicationUpdateDTO applicationUpdateDTO) {
@@ -141,8 +138,7 @@ public class ApplicationService {
 
     public ApplicationResponseDTO patchApplication(UUID publicId, ApplicationUpdateDTO applicationUpdateDTO) {
         Application existingApplication = applicationRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID,
-                        publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
         requireApplicationOwnerOrStaff(existingApplication);
         enforceStatusUpdatePolicy(applicationUpdateDTO);
         enforceJobImmutable(existingApplication, applicationUpdateDTO);
@@ -155,8 +151,7 @@ public class ApplicationService {
 
     public void deleteApplication(UUID publicId) {
         Application application = applicationRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID,
-                        publicId));
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), PUBLIC_ID, publicId));
         requireApplicationOwnerOrStaff(application);
         if (StringUtils.hasText(application.getResumeObjectKey())) {
             resumeStorageService.deleteResumeAfterCommit(application.getResumeObjectKey());
@@ -196,8 +191,7 @@ public class ApplicationService {
         }
 
         String previousObjectKey = application.getResumeObjectKey();
-        String copiedObjectKey = resumeStorageService.copyResumeForApplication(candidate.getResumeObjectKey(),
-                application.getPublicId());
+        String copiedObjectKey = resumeStorageService.copyResumeForApplication(candidate.getResumeObjectKey(), application.getPublicId());
 
         StoredResume storedResume = new StoredResume(
                 copiedObjectKey,

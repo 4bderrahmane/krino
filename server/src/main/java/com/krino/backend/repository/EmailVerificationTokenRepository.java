@@ -17,16 +17,28 @@ import java.util.UUID;
 public interface EmailVerificationTokenRepository extends JpaRepository<EmailVerificationToken, UUID> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT t FROM EmailVerificationToken t WHERE t.tokenHash = :tokenHash AND t.used = false "
-            + "AND t.expiresAt > :now")
+    @Query("""
+            SELECT t FROM EmailVerificationToken t
+            WHERE t.tokenHash = :tokenHash
+              AND t.used = false
+              AND t.expiresAt > :now
+            """)
     Optional<EmailVerificationToken> findValidByHashForUpdate(@Param("tokenHash") byte[] tokenHash,
                                                               @Param("now") Instant now);
 
     @Modifying
-    @Query("UPDATE EmailVerificationToken t SET t.used = true WHERE t.user.id = :userId AND t.used = false")
+    @Query("""
+            UPDATE EmailVerificationToken t
+            SET t.used = true
+            WHERE t.user.id = :userId
+              AND t.used = false
+            """)
     void markAllUsedForUser(@Param("userId") Long userId);
 
     @Modifying
-    @Query("DELETE FROM EmailVerificationToken t WHERE t.expiresAt < :now")
+    @Query("""
+            DELETE FROM EmailVerificationToken t
+            WHERE t.expiresAt < :now
+            """)
     void deleteExpired(@Param("now") Instant now);
 }

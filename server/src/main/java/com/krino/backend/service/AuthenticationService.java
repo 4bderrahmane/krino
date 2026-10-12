@@ -92,8 +92,7 @@ public class AuthenticationService {
         authenticateUser(email, password);
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(String.format("User not found with email: %s",
-                        email)));
+                .orElseThrow(() -> new UsernameNotFoundException(String.format("User not found with email: %s", email)));
 
 
         assertAccountMayHoldSession(user);
@@ -101,9 +100,10 @@ public class AuthenticationService {
         CustomUserDetails userDetails = new CustomUserDetails(user);
         UserResponseDTO userResponse = userMapper.toResponse(user);
 
+        String deviceInfo = extractDeviceInfo(request);
+        String ipAddress = extractIpAddress(request);
         String accessToken = jwtService.generateAccessToken(userDetails);
-        String refreshToken = refreshTokenService.generateAndSaveRefreshToken(user, extractDeviceInfo(request),
-                extractIpAddress(request));
+        String refreshToken = refreshTokenService.generateAndSaveRefreshToken(user, deviceInfo, ipAddress);
 
         cookieUtilities.setCookies(accessToken, refreshToken, response);
 
@@ -221,8 +221,7 @@ public class AuthenticationService {
 
             if (user.isMustChangePassword()) {
                 log.warn("Refresh refused: password change still pending for user {}", user.getId());
-                throw new PasswordChangeRequiredException(
-                        "Please set a new password before continuing; sign in again to do so.");
+                throw new PasswordChangeRequiredException("Please set a new password before continuing; sign in again to do so.");
             }
         } catch (BaseException rejection) {
             refreshTokenService.revokeAllSessionsInOwnTransaction(user.getId());

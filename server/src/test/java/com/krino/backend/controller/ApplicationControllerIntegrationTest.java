@@ -8,9 +8,9 @@ import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.support.TestJobs;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;

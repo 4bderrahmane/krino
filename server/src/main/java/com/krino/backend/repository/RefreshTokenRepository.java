@@ -17,37 +17,74 @@ import java.util.UUID;
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID> {
 
-    @Query("SELECT rt FROM RefreshToken rt WHERE rt.tokenHash = :tokenHash AND rt.consumed = false AND rt.revoked = " +
-            "false AND rt.expiresAt > :now")
+    @Query("""
+            SELECT rt FROM RefreshToken rt
+            WHERE rt.tokenHash = :tokenHash
+              AND rt.consumed = false
+              AND rt.revoked = false
+              AND rt.expiresAt > :now
+            """)
     Optional<RefreshToken> findValidTokenByHash(@Param("tokenHash") byte[] tokenHash, @Param("now") Instant now);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT rt FROM RefreshToken rt WHERE rt.tokenHash = :tokenHash AND rt.consumed = false AND rt.revoked = " +
-            "false AND rt.expiresAt > :now")
-    Optional<RefreshToken> findValidTokenByHashForUpdate(@Param("tokenHash") byte[] tokenHash,
-                                                         @Param("now") Instant now);
+    @Query("""
+            SELECT rt FROM RefreshToken rt
+            WHERE rt.tokenHash = :tokenHash
+              AND rt.consumed = false
+              AND rt.revoked = false
+              AND rt.expiresAt > :now
+            """)
+    Optional<RefreshToken> findValidTokenByHashForUpdate(@Param("tokenHash") byte[] tokenHash, @Param("now") Instant now);
 
     @Modifying
-    @Query("UPDATE RefreshToken rt SET rt.revoked = true WHERE rt.id = :id")
+    @Query("""
+            UPDATE RefreshToken rt
+            SET rt.revoked = true
+            WHERE rt.id = :id
+            """)
     void revokeToken(@Param("id") UUID id);
 
     @Modifying
-    @Query("UPDATE RefreshToken rt SET rt.revoked = true WHERE rt.user.id = :userId")
+    @Query("""
+            UPDATE RefreshToken rt
+            SET rt.revoked = true
+            WHERE rt.user.id = :userId
+            """)
     void revokeAllUserTokens(@Param("userId") Long userId);
 
     @Modifying
-    @Query("DELETE FROM RefreshToken rt WHERE rt.expiresAt < :now OR rt.revoked = true")
+    @Query("""
+            DELETE FROM RefreshToken rt
+            WHERE rt.expiresAt < :now
+               OR rt.revoked = true
+            """)
     void deleteExpiredAndRevokedTokens(@Param("now") Instant now);
 
-    @Query("SELECT rt FROM RefreshToken rt WHERE rt.user.id = :userId AND rt.consumed = false AND rt.revoked = false " +
-            "AND rt.expiresAt > :now ORDER BY rt.createdAt DESC")
+    @Query("""
+            SELECT rt FROM RefreshToken rt
+            WHERE rt.user.id = :userId
+              AND rt.consumed = false
+              AND rt.revoked = false
+              AND rt.expiresAt > :now
+            ORDER BY rt.createdAt DESC
+            """)
     List<RefreshToken> findActiveTokensByUser(@Param("userId") Long userId, @Param("now") Instant now);
 
-    @Query("SELECT COUNT(rt) FROM RefreshToken rt WHERE rt.user.id = :userId AND rt.consumed = false AND rt.revoked =" +
-            " false AND rt.expiresAt > :now")
+    @Query("""
+            SELECT COUNT(rt) FROM RefreshToken rt
+            WHERE rt.user.id = :userId
+              AND rt.consumed = false
+              AND rt.revoked = false
+              AND rt.expiresAt > :now
+            """)
     long countActiveTokensByUser(@Param("userId") Long userId, @Param("now") Instant now);
 
-    @Query("SELECT rt FROM RefreshToken rt WHERE rt.consumed = false AND rt.revoked = false AND rt.expiresAt > :now")
+    @Query("""
+            SELECT rt FROM RefreshToken rt
+            WHERE rt.consumed = false
+              AND rt.revoked = false
+              AND rt.expiresAt > :now
+            """)
     List<RefreshToken> findAllValidTokens(@Param("now") Instant now);
 
     Optional<RefreshToken> findByTokenHash(byte[] tokenHash);
