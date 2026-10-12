@@ -6,7 +6,7 @@ import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.exception.EmailNotVerifiedException;
-import com.krino.backend.exception.InvalidRefreshTokenException;
+import com.krino.backend.exception.RefreshTokenAuthenticationException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
 import com.krino.backend.service.email.EmailVerificationService;
@@ -208,12 +208,12 @@ class AuthenticationServiceTest
     }
 
     @Test
-    void refreshWithoutCookieThrowsInvalidRefreshTokenException()
+    void refreshWithoutCookieThrowsRefreshTokenAuthenticationException()
     {
         MockHttpServletRequest httpRequest = new MockHttpServletRequest();
         MockHttpServletResponse httpResponse = new MockHttpServletResponse();
         assertThatThrownBy(() -> authenticationService.refresh(httpRequest, httpResponse))
-                .isInstanceOf(InvalidRefreshTokenException.class)
+                .isInstanceOf(RefreshTokenAuthenticationException.class)
                 .hasMessage("No refresh token provided");
     }
 

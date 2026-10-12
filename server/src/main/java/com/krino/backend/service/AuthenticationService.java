@@ -12,7 +12,7 @@ import com.krino.backend.exception.AccountNotApprovedException;
 import com.krino.backend.exception.BaseException;
 import com.krino.backend.exception.EmailNotVerifiedException;
 import com.krino.backend.exception.InvalidCredentialsException;
-import com.krino.backend.exception.InvalidRefreshTokenException;
+import com.krino.backend.exception.RefreshTokenAuthenticationException;
 import com.krino.backend.exception.PasswordChangeRequiredException;
 import com.krino.backend.mapper.UserMapper;
 import com.krino.backend.repository.UserRepository;
@@ -133,7 +133,7 @@ public class AuthenticationService {
     @Transactional
     public AuthenticationResponseDTO refresh(HttpServletRequest request, HttpServletResponse response) {
         String providedRefreshToken = cookieUtilities.getRefreshTokenFromCookie(request)
-                .orElseThrow(() -> new InvalidRefreshTokenException("No refresh token provided"));
+                .orElseThrow(() -> new RefreshTokenAuthenticationException("No refresh token provided"));
 
 
         // Account state is settled before the row lock below is taken, and deliberately so.
@@ -151,7 +151,7 @@ public class AuthenticationService {
 
         User user = token.getUser();
         if (user == null)
-            throw new InvalidRefreshTokenException("User not found for refresh token");
+            throw new RefreshTokenAuthenticationException("User not found for refresh token");
 
         refreshTokenService.consumeToken(token);
         String newRefreshToken = refreshTokenService.generateAndSaveRefreshToken(
@@ -230,15 +230,7 @@ public class AuthenticationService {
         }
     }
 
-    /**
-     * A refresh token that exists but was already consumed is the signature of replay after
-     * rotation: either the legitimate client or a thief now holds the successor, and there is
-     * no way to tell which party is asking. The whole session family is therefore revoked
-     * (in its own transaction, so it survives this request's rollback) and everyone has to
-     * log in again. The response stays identical to the token-never-existed case so a
-     * probing attacker can't distinguish the two.
-     */
-    private InvalidRefreshTokenException rejectInvalidRefreshToken(String providedRefreshToken, HttpServletRequest request) {
+    private RefreshTokenAuthenticationException rejectInvalidRefreshToken(String providedRefreshToken, HttpServletRequest request) {
         refreshTokenService.findRefreshTokenAnyState(providedRefreshToken)
                 .filter(token -> token.isConsumed() && token.getUser() != null)
                 .ifPresent(replayed -> {
@@ -248,7 +240,7 @@ public class AuthenticationService {
                     refreshTokenService.revokeAllSessionsInOwnTransaction(userId);
                 });
 
-        return new InvalidRefreshTokenException("Invalid or expired refresh token");
+        return new RefreshTokenAuthenticationException("Invalid or expired refresh token");
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
