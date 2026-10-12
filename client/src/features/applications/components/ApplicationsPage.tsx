@@ -1,10 +1,11 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigate} from 'react-router-dom';
 import {useApplications, type ApplicationScope} from '@/features/applications/hooks/useApplications.ts';
 import {useResumeDownload} from '@/features/applications/hooks/useResumeDownload.ts';
 import ApplicationStatusBadge from './ApplicationStatusBadge.tsx';
 import LoadingSpinner from '@/shared/components/LoadingSpinner.tsx';
+import PaginationControls from '@/shared/components/PaginationControls.tsx';
 import {usePermissions} from '@/shared/hooks/usePermissions';
 import '@/features/applications/styles/Applications.css';
 
@@ -20,7 +21,12 @@ const ApplicationsPage: React.FC = () => {
     const {isStaff} = usePermissions();
     const scope: ApplicationScope = isStaff ? 'all' : 'mine';
 
-    const {data, isLoading, isError, refetch} = useApplications(scope);
+    const [page, setPage] = useState(0);
+    const {data, isLoading, isError, refetch} = useApplications(scope, page);
+    const totalPages = data?.page.totalPages;
+    useEffect(() => {
+        if (totalPages !== undefined && page >= totalPages) setPage(Math.max(0, totalPages - 1));
+    }, [page, totalPages]);
     const navigate = useNavigate();
 
     // Résumé download lives behind an authenticated endpoint (see the hook).
@@ -135,6 +141,8 @@ const ApplicationsPage: React.FC = () => {
                         </table>
                     </div>
             )}
+            <PaginationControls label={t('common.pagination')} page={page}
+                                totalPages={data?.page.totalPages ?? 0} onPageChange={setPage}/>
         </div>
     );
 };

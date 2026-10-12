@@ -677,6 +677,8 @@
     "back": "Retour",
     "next": "Suivant",
     "previous": "Précédent",
+    "pagination": "Pagination",
+    "pageIndicator": "Page {{current}} sur {{total}}",
     "home": "Accueil",
     "more": "Plus",
     "less": "Moins",

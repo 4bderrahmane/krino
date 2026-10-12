@@ -673,6 +673,8 @@
     "back": "Back",
     "next": "Next",
     "previous": "Previous",
+    "pagination": "Pagination",
+    "pageIndicator": "Page {{current}} of {{total}}",
     "home": "Home",
     "more": "More",
     "less": "Less",

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {
     useDeleteInterview,
@@ -10,6 +10,7 @@ import InterviewStatusBadge from './InterviewStatusBadge.tsx';
 import InterviewForm from './InterviewForm.tsx';
 import InterviewOutcomeForm from './InterviewOutcomeForm.tsx';
 import LoadingSpinner from '@/shared/components/LoadingSpinner.tsx';
+import PaginationControls from '@/shared/components/PaginationControls.tsx';
 import {usePermissions} from '@/shared/hooks/usePermissions';
 import {useSuccessToast} from '@/shared/hooks/useSuccessToast';
 import {resolveServerError} from '@/shared/services/errors';
@@ -39,7 +40,12 @@ const InterviewsPage: React.FC = () => {
     const scope: InterviewScope = isStaff ? 'all' : 'mine';
     const {showSuccessToast} = useSuccessToast();
 
-    const {data, isLoading, isError, refetch} = useInterviews(scope);
+    const [page, setPage] = useState(0);
+    const {data, isLoading, isError, refetch} = useInterviews(scope, page);
+    const totalPages = data?.page.totalPages;
+    useEffect(() => {
+        if (totalPages !== undefined && page >= totalPages) setPage(Math.max(0, totalPages - 1));
+    }, [page, totalPages]);
     const deleteInterview = useDeleteInterview();
 
     const [showCreate, setShowCreate] = useState(false);
@@ -221,6 +227,13 @@ const InterviewsPage: React.FC = () => {
                     </table>
                 </div>
             )}
+            <PaginationControls label={t('common.pagination')} page={page}
+                                totalPages={data?.page.totalPages ?? 0}
+                                onPageChange={(nextPage) => {
+                                    setEditingId(null);
+                                    setConfirmingDeleteId(null);
+                                    setPage(nextPage);
+                                }}/>
         </div>
     );
 };
