@@ -79,23 +79,25 @@ const toApplicationPage = (data: PageResponse<ApplicationResponseDTO>): Applicat
 const APPLICATIONS_ENDPOINT = '/applications';
 
 /** All applications — staff only (ADMIN / HR_MANAGER). */
-export const getApplications = async (page = 0, size = 20): Promise<ApplicationPage> => {
+export const getApplications = async (page = 0, size = 20, signal?: AbortSignal): Promise<ApplicationPage> => {
     const {data} = await api.get<PageResponse<ApplicationResponseDTO>>(APPLICATIONS_ENDPOINT, {
         params: {page, size},
+        signal,
     });
     return toApplicationPage(data);
 };
 
 /** The current user's own applications. */
-export const getMyApplications = async (page = 0, size = 20): Promise<ApplicationPage> => {
+export const getMyApplications = async (page = 0, size = 20, signal?: AbortSignal): Promise<ApplicationPage> => {
     const {data} = await api.get<PageResponse<ApplicationResponseDTO>>(`${APPLICATIONS_ENDPOINT}/me`, {
         params: {page, size},
+        signal,
     });
     return toApplicationPage(data);
 };
 
-export const getApplicationById = async (id: string): Promise<Application> => {
-    const {data} = await api.get<ApplicationResponseDTO>(`${APPLICATIONS_ENDPOINT}/${id}`);
+export const getApplicationById = async (id: string, signal?: AbortSignal): Promise<Application> => {
+    const {data} = await api.get<ApplicationResponseDTO>(`${APPLICATIONS_ENDPOINT}/${id}`, {signal});
     return toApplication(data);
 };
 

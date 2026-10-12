@@ -30,18 +30,18 @@ const toDirectoryUser = (dto: UserResponseDTO): DirectoryUser => ({
 });
 
 // GET /api/users — staff only (ADMIN / HR_MANAGER), server-paginated (size 20).
-export const getUsers = async (page = 0): Promise<{users: DirectoryUser[]; totalPages: number}> => {
-    const {data} = await api.get<PageResponse<UserResponseDTO>>(USERS_ENDPOINT, {params: {page}});
+export const getUsers = async (page = 0, signal?: AbortSignal): Promise<{users: DirectoryUser[]; totalPages: number}> => {
+    const {data} = await api.get<PageResponse<UserResponseDTO>>(USERS_ENDPOINT, {params: {page}, signal});
     return {users: data.content.map(toDirectoryUser), totalPages: data.page.totalPages};
 };
 
 // Walks every page so callers needing the complete directory (the approval table,
 // the interviewer picker) get all users, not just the first server page.
-export const getAllUsers = async (): Promise<DirectoryUser[]> => {
-    const first = await getUsers(0);
+export const getAllUsers = async (signal?: AbortSignal): Promise<DirectoryUser[]> => {
+    const first = await getUsers(0, signal);
     const all = [...first.users];
     for (let page = 1; page < first.totalPages; page += 1) {
-        const next = await getUsers(page);
+        const next = await getUsers(page, signal);
         all.push(...next.users);
     }
     return all;
@@ -49,8 +49,8 @@ export const getAllUsers = async (): Promise<DirectoryUser[]> => {
 
 // Used by staff pickers (e.g. the interviewer dropdown on the slot form). The
 // /users endpoint has no server-side role filter, so we filter client-side.
-export const getUsersByRole = async (role: Role): Promise<DirectoryUser[]> =>
-    (await getAllUsers()).filter((user) => user.roles.includes(role));
+export const getUsersByRole = async (role: Role, signal?: AbortSignal): Promise<DirectoryUser[]> =>
+    (await getAllUsers(signal)).filter((user) => user.roles.includes(role));
 
 // PATCH /api/users/{publicId}/approval — approve (true) or revoke (false). Requires
 // ADMIN / HR_MANAGER.
