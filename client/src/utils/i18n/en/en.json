@@ -394,6 +394,7 @@
         "departmentRequired": "Please choose a department.",
         "titleRequired": "A job title is required.",
         "titleTooLong": "The title cannot exceed 100 characters.",
+        "cityRequired": "Choose a city for an on-site or hybrid offer.",
         "deadlineRequired": "An application deadline is required.",
         "deadlineFuture": "The deadline must be in the future.",
         "salaryRange": "Maximum salary cannot be lower than the minimum.",

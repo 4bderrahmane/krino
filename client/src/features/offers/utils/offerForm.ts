@@ -89,6 +89,9 @@ export const validateOfferForm = (form: FormState, t: TFunction): Record<string,
     if (!form.department) errors.department = t('offers.create.errors.departmentRequired');
     if (!form.title.trim()) errors.title = t('offers.create.errors.titleRequired');
     else if (form.title.trim().length > 100) errors.title = t('offers.create.errors.titleTooLong');
+    if (form.remotePolicy !== 'REMOTE' && !form.location) {
+        errors.location = t('offers.create.errors.cityRequired');
+    }
 
     if (!form.applyingDeadline) {
         errors.applyingDeadline = t('offers.create.errors.deadlineRequired');

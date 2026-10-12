@@ -205,9 +205,11 @@ const OfferFormFields: React.FC<OfferFormFieldsProps> = ({
                     </label>
 
                     <label className="offer-field">
-                        <span className="offer-field-label">{t('offers.create.fields.city')}</span>
+                        <span className="offer-field-label">
+                            {t('offers.create.fields.city')}{form.remotePolicy !== 'REMOTE' ? ' *' : ''}
+                        </span>
                         <select
-                            className="offer-input"
+                            className={`offer-input${fieldErrors.location ? ' has-error' : ''}`}
                             value={form.location}
                             onChange={(e) => set('location', e.target.value as MoroccanCity | '')}
                         >
@@ -216,6 +218,9 @@ const OfferFormFields: React.FC<OfferFormFieldsProps> = ({
                                 <option key={v} value={v}>{t(`offers.cities.${v}`)}</option>
                             ))}
                         </select>
+                        {fieldErrors.location && (
+                            <span className="offer-field-error">{fieldErrors.location}</span>
+                        )}
                     </label>
                 </div>
             </fieldset>

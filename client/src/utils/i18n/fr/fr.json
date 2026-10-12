@@ -394,6 +394,7 @@
         "departmentRequired": "Veuillez choisir un département.",
         "titleRequired": "L'intitulé du poste est obligatoire.",
         "titleTooLong": "L'intitulé ne peut pas dépasser 100 caractères.",
+        "cityRequired": "Choisissez une ville pour une offre sur site ou hybride.",
         "deadlineRequired": "Une date limite de candidature est obligatoire.",
         "deadlineFuture": "La date limite doit être dans le futur.",
         "salaryRange": "Le salaire maximum ne peut pas être inférieur au minimum.",
