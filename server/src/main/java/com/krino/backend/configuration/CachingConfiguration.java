@@ -21,7 +21,7 @@ import java.time.Duration;
 import java.util.List;
 
 @Configuration
-@EnableCaching
+@EnableCaching(order = 0)
 @Slf4j
 public class CachingConfiguration {
 
