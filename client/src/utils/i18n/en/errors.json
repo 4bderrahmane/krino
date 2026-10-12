@@ -4,6 +4,7 @@
     "INVALID_CREDENTIALS": "Invalid email or password. Please try again.",
     "VALIDATION_ERROR": "Please check the highlighted fields and try again.",
     "DATA_CONFLICT": "That conflicts with existing data. Please review your input and try again.",
+    "STALE_PROFILE": "Your profile changed. Reload the page to review the latest values before saving.",
     "UNAUTHORIZED": "Your session has expired. Please log in again.",
     "TOKEN_EXPIRED": "Your session has expired. Please log in again.",
     "INVALID_TOKEN": "This link is invalid or has expired.",

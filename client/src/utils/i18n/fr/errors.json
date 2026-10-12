@@ -4,6 +4,7 @@
     "INVALID_CREDENTIALS": "E-mail ou mot de passe invalide. Veuillez réessayer.",
     "VALIDATION_ERROR": "Veuillez vérifier les champs en surbrillance et réessayer.",
     "DATA_CONFLICT": "Cela entre en conflit avec des données existantes. Veuillez vérifier vos informations et réessayer.",
+    "STALE_PROFILE": "Votre profil a changé. Rechargez la page pour consulter les dernières valeurs avant d’enregistrer.",
     "UNAUTHORIZED": "Votre session a expiré. Veuillez vous reconnecter.",
     "TOKEN_EXPIRED": "Votre session a expiré. Veuillez vous reconnecter.",
     "INVALID_TOKEN": "Ce lien est invalide ou a expiré.",
