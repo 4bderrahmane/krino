@@ -74,6 +74,14 @@ class JobControllerIntegrationTest extends AbstractControllerIntegrationTest
                 .contains("\"importance\":\"PREFERRED\"");
         assertThat(jobSkillRepository.count()).isEqualTo(2);
         assertThat(skillRepository.findBySlug("spring-boot")).isPresent();
+        String publicId = objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
+        // A fresh request must load the relationship from PostgreSQL, not merely echo the
+        // in-memory collection rendered by POST (which also worked when skills was transient).
+        MvcResult reloaded = mockMvc.perform(get("/api/jobs/" + publicId).cookie(accessCookie))
+                .andExpect(status().isOk()).andReturn();
+        assertThat(reloaded.getResponse().getContentAsString())
+                .contains("\"slug\":\"java\"")
+                .contains("\"slug\":\"spring-boot\"");
         assertThat(jobRepository.findByTitle("Backend Engineer"))
                 .singleElement()
                 .satisfies(job -> {
