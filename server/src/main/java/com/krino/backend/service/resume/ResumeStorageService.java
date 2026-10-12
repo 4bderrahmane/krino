@@ -140,7 +140,7 @@ public class ResumeStorageService {
         }
     }
 
-    private void validateResume(MultipartFile file) {
+    public void validateResume(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new FileStorageException(ErrorCode.VALIDATION_ERROR, "Resume file cannot be empty.");
         }

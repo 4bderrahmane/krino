@@ -57,6 +57,7 @@ public class AuthenticationService {
         String email = normalizeEmail(dto.getEmail());
 
         if (userRepository.findByEmail(email).isPresent()) {
+            resumeStorageService.validateResume(resume);
             log.info("Registration ignored for already-registered email");
             return;
         }
