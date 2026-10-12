@@ -19,7 +19,7 @@ const Toast: React.FC<ToastProps> = ({message, variant, isVisible, onClose}) => 
     if (!message) return null;
 
     return (
-        <div className={`toast toast--${variant} ${isVisible ? 'visible' : 'hidden'}`} role="status" aria-live="polite">
+        <div className={`toast toast--${variant} ${isVisible ? 'is-visible' : 'is-hidden'}`} role="status" aria-live="polite">
             <svg
                 className="toast-icon"
                 fill="none"

@@ -205,6 +205,19 @@ button {
   cursor: pointer;
 }
 
+.welcome-message {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+}
+
+.spinner-track {
+  opacity: 0.25;
+}
+
+.spinner-fill {
+  opacity: 0.75;
+}
+
 /* Keyboard focus only — visible, on-brand, never on mouse click */
 :focus-visible {
   outline: 2px solid var(--color-primary);

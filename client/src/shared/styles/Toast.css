@@ -23,12 +23,12 @@
     background-color: var(--color-danger);
 }
 
-.toast.visible {
+.toast.is-visible {
     transform: translateX(0);
     opacity: 1;
 }
 
-.toast.hidden {
+.toast.is-hidden {
     transform: translateX(-120%);
     opacity: 0;
 }

@@ -5,7 +5,7 @@ function Welcome() {
     const {t, i18n} = useTranslation();
 
     return (
-        <div className="text-xl font-serif">
+        <div className="welcome-message">
             <TypeAnimation
                 key={i18n.language}
                 sequence={[
