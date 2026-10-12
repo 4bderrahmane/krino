@@ -236,3 +236,7 @@ CREATE TABLE interviews
 
 CREATE INDEX idx_interviews_application ON interviews (application_id);
 CREATE INDEX idx_interviews_interviewer ON interviews (interviewer_id);
+
+-- The last-approved-admin guard runs in UserService under SERIALIZABLE
+-- transactions. It checks users.is_approved together with user_roles.roles;
+-- a DELETE-only trigger on users would miss approval changes.
