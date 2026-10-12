@@ -68,8 +68,7 @@ services:
     build:
       context: ./server
     container_name: krino-server
-    ports:
-      - "8080:8080"
+    # Reachable by the client container at server:8080; no host port bypasses nginx.
     restart: unless-stopped
     # Copy server/.env.example to server/.env for JWT/admin secrets.
     # Compose overrides DB and MinIO addresses so containers talk over the
@@ -81,7 +80,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-krino}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-krino}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      # ddl-auto is deliberately NOT set here. A value in this block outranks the
+      # one in server/.env, so hardcoding it would silently re-enable schema
+      # mutation under the prod profile. The active profile picks the default
+      # instead: update in application-dev.yaml, validate in application-prod.yaml.
       APP_STORAGE_ENDPOINT: http://minio:9000
       APP_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-krino-minio}
       APP_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-change-me-minio-password}
