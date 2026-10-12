@@ -1,11 +1,15 @@
-import React, {useState, type FormEvent} from 'react';
+import React, {useEffect, useState, type FormEvent} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useQuery} from '@tanstack/react-query';
 import {useSuccessToast} from '@/shared/hooks/useSuccessToast';
+import {useAuth} from '@/shared/hooks/useAuth';
 import {resolveServerError} from '@/shared/services/errors';
 import {useCreateInterview, useUpdateInterview} from '@/features/interviews/hooks/useInterviews.ts';
-import {getApplications} from '@/features/applications/services/ApplicationService.ts';
-import {getSlots} from '@/features/slots/services/SlotService.ts';
+import {getSchedulingApplications} from '@/features/applications/services/ApplicationService.ts';
+import type {Application} from '@/features/applications/types/application.types.ts';
+import {getSchedulingSlots} from '@/features/slots/services/SlotService.ts';
+import type {Slot} from '@/features/slots/types/slot.types.ts';
+import PaginationControls from '@/shared/components/PaginationControls.tsx';
 import type {
     Interview,
     InterviewRecommendation,
@@ -30,25 +34,48 @@ const slotLabel = (interviewer: string, date: string | null, start: string | nul
 const InterviewForm: React.FC<InterviewFormProps> = ({interview, onClose}) => {
     const {t} = useTranslation();
     const {showSuccessToast} = useSuccessToast();
+    const {user} = useAuth();
     const isEdit = Boolean(interview);
 
     const createInterview = useCreateInterview();
     const updateInterview = useUpdateInterview();
 
-    // Applications are only needed when scheduling (the application is immutable on edit).
-    const {data: appsData, isLoading: appsLoading} = useQuery({
-        queryKey: ['applications', 'picker'],
-        queryFn: () => getApplications(0, 100),
-        enabled: !isEdit,
-    });
-    const {data: slotsData, isLoading: slotsLoading} = useQuery({
-        queryKey: ['slots', 'picker'],
-        queryFn: () => getSlots(0, 100),
-    });
-
     const [applicationId, setApplicationId] = useState(interview?.applicationId ?? '');
     const [slotId, setSlotId] = useState(interview?.slotId ?? '');
     const [status, setStatus] = useState<InterviewStatus>(interview?.status ?? 'SCHEDULED');
+    const [applicationSearch, setApplicationSearch] = useState('');
+    const [applicationPage, setApplicationPage] = useState(0);
+    const [slotSearch, setSlotSearch] = useState('');
+    const [slotPage, setSlotPage] = useState(0);
+    const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+    const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+
+    // Selection queries use server-side search. Their keys include search and page,
+    // so a later record can be reached without loading the entire directory.
+    const {data: appsData, isLoading: appsLoading, isError: appsError, refetch: refetchApps} = useQuery({
+        queryKey: ['applications', 'picker', user?.id, applicationSearch, applicationPage],
+        queryFn: ({signal}) => getSchedulingApplications(applicationPage, applicationSearch, signal),
+        enabled: !isEdit && !!user,
+    });
+    const {data: slotsData, isLoading: slotsLoading, isError: slotsError, refetch: refetchSlots} = useQuery({
+        queryKey: ['slots', 'picker', user?.id, slotSearch, slotPage],
+        queryFn: ({signal}) => getSchedulingSlots(slotPage, slotSearch, signal),
+        enabled: status !== 'CANCELLED' && !!user,
+    });
+
+    const applicationPages = appsData?.page.totalPages;
+    const slotPages = slotsData?.page.totalPages;
+    useEffect(() => {
+        if (applicationPages !== undefined && applicationPage >= applicationPages) {
+            setApplicationPage(Math.max(0, applicationPages - 1));
+        }
+    }, [applicationPage, applicationPages]);
+    useEffect(() => {
+        if (slotPages !== undefined && slotPage >= slotPages) {
+            setSlotPage(Math.max(0, slotPages - 1));
+        }
+    }, [slotPage, slotPages]);
+
     const [recommendation, setRecommendation] = useState<InterviewRecommendation | ''>(
         interview?.recommendation ?? '',
     );
@@ -60,11 +87,16 @@ const InterviewForm: React.FC<InterviewFormProps> = ({interview, onClose}) => {
 
     const pending = createInterview.isPending || updateInterview.isPending;
 
-    const availableSlots = (slotsData?.slots ?? []).filter((s) => s.available);
-    // In edit mode the booked slot is no longer "available", so surface it explicitly
-    // alongside the free ones so the current value renders and can be kept.
-    const slotOptions = [...availableSlots];
-    if (isEdit && interview?.slotId && !slotOptions.some((s) => s.id === interview.slotId)) {
+    const applicationOptions = [...(appsData?.applications ?? [])];
+    if (selectedApplication && !applicationOptions.some((a) => a.id === selectedApplication.id)) {
+        applicationOptions.unshift(selectedApplication);
+    }
+    const slotOptions = (slotsData?.slots ?? []).filter((slot) => slot.available);
+    if (selectedSlot && !slotOptions.some((slot) => slot.id === selectedSlot.id)) {
+        slotOptions.unshift(selectedSlot);
+    }
+    // A booked slot is absent from the available-slot search during editing.
+    if (isEdit && interview?.slotId && !slotOptions.some((slot) => slot.id === interview.slotId)) {
         slotOptions.unshift({
             id: interview.slotId,
             interviewer: {id: '', fullName: interview.interviewer.fullName, email: ''},
@@ -85,7 +117,7 @@ const InterviewForm: React.FC<InterviewFormProps> = ({interview, onClose}) => {
             setFieldError(t('interviews.form.errors.applicationRequired'));
             return;
         }
-        if (!slotId) {
+        if (status !== 'CANCELLED' && !slotId) {
             setFieldError(t('interviews.form.errors.slotRequired'));
             return;
         }
@@ -135,47 +167,75 @@ const InterviewForm: React.FC<InterviewFormProps> = ({interview, onClose}) => {
                     </div>
                 </div>
             ) : (
+                <div className="interview-picker">
+                    <label className="interview-field">
+                        <span className="interview-field-label">{t('interviews.form.searchApplications')}</span>
+                        <input className="interview-input" type="search" value={applicationSearch}
+                               onChange={(e) => {setApplicationSearch(e.target.value); setApplicationPage(0);}}/>
+                    </label>
+                    <label className="interview-field">
+                        <span className="interview-field-label">{t('interviews.form.application')} *</span>
+                        <select className="interview-input" value={applicationId} disabled={appsLoading || appsError}
+                                onChange={(e) => {
+                                    setApplicationId(e.target.value);
+                                    setSelectedApplication(applicationOptions.find((a) => a.id === e.target.value) ?? null);
+                                }}>
+                            <option value="" disabled>
+                                {appsLoading ? t('app.loading') : t('interviews.form.applicationPlaceholder')}
+                            </option>
+                            {applicationOptions.map((a) => (
+                                <option key={a.id} value={a.id}>
+                                    {a.candidate.fullName}{a.offerTitle ? ` — ${a.offerTitle}` : ''}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                    {appsError && <div className="interview-picker-error" role="alert">
+                        {t('interviews.form.optionsLoadError')}
+                        <button type="button" onClick={() => void refetchApps()}>{t('common.tryAgain')}</button>
+                    </div>}
+                    {!appsLoading && !appsError && applicationOptions.length === 0 &&
+                        <span className="interview-field-hint">{t('interviews.form.noApplications')}</span>}
+                    <PaginationControls label={t('interviews.form.applicationPages')} page={applicationPage}
+                                        totalPages={appsData?.page.totalPages ?? 0} onPageChange={setApplicationPage}/>
+                </div>
+            )}
+
+            <div className="interview-picker">
                 <label className="interview-field">
-                    <span className="interview-field-label">{t('interviews.form.application')} *</span>
-                    <select
-                        className="interview-input"
-                        value={applicationId}
-                        disabled={appsLoading}
-                        onChange={(e) => setApplicationId(e.target.value)}
-                    >
+                    <span className="interview-field-label">{t('interviews.form.searchSlots')}</span>
+                    <input className="interview-input" type="search" value={slotSearch}
+                           disabled={status === 'CANCELLED'}
+                           onChange={(e) => {setSlotSearch(e.target.value); setSlotPage(0);}}/>
+                </label>
+                <label className="interview-field">
+                    <span className="interview-field-label">{t('interviews.form.slot')}{status !== 'CANCELLED' && ' *'}</span>
+                    <select className="interview-input" value={slotId}
+                            disabled={slotsLoading || slotsError || status === 'CANCELLED'}
+                            onChange={(e) => {
+                                setSlotId(e.target.value);
+                                setSelectedSlot(slotOptions.find((slot) => slot.id === e.target.value) ?? null);
+                            }}>
                         <option value="" disabled>
-                            {appsLoading ? t('app.loading') : t('interviews.form.applicationPlaceholder')}
+                            {slotsLoading ? t('app.loading') : t('interviews.form.slotPlaceholder')}
                         </option>
-                        {(appsData?.applications ?? []).map((a) => (
-                            <option key={a.id} value={a.id}>
-                                {a.candidate.fullName}{a.offerTitle ? ` — ${a.offerTitle}` : ''}
+                        {slotOptions.map((slot) => (
+                            <option key={slot.id} value={slot.id}>
+                                {slotLabel(slot.interviewer.fullName, slot.date, slot.startTime, slot.endTime)}
                             </option>
                         ))}
                     </select>
                 </label>
-            )}
-
-            <label className="interview-field">
-                <span className="interview-field-label">{t('interviews.form.slot')} *</span>
-                <select
-                    className="interview-input"
-                    value={slotId}
-                    disabled={slotsLoading}
-                    onChange={(e) => setSlotId(e.target.value)}
-                >
-                    <option value="" disabled>
-                        {slotsLoading ? t('app.loading') : t('interviews.form.slotPlaceholder')}
-                    </option>
-                    {slotOptions.map((s) => (
-                        <option key={s.id} value={s.id}>
-                            {slotLabel(s.interviewer.fullName, s.date, s.startTime, s.endTime)}
-                        </option>
-                    ))}
-                </select>
-                {!slotsLoading && slotOptions.length === 0 && (
-                    <span className="interview-field-hint">{t('interviews.form.noSlots')}</span>
-                )}
-            </label>
+                {slotsError && status !== 'CANCELLED' && <div className="interview-picker-error" role="alert">
+                    {t('interviews.form.optionsLoadError')}
+                    <button type="button" onClick={() => void refetchSlots()}>{t('common.tryAgain')}</button>
+                </div>}
+                {status !== 'CANCELLED' && !slotsLoading && !slotsError && slotOptions.length === 0 &&
+                    <span className="interview-field-hint">{t('interviews.form.noSlots')}</span>}
+                {status !== 'CANCELLED' &&
+                    <PaginationControls label={t('interviews.form.slotPages')} page={slotPage}
+                                        totalPages={slotsData?.page.totalPages ?? 0} onPageChange={setSlotPage}/>}
+            </div>
 
             {isEdit && (
                 <label className="interview-field">

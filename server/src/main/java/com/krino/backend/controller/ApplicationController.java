@@ -60,6 +60,14 @@ public class ApplicationController {
         return ResponseEntity.ok(applications);
     }
 
+    @GetMapping("/scheduling-options")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    public ResponseEntity<PageResponse<ApplicationResponseDTO>> getSchedulingApplications(
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(applicationService.getSchedulingApplications(search, SORT_WHITELIST.sanitize(pageable)));
+    }
+
     @GetMapping("/me")
     @PreAuthorize("hasAuthority('application:read')")
     public ResponseEntity<PageResponse<ApplicationResponseDTO>> getMyApplications(@PageableDefault(size = 20, sort =

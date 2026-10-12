@@ -217,6 +217,34 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
         assertThat(applicationRepository.findByPublicId(application.getPublicId())).isEmpty();
     }
 
+    @Test
+    void schedulingOptionsSearchAndPageBeyondFirstHundred() throws Exception
+    {
+        createUser("hr@test.local", true, UserRole.HR_MANAGER);
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        Department department = departmentRepository.save(department());
+        Application last = null;
+        for (int i = 0; i < 105; i++) {
+            Job job = jobRepository.save(TestJobs.open(department, i == 104 ? "Needle Engineer" : "Engineer " + i));
+            last = applicationRepository.save(applicationFor(job, candidate));
+        }
+        Cookie hr = loginAndGetAccessCookie("hr@test.local");
+
+        mockMvc.perform(get("/api/applications/scheduling-options?page=5&size=20").cookie(hr))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.number").value(5))
+                .andExpect(jsonPath("$.page.totalElements").value(105))
+                .andExpect(jsonPath("$.content.length()").value(5));
+        mockMvc.perform(get("/api/applications/scheduling-options?search=needle&page=0&size=20").cookie(hr))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(last.getPublicId().toString()));
+
+        Cookie candidateCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+        mockMvc.perform(get("/api/applications/scheduling-options").cookie(candidateCookie))
+                .andExpect(status().isForbidden());
+    }
+
     private MockMultipartFile pdf(String filename)
     {
         return new MockMultipartFile("resume", filename, "application/pdf", "%PDF-1.4\ncontent".getBytes(UTF_8));

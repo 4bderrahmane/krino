@@ -105,6 +105,12 @@ public class ApplicationService {
                 applicationMapper::toResponse);
     }
 
+    public PageResponse<ApplicationResponseDTO> getSchedulingApplications(String search, Pageable pageable) {
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
+        String term = search == null ? "" : search.trim().toLowerCase(java.util.Locale.ROOT);
+        return PageResponse.from(applicationRepository.searchForScheduling(term, pageable), applicationMapper::toResponse);
+    }
+
     public PageResponse<ApplicationResponseDTO> getMyApplications(Pageable pageable) {
         User candidate = getCurrentUser();
         return PageResponse.from(applicationRepository.findByCandidate(candidate, pageable),

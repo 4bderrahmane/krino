@@ -573,6 +573,12 @@
       "STRONG_NO": "Strong no"
     },
     "form": {
+      "searchApplications": "Search candidates, email, or offer",
+      "searchSlots": "Search interviewers",
+      "applicationPages": "Application choices",
+      "slotPages": "Available slot choices",
+      "noApplications": "No applications match this search.",
+      "optionsLoadError": "Could not load choices.",
       "schedule": "Schedule interview",
       "createTitle": "Schedule an interview",
       "editTitle": "Edit interview",

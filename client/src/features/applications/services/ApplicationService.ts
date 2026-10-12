@@ -87,6 +87,15 @@ export const getApplications = async (page = 0, size = 20, signal?: AbortSignal)
     return toApplicationPage(data);
 };
 
+/** Search all applications for the scheduling picker, one server page at a time. */
+export const getSchedulingApplications = async (page: number, search: string, signal?: AbortSignal): Promise<ApplicationPage> => {
+    const {data} = await api.get<PageResponse<ApplicationResponseDTO>>(`${APPLICATIONS_ENDPOINT}/scheduling-options`, {
+        params: {page, size: 20, search},
+        signal,
+    });
+    return toApplicationPage(data);
+};
+
 /** The current user's own applications. */
 export const getMyApplications = async (page = 0, size = 20, signal?: AbortSignal): Promise<ApplicationPage> => {
     const {data} = await api.get<PageResponse<ApplicationResponseDTO>>(`${APPLICATIONS_ENDPOINT}/me`, {

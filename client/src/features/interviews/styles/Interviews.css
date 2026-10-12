@@ -363,3 +363,30 @@
     background: var(--color-danger-tint);
     border-color: var(--color-danger);
 }
+
+/* Search and page navigation for scheduling choices. */
+.interview-picker {
+    display: grid;
+    gap: 10px;
+}
+
+.interview-picker .pagination-controls {
+    justify-content: flex-start;
+    padding: 0;
+}
+
+.interview-picker-error {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-danger);
+    font-size: var(--text-sm);
+}
+
+.interview-picker-error button {
+    border: 0;
+    background: none;
+    color: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}

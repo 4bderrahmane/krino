@@ -573,6 +573,12 @@
       "STRONG_NO": "Non, fortement"
     },
     "form": {
+      "searchApplications": "Rechercher un candidat, un e-mail ou une offre",
+      "searchSlots": "Rechercher un recruteur",
+      "applicationPages": "Choix des candidatures",
+      "slotPages": "Choix des créneaux disponibles",
+      "noApplications": "Aucune candidature ne correspond à cette recherche.",
+      "optionsLoadError": "Impossible de charger les choix.",
       "schedule": "Planifier un entretien",
       "createTitle": "Planifier un entretien",
       "editTitle": "Modifier l'entretien",
