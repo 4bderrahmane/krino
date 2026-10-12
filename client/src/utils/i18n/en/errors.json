@@ -11,6 +11,7 @@
     "ACCOUNT_LOCKED": "Your account is locked. Please try again later or contact support.",
     "ACCOUNT_NOT_APPROVED": "Your account has been deactivated. Please contact an administrator.",
     "EMAIL_NOT_VERIFIED": "Your email address hasn't been verified yet. Check your inbox for the verification link.",
+    "PASSWORD_CHANGE_REQUIRED": "Please set a new password before continuing. Sign in again to do so.",
     "RESOURCE_NOT_FOUND": "We couldn't find what you were looking for.",
     "OPERATION_NOT_ALLOWED": "This action isn't allowed right now.",
     "METHOD_NOT_ALLOWED": "This action isn't supported.",

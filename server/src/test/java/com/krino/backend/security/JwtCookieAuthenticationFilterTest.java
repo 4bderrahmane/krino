@@ -42,7 +42,8 @@ class JwtCookieAuthenticationFilterTest {
             jwtService,
             userDetailsService,
             cookieUtilities,
-            authenticationEntryPoint
+            authenticationEntryPoint,
+            mock(CustomAccessDeniedHandler.class)
     );
 
     @AfterEach

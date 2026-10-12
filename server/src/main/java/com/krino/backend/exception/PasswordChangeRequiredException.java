@@ -7,8 +7,8 @@ import com.krino.backend.utility.ErrorCode;
  * password it was created with.
  *
  * <p>Login deliberately still succeeds in that state: the user needs a session to reach the
- * change-password endpoint at all. Renewal is where the line is drawn, so a temporary password
- * buys one access-token lifetime rather than an indefinitely extendable session. Distinct from
+ * change-password endpoint at all. The JWT filter restricts that session to reading the current
+ * account and changing its password; renewal is also refused until it is changed. Distinct from
  * {@link AccountNotApprovedException} so the client can send the user to the change-password
  * screen instead of showing a dead end.
  */

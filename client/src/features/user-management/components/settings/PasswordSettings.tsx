@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {resolveServerError} from '@/shared/services/errors';
 import { changePassword } from '@/features/user-management/services/UserManagementService';
 import { useAuth } from '@/shared/hooks/useAuth';
 import '@/features/user-management/styles/settings/SettingsForm.css';
 
 const PasswordSettings = () => {
     const { t } = useTranslation();
-    const { refreshUser } = useAuth();
+    const { user, refreshUser } = useAuth();
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: '',
         newPassword: '',
@@ -43,8 +44,8 @@ const PasswordSettings = () => {
             setPasswordForm({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
             // Clear the "must change password" flag locally so the reminder stops.
             await refreshUser();
-        } catch {
-            setError(t('settings.passwordChangeFailed'));
+        } catch (error) {
+            setError(resolveServerError(t, error, {context: 'changePassword'}));
         } finally {
             setLoading(false);
         }
@@ -54,6 +55,7 @@ const PasswordSettings = () => {
         <div className="settings-center-container">
             <form className="settings-card" onSubmit={handleSubmit}>
                 <h2>{t('settings.changePassword')}</h2>
+                {user?.mustChangePassword && <p role="status">{t('passwordReminder.body')}</p>}
                 <div className="form-content">
                     <div className="info-row">
                         <label className="info-label" htmlFor="currentPassword">{t('settings.currentPassword')}</label>

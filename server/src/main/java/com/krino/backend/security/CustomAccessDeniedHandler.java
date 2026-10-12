@@ -29,9 +29,17 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(@NonNull HttpServletRequest request, HttpServletResponse response,
                        @NonNull AccessDeniedException accessDeniedException) throws IOException {
 
+        writeProblem(request, response, ErrorCode.ACCESS_DENIED, "You do not have permission to perform this action.");
+    }
+
+    public void handlePasswordChangeRequired(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        writeProblem(request, response, ErrorCode.PASSWORD_CHANGE_REQUIRED, "Please change your initial password before continuing.");
+    }
+
+    private void writeProblem(HttpServletRequest request, HttpServletResponse response, ErrorCode errorCode, String detail) throws IOException {
         ProblemDetail problem = problemDetailFactory.buildProblemDetail(
-                ErrorCode.ACCESS_DENIED,
-                "You do not have permission to perform this action.",
+                errorCode,
+                detail,
                 request,
                 null,
                 null

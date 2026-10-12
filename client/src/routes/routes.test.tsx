@@ -180,3 +180,59 @@ describe('routing for a signed-in user', () => {
         expect(await screen.findByText('Skunkworks')).toBeInTheDocument();
     });
 });
+
+
+describe('mandatory initial password change', () => {
+    it.each(['/dashboard', '/offers/new', '/offers', '/settings/profile'])(
+        'redirects a restricted session from %s to password settings', async (path) => {
+            server.use(...signedInSession(aUser(['HR_MANAGER'], {mustChangePassword: true})));
+            const {currentPath} = renderApp(path);
+            await waitFor(() => expect(currentPath()).toBe('/settings/password'));
+            expect(await screen.findByRole('heading', {name: 'Change Password'})).toBeInTheDocument();
+            expect(screen.queryByRole('button', {name: 'Later'})).not.toBeInTheDocument();
+        },
+    );
+
+    it('unlocks navigation after a successful password change and account reload', async () => {
+        const user = aUser(['HR_MANAGER'], {mustChangePassword: true});
+        server.use(...signedInSession(user),
+            http.put(apiPath('/users/me/password'), async ({request}) => {
+                expect(await request.json()).toEqual({
+                    currentPassword: 'InitialPassword123!', newPassword: 'NewPassword123!',
+                    confirmNewPassword: 'NewPassword123!',
+                });
+                user.mustChangePassword = false;
+                return new HttpResponse(null, {status: 204});
+            }), staffCatalogue());
+        const {router, currentPath} = renderApp('/settings/password');
+        const events = userEvent.setup();
+        await events.type(await screen.findByLabelText('Current Password'), 'InitialPassword123!');
+        await events.type(screen.getByLabelText('New Password', {exact: true}), 'NewPassword123!');
+        await events.type(screen.getByLabelText('Confirm New Password'), 'NewPassword123!');
+        await events.click(screen.getByRole('button', {name: 'Change Password'}));
+        await waitFor(() => expect(screen.queryByText(/Your account is still using the temporary password/)).not.toBeInTheDocument());
+        await act(() => router.navigate('/offers'));
+        expect(await screen.findByText('Unpublished Draft')).toBeInTheDocument();
+        expect(currentPath()).toBe('/offers');
+    });
+
+    it('keeps the password form usable after an incorrect current password', async () => {
+        let refreshCalls = 0;
+        server.use(...signedInSession(aUser(['HR_MANAGER'], {mustChangePassword: true})),
+            http.put(apiPath('/users/me/password'), () => HttpResponse.json(
+                {errorCode: 'INVALID_CREDENTIALS', status: 401}, {status: 401})),
+            http.post(apiPath('/auth/refresh'), () => {
+                refreshCalls++;
+                return new HttpResponse(null, {status: 403});
+            }));
+        const {currentPath} = renderApp('/settings/password');
+        const events = userEvent.setup();
+        await events.type(await screen.findByLabelText('Current Password'), 'WrongPassword123!');
+        await events.type(screen.getByLabelText('New Password', {exact: true}), 'NewPassword123!');
+        await events.type(screen.getByLabelText('Confirm New Password'), 'NewPassword123!');
+        await events.click(screen.getByRole('button', {name: 'Change Password'}));
+        expect(await screen.findByText('Your current password is incorrect.')).toBeInTheDocument();
+        expect(refreshCalls).toBe(0);
+        expect(currentPath()).toBe('/settings/password');
+    });
+});

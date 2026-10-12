@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -20,10 +21,12 @@ import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -37,11 +40,18 @@ public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
     // anonymous, which is exactly what they are specified to do.
     private static final RequestMatcher PUBLIC_ENDPOINTS = PathPatternRequestMatcher.pathPattern("/api/public/**");
     private static final RequestMatcher AUTH_ENDPOINTS = PathPatternRequestMatcher.pathPattern("/api/auth/**");
+    // Keep session restoration and the password form usable, without opening other account
+    // operations. Public/auth endpoints (including logout and CSRF) bypass this filter above.
+    private static final RequestMatcher PASSWORD_CHANGE_ENDPOINTS = new OrRequestMatcher(
+            PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/users/me"),
+            PathPatternRequestMatcher.pathPattern(HttpMethod.PUT, "/api/users/me/password")
+    );
 
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
     private final CookieUtilities cookieUtilities;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
     private final UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
 
     @Override
@@ -54,7 +64,7 @@ public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        var accessToken = cookieUtilities.getAccessTokenFromCookie(request);
+        Optional<String> accessToken = cookieUtilities.getAccessTokenFromCookie(request);
         if (accessToken.isEmpty()) {
             filterChain.doFilter(request, response);
             return;
@@ -65,6 +75,14 @@ public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
             CustomUserDetails userDetails = customUserDetailsService.loadUserByPublicId(verifiedToken.userPublicId());
 
             userDetailsChecker.check(userDetails);
+
+            // Read from the freshly loaded account, not a JWT claim: changing the password
+            // unlocks the next request, and signing in again cannot bypass this restriction.
+            if (userDetails.isMustChangePassword() && !PASSWORD_CHANGE_ENDPOINTS.matches(request)) {
+                SecurityContextHolder.clearContext();
+                accessDeniedHandler.handlePasswordChangeRequired(request, response);
+                return;
+            }
 
             UsernamePasswordAuthenticationToken authentication =
                     UsernamePasswordAuthenticationToken.authenticated(

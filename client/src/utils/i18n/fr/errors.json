@@ -11,6 +11,7 @@
     "ACCOUNT_LOCKED": "Votre compte est verrouillé. Veuillez réessayer plus tard ou contacter le support.",
     "ACCOUNT_NOT_APPROVED": "Votre compte a été désactivé. Veuillez contacter un administrateur.",
     "EMAIL_NOT_VERIFIED": "Votre adresse e-mail n'a pas encore été vérifiée. Consultez votre boîte mail pour trouver le lien de vérification.",
+    "PASSWORD_CHANGE_REQUIRED": "Veuillez définir un nouveau mot de passe avant de continuer. Reconnectez-vous pour le faire.",
     "RESOURCE_NOT_FOUND": "Nous n'avons pas trouvé ce que vous cherchiez.",
     "OPERATION_NOT_ALLOWED": "Cette action n'est pas autorisée pour le moment.",
     "METHOD_NOT_ALLOWED": "Cette action n'est pas prise en charge.",
