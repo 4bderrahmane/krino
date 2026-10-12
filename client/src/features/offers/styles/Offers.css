@@ -732,3 +732,30 @@
     gap: 10px;
     margin-top: 12px;
 }
+.offer-apply-success p,
+.offer-apply-partial p {
+    margin: 0 0 8px;
+}
+
+.offer-apply-success a,
+.offer-apply-partial a {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.offer-apply-partial {
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-sunken);
+    padding: 14px 16px;
+    color: var(--color-ink);
+}
+
+.offer-apply-error button {
+    margin-left: 10px;
+    border: 0;
+    background: none;
+    color: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}

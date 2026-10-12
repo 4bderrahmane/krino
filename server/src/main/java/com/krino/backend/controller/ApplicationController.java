@@ -52,6 +52,12 @@ public class ApplicationController {
         return ResponseEntity.ok(application);
     }
 
+    @GetMapping("/me/by-job/{jobPublicId}")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    public ResponseEntity<ApplicationResponseDTO> getMyApplicationForJob(@PathVariable UUID jobPublicId) {
+        return ResponseEntity.ok(applicationService.getMyApplicationForJob(jobPublicId));
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<PageResponse<ApplicationResponseDTO>> getAllApplications(@PageableDefault(size = 20, sort =

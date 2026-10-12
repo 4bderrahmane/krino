@@ -328,6 +328,11 @@
       "applyHeading": "Apply"
     },
     "apply": {
+      "alreadyApplied": "You've already applied to this offer.",
+      "resumeMissing": "Your application was created, but its résumé is missing. Attach it here or open the application to finish.",
+      "retryAttachment": "Attach résumé",
+      "viewApplication": "View application",
+      "lookupError": "Could not check whether you already applied. Try again before submitting.",
       "useBaseCv": "Apply with my CV ({{name}})",
       "uploadNew": "Upload a new CV for this offer",
       "choosePdf": "Choose PDF",

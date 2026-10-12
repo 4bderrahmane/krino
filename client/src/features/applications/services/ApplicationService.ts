@@ -1,3 +1,4 @@
+import axios from 'axios';
 import api from '@/shared/services/api.ts';
 import type {
     Application,
@@ -103,6 +104,17 @@ export const getMyApplications = async (page = 0, size = 20, signal?: AbortSigna
         signal,
     });
     return toApplicationPage(data);
+};
+
+/** The candidate's application for one job, including a partially completed submission. */
+export const getMyApplicationForJob = async (jobId: string, signal?: AbortSignal): Promise<Application | null> => {
+    try {
+        const {data} = await api.get<ApplicationResponseDTO>(`${APPLICATIONS_ENDPOINT}/me/by-job/${jobId}`, {signal});
+        return toApplication(data);
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) return null;
+        throw error;
+    }
 };
 
 export const getApplicationById = async (id: string, signal?: AbortSignal): Promise<Application> => {

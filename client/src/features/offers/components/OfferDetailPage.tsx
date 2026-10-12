@@ -1,6 +1,7 @@
 import React, {useState, type FormEvent, useRef} from 'react';
 import {useTranslation} from 'react-i18next';
 import {Link, useParams} from 'react-router-dom';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useOffer} from '@/features/offers/hooks/useOffers.ts';
 import {useAuth} from '@/shared/hooks/useAuth';
 import {usePermissions} from '@/shared/hooks/usePermissions';
@@ -9,6 +10,7 @@ import {resolveServerError} from '@/shared/services/errors';
 import {
     applyWithBaseCv,
     createApplication,
+    getMyApplicationForJob,
     uploadApplicationResume,
 } from '@/features/applications/services/ApplicationService.ts';
 import LoadingSpinner from '@/shared/components/LoadingSpinner.tsx';
@@ -31,18 +33,31 @@ const OfferDetailPage: React.FC = () => {
     const {id} = useParams<{id: string}>();
     const {user} = useAuth();
     const {showSuccessToast} = useSuccessToast();
+    const queryClient = useQueryClient();
 
     const {data: offer, isLoading, isError, refetch} = useOffer(id);
 
     const {isCandidate, isStaff} = usePermissions();
     const baseCvName = user?.resumeFilename ?? null;
 
-    const [cvChoice, setCvChoice] = useState<CvChoice>(baseCvName ? 'base' : 'new');
+    // Not seeded from baseCvName at mount: this page is public, so it renders before
+    // the session probe resolves and `user` is still null on the first paint. A
+    // useState initial value would freeze "no CV on file" for a candidate who has
+    // one, leaving them on "upload a new CV" and refusing their submit. null means
+    // "the candidate has not chosen", so the default follows the data once it lands.
+    const [chosenCv, setChosenCv] = useState<CvChoice | null>(null);
+    const cvChoice: CvChoice = chosenCv ?? (baseCvName ? 'base' : 'new');
     const [file, setFile] = useState<File | null>(null);
     const [submitting, setSubmitting] = useState(false);
-    const [applied, setApplied] = useState(false);
+    const [createdForOffer, setCreatedForOffer] = useState<{offerId: string; userId: string; applicationId: string} | null>(null);
+    const [appliedForOffer, setAppliedForOffer] = useState<{offerId: string; userId: string} | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const applicationLookup = useQuery({
+        queryKey: ['application', 'by-job', id, user?.id],
+        queryFn: ({signal}) => getMyApplicationForJob(id as string, signal),
+        enabled: isCandidate && !!id && !!user,
+    });
 
     if (isLoading) {
         return <LoadingSpinner/>;
@@ -60,6 +75,15 @@ const OfferDetailPage: React.FC = () => {
         );
     }
 
+    const existingApplication = applicationLookup.data;
+    const createdApplicationId = createdForOffer?.offerId === offer.id && createdForOffer.userId === user?.id
+        ? createdForOffer.applicationId : null;
+    const attachmentApplicationId = createdApplicationId ?? existingApplication?.id ?? null;
+    const appliedNow = appliedForOffer?.offerId === offer.id && appliedForOffer.userId === user?.id;
+    const alreadyApplied = !appliedNow && !!existingApplication?.resume;
+    const attachmentPending = !!attachmentApplicationId && !appliedNow && !alreadyApplied;
+    const applicationCacheKey = ['application', 'by-job', offer.id, user?.id];
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFile(e.target.files?.[0] ?? null);
         setErrorMessage(null);
@@ -68,6 +92,8 @@ const OfferDetailPage: React.FC = () => {
     const handleApply = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setErrorMessage(null);
+        if (!user?.id || applicationLookup.isLoading || applicationLookup.isError || alreadyApplied || appliedNow) return;
+        const userId = user.id;
 
         if (cvChoice === 'new') {
             const cvError = validateCvFile(file);
@@ -79,18 +105,42 @@ const OfferDetailPage: React.FC = () => {
 
         setSubmitting(true);
         try {
-            // Two steps: create the application, then attach the chosen CV to it.
-            const application = await createApplication(offer.id);
-            if (cvChoice === 'base') {
-                await applyWithBaseCv(application.id);
-            } else if (file) {
-                await uploadApplicationResume(application.id, file);
+            let targetId = attachmentApplicationId;
+            if (!targetId) {
+                try {
+                    const created = await createApplication(offer.id);
+                    targetId = created.id;
+                    setCreatedForOffer({offerId: offer.id, userId, applicationId: created.id});
+                    queryClient.setQueryData(applicationCacheKey, created);
+                    void queryClient.invalidateQueries({queryKey: ['applications']});
+                } catch (createError: unknown) {
+                    // The create response may be lost after the server commits. Look up
+                    // the candidate's application before allowing another create attempt.
+                    try {
+                        const recovered = await getMyApplicationForJob(offer.id);
+                        if (recovered) {
+                            setCreatedForOffer({offerId: offer.id, userId, applicationId: recovered.id});
+                            queryClient.setQueryData(applicationCacheKey, recovered);
+                        } else {
+                            setErrorMessage(resolveServerError(t, createError, {context: 'application'}));
+                        }
+                    } catch {
+                        setErrorMessage(resolveServerError(t, createError, {context: 'application'}));
+                    }
+                    return;
+                }
             }
-            setApplied(true);
+
+            const attached = cvChoice === 'base'
+                ? await applyWithBaseCv(targetId)
+                : await uploadApplicationResume(targetId, file as File);
+            queryClient.setQueryData(applicationCacheKey, attached);
+            queryClient.setQueryData(['application', attached.id, user?.id], attached);
+            void queryClient.invalidateQueries({queryKey: ['applications']});
+            setAppliedForOffer({offerId: offer.id, userId});
             showSuccessToast(t('offers.apply.success'));
-        } catch (err: unknown) {
-            console.error('apply failed:', err);
-            setErrorMessage(resolveServerError(t, err, {context: 'application'}));
+        } catch (error: unknown) {
+            setErrorMessage(resolveServerError(t, error, {context: 'application'}));
         } finally {
             setSubmitting(false);
         }
@@ -202,10 +252,33 @@ const OfferDetailPage: React.FC = () => {
                     <section className="offer-detail-section">
                         <h2 className="offer-detail-heading">{t('offers.detail.applyHeading')}</h2>
 
-                        {applied ? (
-                            <div className="offer-apply-success">{t('offers.apply.submitted')}</div>
+                        {appliedNow || alreadyApplied ? (
+                            <div className="offer-apply-success">
+                                <p>{t(appliedNow ? 'offers.apply.submitted' : 'offers.apply.alreadyApplied')}</p>
+                                {attachmentApplicationId &&
+                                    <Link to={`/applications/${attachmentApplicationId}`}>
+                                        {t('offers.apply.viewApplication')}
+                                    </Link>}
+                            </div>
+                        ) : applicationLookup.isLoading ? (
+                            <p className="offer-detail-description">{t('app.loading')}</p>
+                        ) : applicationLookup.isError ? (
+                            <div className="offer-apply-error" role="alert">
+                                {t('offers.apply.lookupError')}
+                                <button type="button" onClick={() => void applicationLookup.refetch()}>
+                                    {t('common.tryAgain')}
+                                </button>
+                            </div>
                         ) : (
                             <form className="offer-apply-form" onSubmit={handleApply} noValidate>
+                            {attachmentPending && (
+                                <div className="offer-apply-partial" role="status">
+                                    <p>{t('offers.apply.resumeMissing')}</p>
+                                    <Link to={`/applications/${attachmentApplicationId}`}>
+                                        {t('offers.apply.viewApplication')}
+                                    </Link>
+                                </div>
+                            )}
                             {baseCvName && (
                                 <label className="offer-apply-option">
                                     <input
@@ -213,7 +286,7 @@ const OfferDetailPage: React.FC = () => {
                                         name="cvChoice"
                                         value="base"
                                         checked={cvChoice === 'base'}
-                                        onChange={() => setCvChoice('base')}
+                                        onChange={() => setChosenCv('base')}
                                     />
                                     <span>{t('offers.apply.useBaseCv', {name: baseCvName})}</span>
                                 </label>
@@ -225,7 +298,7 @@ const OfferDetailPage: React.FC = () => {
                                     name="cvChoice"
                                     value="new"
                                     checked={cvChoice === 'new'}
-                                    onChange={() => setCvChoice('new')}
+                                    onChange={() => setChosenCv('new')}
                                 />
                                 <span>{t('offers.apply.uploadNew')}</span>
                             </label>
@@ -256,7 +329,7 @@ const OfferDetailPage: React.FC = () => {
                             {errorMessage && <div className="offer-apply-error">{errorMessage}</div>}
 
                             <button type="submit" className="offer-apply-submit" disabled={submitting}>
-                                {submitting ? t('app.loading') : t('offers.apply.submit')}
+                                {submitting ? t('app.loading') : t(attachmentPending ? 'offers.apply.retryAttachment' : 'offers.apply.submit')}
                             </button>
                         </form>
                         )}

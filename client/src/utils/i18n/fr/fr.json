@@ -328,6 +328,11 @@
       "applyHeading": "Postuler"
     },
     "apply": {
+      "alreadyApplied": "Vous avez déjà postulé à cette offre.",
+      "resumeMissing": "Votre candidature a été créée, mais son CV est manquant. Joignez-le ici ou ouvrez la candidature pour terminer.",
+      "retryAttachment": "Joindre le CV",
+      "viewApplication": "Voir la candidature",
+      "lookupError": "Impossible de vérifier si vous avez déjà postulé. Réessayez avant de soumettre.",
       "useBaseCv": "Postuler avec mon CV ({{name}})",
       "uploadNew": "Téléverser un nouveau CV pour cette offre",
       "choosePdf": "Choisir un PDF",

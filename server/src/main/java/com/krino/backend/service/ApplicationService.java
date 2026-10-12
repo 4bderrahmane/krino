@@ -99,6 +99,15 @@ public class ApplicationService {
         return applicationMapper.toResponse(application);
     }
 
+    public ApplicationResponseDTO getMyApplicationForJob(UUID jobPublicId) {
+        SecurityUtilities.requireAnyRole(UserRole.CANDIDATE);
+        User candidate = getCurrentUser();
+        Application application = applicationRepository
+                .findByJob_PublicIdAndCandidate_PublicId(jobPublicId, candidate.getPublicId())
+                .orElseThrow(() -> new ResourceNotFoundException(Application.class.getSimpleName(), "jobPublicId", jobPublicId));
+        return applicationMapper.toResponse(application);
+    }
+
     public PageResponse<ApplicationResponseDTO> getAllApplications(Pageable pageable) {
         SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
         return PageResponse.from(applicationRepository.findAll(pageable),

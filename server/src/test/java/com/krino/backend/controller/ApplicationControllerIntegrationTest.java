@@ -128,6 +128,26 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
     }
 
     @Test
+    void candidateCanFindOnlyTheirOwnApplicationForAJob() throws Exception
+    {
+        User owner = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        createUser(OTHER_CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        Job job = openJob();
+        Application application = applicationRepository.save(applicationFor(job, owner));
+        String path = "/api/applications/me/by-job/" + job.getPublicId();
+
+        Cookie ownerCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+        mockMvc.perform(get(path).cookie(ownerCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(application.getPublicId().toString()))
+                .andExpect(jsonPath("$.resume").isEmpty());
+
+        Cookie otherCookie = loginAndGetAccessCookie(OTHER_CANDIDATE_EMAIL);
+        mockMvc.perform(get(path).cookie(otherCookie))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void readingUnknownApplicationReturnsNotFound() throws Exception
     {
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
