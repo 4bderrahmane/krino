@@ -184,14 +184,14 @@ public class Job extends AbstractPublicEntity {
         this.city = city;
     }
 
-    public void updateTimeline(Instant aDeadline, LocalDate psDate) {
+    public void updateTimeline(Instant applicationDeadline, LocalDate plannedStartDate) {
         ensureEditable();
 
         if (applicationDeadline != null && publishedAt != null && !applicationDeadline.isAfter(publishedAt))
             throw new IllegalArgumentException("applicationDeadline must be after publishedAt");
 
-        applicationDeadline = aDeadline;
-        plannedStartDate = psDate;
+        this.applicationDeadline = applicationDeadline;
+        this.plannedStartDate = plannedStartDate;
     }
 
     public void updateSalary(Integer sMin, Integer sMax, SalaryCurrency cur, SalaryPeriod sPer, boolean sNeg) {
