@@ -8,7 +8,7 @@ spring:
     url: "${SPRING_DATASOURCE_URL}"
     username: "${SPRING_DATASOURCE_USERNAME}"
     password: "${SPRING_DATASOURCE_PASSWORD}"
-  # Redis backs both the Spring cache (CachingConfiguration) and the rate limiter.
+
   data:
     redis:
       host: "${REDIS_HOST:localhost}"
@@ -20,10 +20,10 @@ spring:
         # whole table in one query, and on /api/public/** that caller need not even log in.
         max-page-size: 100
         default-page-size: 20
+  # Schema management is profile-owned: dev runs `update`, prod runs `validate`.
+  # See application-dev.yaml and application-prod.yaml.
   jpa:
-    hibernate:
-      ddl-auto: "${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}"
-    open-in-view: false
+    open-in-view: false # Do not bind an EntityManager for every request.
   servlet:
     multipart:
       max-file-size: "${APP_STORAGE_MAX_CV_SIZE:5MB}"
@@ -35,6 +35,12 @@ spring:
 #    username: "${MAIL_USERNAME:resend}"
 #    password: "${MAIL_PASSWORD}"
 
+#logging:
+#  level:
+#    org:
+#      hibernate:
+#        sql:
+#          DEBUG
 
 # Actuator: expose only the health endpoint over HTTP, and never reveal component
 # details/probes — the endpoint is public, so it must return at most {"status":"UP"}.
