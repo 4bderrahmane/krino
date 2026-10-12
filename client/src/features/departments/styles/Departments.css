@@ -221,44 +221,6 @@
     margin: 0;
 }
 
-/* Pagination */
-.departments-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    margin-top: 28px;
-}
-
-.departments-page-button {
-    height: 40px;
-    padding: 0 18px;
-    border: 1px solid var(--color-line-strong);
-    border-radius: var(--radius-pill);
-    background: var(--color-surface);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background var(--transition), border-color var(--transition);
-}
-
-.departments-page-button:hover:not(:disabled) {
-    background: var(--color-surface-sunken);
-}
-
-.departments-page-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.departments-page-indicator {
-    color: var(--color-ink-soft);
-    font-size: 0.9rem;
-    font-variant-numeric: tabular-nums;
-}
-
 /* State panels (error / empty) */
 .departments-state {
     text-align: center;

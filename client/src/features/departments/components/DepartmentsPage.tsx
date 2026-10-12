@@ -9,9 +9,8 @@ import '@/features/departments/styles/Departments.css';
 const DepartmentsPage: React.FC = () => {
     const {t} = useTranslation();
     const {isStaff} = usePermissions();
-    const [page, setPage] = useState(0);
     const [showForm, setShowForm] = useState(false);
-    const {data, isLoading, isError, refetch} = useDepartments(page);
+    const {data, isLoading, isError, refetch} = useDepartments();
 
     if (isLoading) {
         return <LoadingSpinner/>;
@@ -30,16 +29,13 @@ const DepartmentsPage: React.FC = () => {
         );
     }
 
-    const departments = data?.departments ?? [];
-    const meta = data?.page;
-    const pageCount = Math.max(1, meta?.totalPages ?? 1);
-    const total = meta?.totalElements ?? departments.length;
+    const departments = data ?? [];
 
     return (
         <div className="departments-container">
             <header className="departments-header">
                 <h1 className="departments-title">{t('departments.title')}</h1>
-                <p className="departments-subtitle">{t('departments.count', {count: total})}</p>
+                <p className="departments-subtitle">{t('departments.count', {count: departments.length})}</p>
             </header>
 
             {isStaff && (
@@ -63,42 +59,18 @@ const DepartmentsPage: React.FC = () => {
                     <p>{t('departments.empty')}</p>
                 </div>
             ) : (
-                <>
-                    <ul className="departments-list">
-                        {departments.map((department) => (
-                            <li key={department.id} className="department-row">
-                                <div className="department-row-main">
-                                    <h2 className="department-row-title">{department.name}</h2>
-                                    {department.description && (
-                                        <p className="department-row-description">{department.description}</p>
-                                    )}
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-
-                    {pageCount > 1 && (
-                        <nav className="departments-pagination" aria-label={t('departments.pagination')}>
-                            <button
-                                className="departments-page-button"
-                                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                                disabled={page === 0}
-                            >
-                                {t('common.previous')}
-                            </button>
-                            <span className="departments-page-indicator">
-                                {t('departments.pageIndicator', {current: page + 1, total: pageCount})}
-                            </span>
-                            <button
-                                className="departments-page-button"
-                                onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
-                                disabled={page >= pageCount - 1}
-                            >
-                                {t('common.next')}
-                            </button>
-                        </nav>
-                    )}
-                </>
+                <ul className="departments-list">
+                    {departments.map((department) => (
+                        <li key={department.id} className="department-row">
+                            <div className="department-row-main">
+                                <h2 className="department-row-title">{department.name}</h2>
+                                {department.description && (
+                                    <p className="department-row-description">{department.description}</p>
+                                )}
+                            </div>
+                        </li>
+                    ))}
+                </ul>
             )}
         </div>
     );

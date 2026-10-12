@@ -5,7 +5,7 @@ import {usePermissions} from '@/shared/hooks/usePermissions';
 import {useSuccessToast} from '@/shared/hooks/useSuccessToast';
 import {resolveServerError} from '@/shared/services/errors';
 import {useOffer, useUpdateOffer} from '@/features/offers/hooks/useOffers.ts';
-import {useAllDepartments} from '@/features/departments/hooks/useDepartments.ts';
+import {useDepartments} from '@/features/departments/hooks/useDepartments.ts';
 import {canEdit} from '@/features/offers/utils/offerTransitions.ts';
 import LoadingSpinner from '@/shared/components/LoadingSpinner.tsx';
 import OfferFormFields from '@/features/offers/components/OfferFormFields.tsx';
@@ -26,7 +26,7 @@ const EditOfferPage: React.FC = () => {
     const {showSuccessToast} = useSuccessToast();
 
     const {data: offer, isLoading, isError, refetch} = useOffer(id);
-    const {data: departments, isLoading: departmentsLoading} = useAllDepartments();
+    const {data: departments, isLoading: departmentsLoading} = useDepartments();
     const updateOffer = useUpdateOffer();
 
     // Seeded from the offer once it loads; null until then.

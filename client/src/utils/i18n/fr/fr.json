@@ -430,8 +430,6 @@
     "count_other": "{{count}} départements",
     "empty": "Il n'y a pas encore de départements.",
     "loadError": "Échec du chargement des départements. Veuillez réessayer.",
-    "pagination": "Pagination",
-    "pageIndicator": "Page {{current}} sur {{total}}",
     "create": {
       "newDepartment": "Nouveau département",
       "title": "Créer un département",

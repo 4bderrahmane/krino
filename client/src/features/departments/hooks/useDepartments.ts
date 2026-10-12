@@ -1,28 +1,39 @@
-import {keepPreviousData, useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {
     createDepartment,
-    getAllDepartments,
-    getDepartments,
+    getManagedDepartments,
+    getPublicDepartments,
 } from '@/features/departments/services/DepartmentService.ts';
+import {usePermissions} from '@/shared/hooks/usePermissions';
+import {useAuth} from '@/shared/hooks/useAuth';
 
-export const useDepartments = (page: number) =>
-    useQuery({
-        queryKey: ['departments', page],
-        queryFn: () => getDepartments(page),
-        // Keep the current page visible while the next one loads, avoiding a
-        // full-page spinner flash on every pagination click.
-        placeholderData: keepPreviousData,
+/**
+ * The directory, from whichever endpoint the caller is entitled to.
+ *
+ * Staff and interviewers read the whole thing; everyone else, signed in or not, reads
+ * the departments that actually have an opening. The audience is part of the query key
+ * so a visitor's cached list is never handed to a staff member who signs in on the same
+ * tab: the two lists differ, and the shorter one would silently hide departments from
+ * the offer form's picker.
+ *
+ * Unpaged, so the directory page and that picker share one cache entry and the picker
+ * costs no extra request.
+ */
+export const useDepartments = () => {
+    const {isStaff, isInterviewer} = usePermissions();
+    const {user} = useAuth();
+    const seesWholeDirectory = isStaff || isInterviewer;
+
+    return useQuery({
+        queryKey: ['departments', seesWholeDirectory ? 'managed' : 'public', seesWholeDirectory ? user?.id : null],
+        queryFn: ({signal}) => seesWholeDirectory
+            ? getManagedDepartments(signal)
+            : getPublicDepartments(signal),
     });
+};
 
-// The complete, unpaginated list — for pickers (e.g. the create-offer form).
-export const useAllDepartments = () =>
-    useQuery({
-        queryKey: ['departments', 'all'],
-        queryFn: getAllDepartments,
-    });
-
-// Creates a department, then invalidates every departments query (the paginated
-// list and the "all" picker) so both reflect the new entry.
+// Creates a department, then invalidates every departments query so both audiences
+// reflect the new entry.
 export const useCreateDepartment = () => {
     const queryClient = useQueryClient();
     return useMutation({

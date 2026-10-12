@@ -16,9 +16,13 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     Optional<Department> findByPublicId(UUID publicId);
 
     @Query("""
-            select d from Department d
-            where exists (select 1 from Job j where j.department = d and j.status = :status)
-            order by d.name
+            SELECT d FROM Department d
+            WHERE EXISTS (
+                SELECT 1 FROM Job j
+                WHERE j.department = d
+                  AND j.status = :status
+            )
+            ORDER BY d.name
             """)
     List<Department> findHavingJobWithStatus(@Param("status") JobStatus status);
 }

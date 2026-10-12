@@ -6,7 +6,7 @@ import {usePermissions} from '@/shared/hooks/usePermissions';
 import {useSuccessToast} from '@/shared/hooks/useSuccessToast';
 import {resolveServerError} from '@/shared/services/errors';
 import {useCreateOffer} from '@/features/offers/hooks/useOffers.ts';
-import {useAllDepartments} from '@/features/departments/hooks/useDepartments.ts';
+import {useDepartments} from '@/features/departments/hooks/useDepartments.ts';
 import {clearDraft, loadDraft, saveDraft} from '@/features/offers/utils/offerDraftStorage.ts';
 import OfferFormFields from '@/features/offers/components/OfferFormFields.tsx';
 import {
@@ -37,7 +37,7 @@ const CreateOfferPage: React.FC = () => {
     const {user} = useAuth();
     const {isStaff} = usePermissions();
     const {showSuccessToast} = useSuccessToast();
-    const {data: departments, isLoading: departmentsLoading} = useAllDepartments();
+    const {data: departments, isLoading: departmentsLoading} = useDepartments();
     const createOffer = useCreateOffer();
 
     // Drafts are scoped per user so each admin/HR keeps their own on this browser.

@@ -430,8 +430,6 @@
     "count_other": "{{count}} departments",
     "empty": "There are no departments yet.",
     "loadError": "Failed to load departments. Please try again.",
-    "pagination": "Pagination",
-    "pageIndicator": "Page {{current}} of {{total}}",
     "create": {
       "newDepartment": "New department",
       "title": "Create a department",
