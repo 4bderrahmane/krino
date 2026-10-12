@@ -15,7 +15,7 @@ RUN useradd -m springuser || true
 USER springuser
 WORKDIR /home/springuser
 
-ARG JAR_FILE=/workspace/target/*.jar
+ARG JAR_FILE=/workspace/target/backend-*.jar
 COPY --from=build ${JAR_FILE} ./app.jar
 
 EXPOSE 8080

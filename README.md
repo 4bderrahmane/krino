@@ -279,14 +279,19 @@ is logged rather than returned.
 cp server/.env.example server/.env
 ```
 
+If you change `SPRING_DATASOURCE_PASSWORD` in `server/.env`, set the same value
+as `POSTGRES_PASSWORD` in a repository-root `.env` before first starting the
+Compose database. Compose uses `password` when `POSTGRES_PASSWORD` is unset;
+PostgreSQL only applies that setting when it initializes a new data volume.
+
 ```bash
-docker compose --profile app up --build
+docker compose up --build
 ```
 
 | Service | URL |
 |---------|-----|
-| Client (nginx) | http://localhost:5173 |
-| API (through nginx) | http://localhost:5173/api/... |
+| Client (nginx) | http://localhost:5000 |
+| API (through nginx) | http://localhost:5000/api/... |
 | MinIO console | http://localhost:9001 |
 | PostgreSQL | `localhost:5432` |
 | Redis | `localhost:6379` |
@@ -297,7 +302,7 @@ Compose entrypoint. `minio-init` creates the CV bucket (`krino-cvs`) before the 
 starts. To reset all containerized data:
 
 ```bash
-docker compose --profile app down -v
+docker compose down -v
 ```
 
 ### Run the services directly
@@ -305,7 +310,7 @@ docker compose --profile app down -v
 Start only the backing services, then run the API and the SPA on the host:
 
 ```bash
-docker compose --profile app up -d db redis minio minio-init
+docker compose up -d db redis minio minio-init
 ```
 
 ```bash

@@ -1,7 +1,5 @@
 services:
   db:
-    # Disabled by default while testing MinIO only.
-    profiles: ["app"]
     image: postgres:18-alpine
     container_name: krino-db
     environment:
@@ -11,7 +9,7 @@ services:
     ports:
       - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 10s
@@ -47,7 +45,7 @@ services:
     restart: unless-stopped
 
   minio-init:
-    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: krino-minio-init
     depends_on:
       - minio
@@ -63,8 +61,6 @@ services:
     restart: "no"
 
   server:
-    # Disabled by default while testing MinIO only.
-    profiles: ["app"]
     build:
       context: ./server
     container_name: krino-server
@@ -100,13 +96,11 @@ services:
         condition: service_completed_successfully
 
   client:
-    # Disabled by default while testing MinIO only.
-    profiles: ["app"]
     build:
       context: ./client
     container_name: krino-client
     ports:
-      - "5173:80"
+      - "5000:80"
     depends_on:
       - server
     restart: unless-stopped
