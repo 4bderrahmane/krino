@@ -213,8 +213,7 @@ credential failures. Registration and recovery flows also do different work depe
 account state, which may expose timing differences; network timing has not been measured.
 Some auth paths log email addresses at info level. Revoked sessions can keep using an
 already-issued access JWT until its 15-minute expiry, and uploaded PDFs are not malware
-scanned. See [ISSUES.md](./ISSUES.md#deferred-authentication-enumeration-work) and
-[THREAT_MODEL.md](./THREAT_MODEL.md) for scope and status.
+scanned. See [THREAT_MODEL.md](./THREAT_MODEL.md) for scope and status.
 
 ## Caching and rate limiting
 

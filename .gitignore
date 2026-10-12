@@ -28,6 +28,7 @@ logs/
 
 # ----- Local-only docs / artifacts -----
 PROJECT_REVIEW.txt
+ISSUES.md
 
 # ----- Safety nets (also covered per-project) -----
 # Node / client
