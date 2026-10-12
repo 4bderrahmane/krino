@@ -53,6 +53,21 @@ public class SlotController {
         return ResponseEntity.ok(slots);
     }
 
+    @GetMapping("/scheduling-options")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    public ResponseEntity<PageResponse<SlotResponseDTO>> getAvailableSlotsForScheduling(
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(slotService.getAvailableSlotsForScheduling(search, SORT_WHITELIST.sanitize(pageable)));
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('INTERVIEWER')")
+    public ResponseEntity<PageResponse<SlotResponseDTO>> getMySlots(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        PageResponse<SlotResponseDTO> slots = slotService.getMySlots(SORT_WHITELIST.sanitize(pageable));
+        return ResponseEntity.ok(slots);
+    }
+
     @PutMapping("/{publicId}")
     @PreAuthorize("hasAuthority('slot:update')")
     public ResponseEntity<SlotResponseDTO> updateSlot(@PathVariable UUID publicId,

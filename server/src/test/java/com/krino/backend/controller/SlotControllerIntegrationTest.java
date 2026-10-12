@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
 {
@@ -109,6 +110,36 @@ class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
     }
 
     @Test
+    void schedulingOptionsReturnOnlyAvailableSlotsAndSearchBeyondFirstHundred() throws Exception
+    {
+        createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
+        User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        User special = createUser(OTHER_INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        bookedSlotFor(interviewer);
+        for (int i = 0; i < 105; i++) {
+            Instant start = START.plusSeconds(3600L * (i + 1));
+            slotRepository.save(slotFor(interviewer, start, start.plusSeconds(2700)));
+        }
+        Instant specialStart = START.plusSeconds(3600L * 200);
+        Slot specialSlot = slotRepository.save(slotFor(special, specialStart, specialStart.plusSeconds(2700)));
+        Cookie admin = loginAndGetAccessCookie(ADMIN_EMAIL);
+
+        mockMvc.perform(get("/api/slots/scheduling-options?page=5&size=20").cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.number").value(5))
+                .andExpect(jsonPath("$.page.totalElements").value(106))
+                .andExpect(jsonPath("$.content.length()").value(6));
+        mockMvc.perform(get("/api/slots/scheduling-options?search=other-interviewer@test.local").cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(specialSlot.getPublicId().toString()));
+
+        Cookie candidate = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+        mockMvc.perform(get("/api/slots/scheduling-options").cookie(candidate))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void candidateCannotCreateSlot() throws Exception
     {
         User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
@@ -129,6 +160,68 @@ class SlotControllerIntegrationTest extends AbstractControllerIntegrationTest
                 .andExpect(status().isForbidden());
 
         assertThat(slotRepository.count()).isZero();
+    }
+
+    @Test
+    void interviewerListsAndManagesOnlyOwnAvailability() throws Exception
+    {
+        User interviewer = createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        User other = createUser(OTHER_INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Cookie accessCookie = loginAndGetAccessCookie(INTERVIEWER_EMAIL);
+        Slot otherSlot = slotRepository.save(slotFor(other));
+
+        MvcResult created = mockMvc.perform(withCsrf(post("/api/slots"))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"startAt":"2099-01-01T09:00:00Z","endAt":"2099-01-01T09:45:00Z"}
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn();
+        String ownId = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asText();
+
+        MvcResult listing = mockMvc.perform(get("/api/slots/me").cookie(accessCookie))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(listing.getResponse().getContentAsString())
+                .contains(ownId, interviewer.getEmail(), "\"totalElements\":1")
+                .doesNotContain(otherSlot.getPublicId().toString(), other.getEmail());
+
+        mockMvc.perform(withCsrf(put("/api/slots/" + ownId))
+                        .cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"startAt":"2099-01-01T10:00:00Z","endAt":"2099-01-01T10:45:00Z"}
+                                """))
+                .andExpect(status().isOk());
+        assertThat(slotRepository.findByPublicId(UUID.fromString(ownId)).orElseThrow().getStartAt())
+                .isEqualTo(Instant.parse("2099-01-01T10:00:00Z"));
+
+        mockMvc.perform(withCsrf(delete("/api/slots/" + ownId)).cookie(accessCookie))
+                .andExpect(status().isNoContent());
+        assertThat(slotRepository.findByPublicId(UUID.fromString(ownId))).isEmpty();
+        assertThat(slotRepository.findByPublicId(otherSlot.getPublicId())).isPresent();
+    }
+
+    @Test
+    void interviewerCannotAccessAnotherInterviewersAvailability() throws Exception
+    {
+        createUser(INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        User other = createUser(OTHER_INTERVIEWER_EMAIL, true, UserRole.INTERVIEWER);
+        Slot otherSlot = slotRepository.save(slotFor(other));
+        Cookie accessCookie = loginAndGetAccessCookie(INTERVIEWER_EMAIL);
+        String path = "/api/slots/" + otherSlot.getPublicId();
+
+        mockMvc.perform(get(path).cookie(accessCookie)).andExpect(status().isForbidden());
+        mockMvc.perform(withCsrf(put(path)).cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"startAt":"2099-01-01T10:00:00Z","endAt":"2099-01-01T10:45:00Z"}
+                                """))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(withCsrf(delete(path)).cookie(accessCookie))
+                .andExpect(status().isForbidden());
+        assertThat(slotRepository.findByPublicId(otherSlot.getPublicId())).isPresent();
     }
 
     @Test

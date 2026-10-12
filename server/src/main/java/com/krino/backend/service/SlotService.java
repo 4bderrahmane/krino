@@ -98,6 +98,20 @@ public class SlotService {
         return PageResponse.from(slotRepository.findAll(pageable), slotMapper::toResponse);
     }
 
+    public PageResponse<SlotResponseDTO> getAvailableSlotsForScheduling(String search, Pageable pageable) {
+        SecurityUtilities.requireAnyRole(UserRole.ADMIN, UserRole.HR_MANAGER);
+        String term = search == null ? "" : search.trim().toLowerCase(java.util.Locale.ROOT);
+        return PageResponse.from(slotRepository.searchAvailableForScheduling(term, pageable), slotMapper::toResponse);
+    }
+
+    public PageResponse<SlotResponseDTO> getMySlots(Pageable pageable) {
+        SecurityUtilities.requireAnyRole(UserRole.INTERVIEWER);
+        CustomUserDetails currentUser = SecurityUtilities.requireCurrentCustomUser();
+        User interviewer = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new AccessDeniedException("The authenticated user's account no longer exists."));
+        return PageResponse.from(slotRepository.findByInterviewer(interviewer, pageable), slotMapper::toResponse);
+    }
+
     public SlotResponseDTO updateSlot(UUID publicId, SlotUpdateDTO slotUpdateDTO) {
         Slot existingSlot = findSlot(publicId);
         requireSlotOwnerOrStaff(existingSlot);
