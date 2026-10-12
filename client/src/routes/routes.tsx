@@ -1,4 +1,4 @@
-import {createBrowserRouter, Navigate} from 'react-router-dom';
+import {createBrowserRouter, Navigate, type RouteObject} from 'react-router-dom';
 import {Suspense, lazy, type JSX} from "react";
 
 import LoginForm from '@/features/authentication/components/LoginForm';
@@ -33,7 +33,10 @@ const withSuspense = (element: JSX.Element) => (
     <Suspense fallback={<LoadingSpinner/>}>{element}</Suspense>
 );
 
-const router = createBrowserRouter([
+// Exported so tests can mount the real tree with a memory router: the public and
+// guarded halves of the app are defined by this shape, and a copy in a test would
+// assert nothing about the app that actually ships.
+export const routes: RouteObject[] = [
     {
         path: '/',
         element: <RootRedirect/>
@@ -60,85 +63,97 @@ const router = createBrowserRouter([
     },
     {
         path: "/",
-        element: (
-            <ProtectedRoute>
-                {withSuspense(<Layout/>)}
-            </ProtectedRoute>
-        ),
+        element: withSuspense(<Layout/>),
         children: [
-            {
-                path: "dashboard",
-                element: withSuspense(<Dashboard/>),
-            },
-            {
-                path: "me",
-                element: withSuspense(<Profile/>),
-            },
+            // Open to visitors: the published catalogue is the storefront, and an
+            // account is only needed to apply. Everything else below sits behind
+            // ProtectedRoute, which shares this same layout.
             {
                 path: "offers",
                 element: withSuspense(<OffersPage/>),
             },
             {
-                path: "offers/new",
-                element: withSuspense(<CreateOfferPage/>),
-            },
-            {
                 path: "offers/:id",
                 element: withSuspense(<OfferDetailPage/>),
             },
-            {
-                path: "offers/:id/edit",
-                element: withSuspense(<EditOfferPage/>),
-            },
-            {
-                path: "applications",
-                element: withSuspense(<ApplicationsPage/>),
-            },
-            {
-                path: "applications/:id",
-                element: withSuspense(<ApplicationDetailPage/>),
-            },
-            {
-                path: "interviews",
-                element: withSuspense(<InterviewsPage/>),
-            },
+            // Public for the same reason: it is the catalogue's other face, and a
+            // visitor deciding whether to apply should see who is hiring without an
+            // account. Anonymous callers get the public endpoint, which lists only
+            // departments with an opening (see useDepartments).
             {
                 path: "departments",
                 element: withSuspense(<DepartmentsPage/>),
             },
             {
-                path: "slots",
-                element: withSuspense(<SlotsPage/>),
-            },
-            {
-                path: "admin/staff",
-                element: withSuspense(<StaffManagementPage/>),
-            },
-            {
-                path: "admin/users",
-                element: withSuspense(<UserManagementPage/>),
-            },
-            {
-                path: "settings",
+                element: <ProtectedRoute/>,
                 children: [
                     {
-                        index: true,
-                        element: <Navigate to="profile" replace/>,
+                        path: "dashboard",
+                        element: withSuspense(<Dashboard/>),
                     },
                     {
-                        path: "profile",
-                        element: withSuspense(<ProfileSettings/>),
+                        path: "me",
+                        element: withSuspense(<Profile/>),
+                    },
+                    // More specific than the public "offers/:id" above, so router
+                    // ranking sends /offers/new and /offers/x/edit here, behind the guard.
+                    {
+                        path: "offers/new",
+                        element: withSuspense(<CreateOfferPage/>),
                     },
                     {
-                        path: "password",
-                        element: withSuspense(<PasswordSettings/>),
+                        path: "offers/:id/edit",
+                        element: withSuspense(<EditOfferPage/>),
                     },
                     {
-                        path: "delete",
-                        element: withSuspense(<DeleteAccount/>),
-                    }
+                        path: "applications",
+                        element: withSuspense(<ApplicationsPage/>),
+                    },
+                    {
+                        path: "applications/:id",
+                        element: withSuspense(<ApplicationDetailPage/>),
+                    },
+                    {
+                        path: "interviews",
+                        element: withSuspense(<InterviewsPage/>),
+                    },
+                    {
+                        path: "slots",
+                        element: withSuspense(<SlotsPage/>),
+                    },
+                    {
+                        path: "admin/staff",
+                        element: withSuspense(<StaffManagementPage/>),
+                    },
+                    {
+                        path: "admin/users",
+                        element: withSuspense(<UserManagementPage/>),
+                    },
+                    {
+                        path: "settings",
+                        children: [
+                            {
+                                index: true,
+                                element: <Navigate to="profile" replace/>,
+                            },
+                            {
+                                path: "profile",
+                                element: withSuspense(<ProfileSettings/>),
+                            },
+                            {
+                                path: "password",
+                                element: withSuspense(<PasswordSettings/>),
+                            },
+                            {
+                                path: "delete",
+                                element: withSuspense(<DeleteAccount/>),
+                            }
+                        ]
+                    },
                 ]
             },
+            // Outside the guard: an unknown URL is a 404 for everyone, not a
+            // reason to demand a login.
             {
                 path: '*',
                 element: withSuspense(<NotFoundPage/>),
@@ -150,7 +165,8 @@ const router = createBrowserRouter([
         element:
             withSuspense(<NotFoundPage/>),
     }
-])
+];
 
+const router = createBrowserRouter(routes);
 
 export default router;

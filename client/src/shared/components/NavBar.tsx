@@ -56,35 +56,49 @@ const NavBar: React.FC = () => {
 
     const displayName = user?.firstName || 'User';
 
+    // Signing in from a job page should come back to that job, not dump the
+    // visitor on the dashboard having lost what they were reading.
+    const signInTarget = `/login?redirect=${encodeURIComponent(location.pathname + location.search)}`;
+
     return (
         <nav className="navbar">
             <div className="navbar-brand">
-                <Link to="/dashboard" aria-label="KRINO dashboard">
+                <Link to={user ? '/dashboard' : '/offers'} aria-label="KRINO">
                     <BrandLogo variant="navbar"/>
                 </Link>
             </div>
 
+            {/* A visitor gets the catalogue and nothing else: every other
+                destination needs a session, and Departments is staff-only. */}
             <ul className="navbar-links">
-                    <li className={isCurrentPage('/dashboard') ? 'active' : ''}>
-                        <Link to="/dashboard">
-                            {t('nav.dashboard')}
-                        </Link>
-                    </li>
-                    <li className={isCurrentPage('/applications') ? 'active' : ''}>
-                        <Link to="/applications">
-                            {t('nav.applications')}
-                        </Link>
-                    </li>
+                    {user && (
+                        <li className={isCurrentPage('/dashboard') ? 'active' : ''}>
+                            <Link to="/dashboard">
+                                {t('nav.dashboard')}
+                            </Link>
+                        </li>
+                    )}
+                    {user && (
+                        <li className={isCurrentPage('/applications') ? 'active' : ''}>
+                            <Link to="/applications">
+                                {t('nav.applications')}
+                            </Link>
+                        </li>
+                    )}
                     <li className={isCurrentPage('/offers') ? 'active' : ''}>
                         <Link to="/offers">
                             {t('nav.offers')}
                         </Link>
                     </li>
-                    <li className={isCurrentPage('/interviews') ? 'active' : ''}>
-                        <Link to="/interviews">
-                            {t('nav.interviews')}
-                        </Link>
-                    </li>
+                    {user && (
+                        <li className={isCurrentPage('/interviews') ? 'active' : ''}>
+                            <Link to="/interviews">
+                                {t('nav.interviews')}
+                            </Link>
+                        </li>
+                    )}
+                    {/* Public, like the catalogue: a visitor sees the departments that
+                        are hiring, staff see the whole directory behind the same link. */}
                     <li className={isCurrentPage('/departments') ? 'active' : ''}>
                         <Link to="/departments">
                             {t('nav.departments')}
@@ -118,38 +132,47 @@ const NavBar: React.FC = () => {
 
                     <LanguageSwitcher/>
 
-                    <div className="navbar-user" ref={dropdownRef}>
-                        <button className="user-profile" onClick={toggleDropdown}>
-                            <span className="user-name">{displayName}</span>
-                            <span className="dropdown-icon">▼</span>
-                        </button>
+                    {user ? (
+                        <div className="navbar-user" ref={dropdownRef}>
+                            <button className="user-profile" onClick={toggleDropdown}>
+                                <span className="user-name">{displayName}</span>
+                                <span className="dropdown-icon">▼</span>
+                            </button>
 
-                        {isDropdownOpen && (
-                            <div className="dropdown-menu">
-                                <Link to="/me" className="dropdown-item flex items-center gap-2"
-                                      onClick={closeDropdown}>
-                                    <MdPerson className="dropdown-icon-svg"/> <span>{t('nav.profile')}</span>
-                                </Link>
+                            {isDropdownOpen && (
+                                <div className="dropdown-menu">
+                                    <Link to="/me" className="dropdown-item"
+                                          onClick={closeDropdown}>
+                                        <MdPerson className="dropdown-icon-svg"/> <span>{t('nav.profile')}</span>
+                                    </Link>
 
-                                <div className="dropdown-item dropdown-parent flex items-center gap-2 settings-parent">
-                                    <MdSettings className="dropdown-icon-svg"/>
-                                    <span>{t('nav.settings')}</span>
-                                    <div className="dropdown-submenu">
-                                        <SettingsDropDown onClose={closeDropdown}/>
+                                    <div className="dropdown-item dropdown-parent settings-parent">
+                                        <MdSettings className="dropdown-icon-svg"/>
+                                        <span>{t('nav.settings')}</span>
+                                        <div className="dropdown-submenu">
+                                            <SettingsDropDown onClose={closeDropdown}/>
+                                        </div>
                                     </div>
+
+                                    <div className="dropdown-divider"></div>
+
+                                    <button
+                                        className="dropdown-item logout-button"
+                                        onClick={handleLogout}
+                                    >
+                                        <MdLogout className="dropdown-icon-svg"/> <span>{t('auth.logout')}</span>
+                                    </button>
                                 </div>
-
-                                <div className="dropdown-divider"></div>
-
-                                <button
-                                    className="dropdown-item flex items-center gap-2 logout-button"
-                                    onClick={handleLogout}
-                                >
-                                    <MdLogout className="dropdown-icon-svg"/> <span>{t('auth.logout')}</span>
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    ) : (
+                        // Signed out: the way in, rather than a menu for an account
+                        // that does not exist yet.
+                        <div className="navbar-auth">
+                            <Link className="navbar-signin" to={signInTarget}>{t('auth.signIn')}</Link>
+                            <Link className="navbar-signup" to="/register">{t('auth.signUp')}</Link>
+                        </div>
+                    )}
                 </div>
         </nav>
     );

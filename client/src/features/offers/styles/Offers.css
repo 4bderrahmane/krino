@@ -587,6 +587,30 @@
     cursor: not-allowed;
 }
 
+/* Shown to visitors in place of the apply form: sign in, or create an account. */
+.offer-apply-guest-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* The submit button is a <Link> here, so it needs the line-height that a
+   <button> gets for free to keep its label centred. */
+.offer-apply-guest-actions .offer-apply-submit {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.offer-apply-register {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
 /* Below this width the rail leaves too little room for three cards across. */
 @media (max-width: 1140px) {
     .offers-grid {

@@ -343,7 +343,8 @@
       "candidatesOnly": "Seuls les candidats peuvent postuler aux offres.",
       "cvRequired": "Veuillez joindre un CV (PDF).",
       "cvType": "Votre CV doit être un fichier PDF.",
-      "cvSize": "Votre CV doit faire 5 Mo ou moins."
+      "cvSize": "Votre CV doit faire 5 Mo ou moins.",
+      "signInPrompt": "Ce poste vous intéresse ? Connectez-vous ou créez un compte pour postuler avec votre CV."
     },
     "create": {
       "cardTitle": "Créer une offre",

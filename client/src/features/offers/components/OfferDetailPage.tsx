@@ -40,6 +40,9 @@ const OfferDetailPage: React.FC = () => {
     const {isCandidate, isStaff} = usePermissions();
     const baseCvName = user?.resumeFilename ?? null;
 
+    // Sign in and come back to this posting, rather than to the dashboard.
+    const signInHere = `/login?redirect=${encodeURIComponent(`/offers/${id ?? ''}`)}`;
+
     // Not seeded from baseCvName at mount: this page is public, so it renders before
     // the session probe resolves and `user` is still null on the first paint. A
     // useState initial value would freeze "no CV on file" for a candidate who has
@@ -243,6 +246,24 @@ const OfferDetailPage: React.FC = () => {
                     <section className="offer-detail-section">
                         <h2 className="offer-detail-heading">{t('offers.detail.department')}</h2>
                         <p className="offer-detail-description">{offer.department.description}</p>
+                    </section>
+                )}
+
+                {/* A visitor can read everything above without an account; applying is
+                    where the account starts to matter, so this is the one place the
+                    catalogue asks them to sign in, and it returns them here afterwards. */}
+                {!user && (
+                    <section className="offer-detail-section">
+                        <h2 className="offer-detail-heading">{t('offers.detail.applyHeading')}</h2>
+                        <p className="offer-detail-description">{t('offers.apply.signInPrompt')}</p>
+                        <div className="offer-apply-guest-actions">
+                            <Link className="offer-apply-submit" to={signInHere}>
+                                {t('auth.signIn')}
+                            </Link>
+                            <Link className="offer-apply-register" to="/register">
+                                {t('auth.signUp')}
+                            </Link>
+                        </div>
                     </section>
                 )}
 

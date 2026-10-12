@@ -343,7 +343,8 @@
       "candidatesOnly": "Only candidates can apply to offers.",
       "cvRequired": "Please attach a CV (PDF).",
       "cvType": "Your CV must be a PDF file.",
-      "cvSize": "Your CV must be 5MB or smaller."
+      "cvSize": "Your CV must be 5MB or smaller.",
+      "signInPrompt": "Interested in this role? Sign in or create an account to apply with your CV."
     },
     "create": {
       "cardTitle": "Create an offer",

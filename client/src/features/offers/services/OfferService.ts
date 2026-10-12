@@ -112,19 +112,44 @@ const toOffer = (job: JobResponseDTO): Offer => ({
 });
 
 const OFFERS_ENDPOINT = '/jobs';
+const PUBLIC_OFFERS_ENDPOINT = '/public/jobs';
 
-// The backend returns the full offer list (it does not paginate offers — see
-// JobService#getAllJobs), so we fetch it in one request with no page/size params.
-export const getOffers = async (): Promise<OfferPage> => {
-    const {data} = await api.get<PageResponse<JobResponseDTO>>(OFFERS_ENDPOINT);
+// The catalogue now paginates server-side, capped at 100 per page
+// (spring.data.web.pageable.max-page-size). The offer pages filter and page
+// client-side over whatever they are handed, so we take one full page instead of
+// walking them. The catalogue is small by design; if it ever outgrows 100 live
+// postings, filtering has to move server-side, because otherwise it would quietly
+// only ever search the first hundred.
+const MAX_PAGE_SIZE = 100;
+
+const fetchOffers = async (endpoint: string, signal?: AbortSignal): Promise<OfferPage> => {
+    const {data} = await api.get<PageResponse<JobResponseDTO>>(endpoint, {
+        params: {size: MAX_PAGE_SIZE},
+        signal,
+    });
     return {
         offers: data.content.map(toOffer),
         page: data.page,
     };
 };
 
-export const getOfferById = async (id: string): Promise<Offer> => {
-    const {data} = await api.get<JobResponseDTO>(`${OFFERS_ENDPOINT}/${id}`);
+// GET /api/public/jobs — published (OPEN) postings only, and no session needed.
+// This is what visitors and candidates browse.
+export const getPublicOffers = (signal?: AbortSignal): Promise<OfferPage> => fetchOffers(PUBLIC_OFFERS_ENDPOINT, signal);
+
+// GET /api/jobs — every status including drafts, so ADMIN/HR_MANAGER/INTERVIEWER only.
+export const getManagedOffers = (signal?: AbortSignal): Promise<OfferPage> => fetchOffers(OFFERS_ENDPOINT, signal);
+
+// GET /api/public/jobs/{id} — 404s for anything not published, by design.
+export const getPublicOfferById = async (id: string, signal?: AbortSignal): Promise<Offer> => {
+    const {data} = await api.get<JobResponseDTO>(`${PUBLIC_OFFERS_ENDPOINT}/${id}`, {signal});
+    return toOffer(data);
+};
+
+// GET /api/jobs/{id} — staff see any posting; a candidate sees it while it is open,
+// or afterwards if they applied to it.
+export const getOfferById = async (id: string, signal?: AbortSignal): Promise<Offer> => {
+    const {data} = await api.get<JobResponseDTO>(`${OFFERS_ENDPOINT}/${id}`, {signal});
     return toOffer(data);
 };
 

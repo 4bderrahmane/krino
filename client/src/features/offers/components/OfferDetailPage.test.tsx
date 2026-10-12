@@ -40,6 +40,70 @@ const applyForm = () => screen.queryByRole('button', {name: t('offers.apply.subm
 const managePanel = () => screen.queryByRole('heading', {name: t('offers.manage.heading')});
 const signInPrompt = () => screen.queryByText(t('offers.apply.signInPrompt'));
 
+describe('the offer itself', () => {
+    it('is readable without an account', async () => {
+        asVisitor();
+
+        renderOffer();
+
+        expect(await screen.findByRole('heading', {name: 'Senior Backend Engineer'})).toBeInTheDocument();
+        expect(screen.getByText('Run the platform.')).toBeInTheDocument();
+        expect(screen.getByText(t('offers.detail.salary'))).toBeInTheDocument();
+    });
+
+    it('shows an error and a way back when the offer cannot be loaded', async () => {
+        server.use(
+            ...anonymousSession(),
+            http.get(apiPath(`/public/jobs/${OFFER.id}`), () => new HttpResponse(null, {status: 404})),
+        );
+
+        renderOffer();
+
+        expect(await screen.findByText(t('offers.loadError'))).toBeInTheDocument();
+        expect(screen.getByRole('link', {name: t('offers.detail.back')})).toHaveAttribute('href', '/offers');
+    });
+});
+
+describe('a visitor with no account', () => {
+    it('is invited to sign in, and sent back to this offer afterwards', async () => {
+        asVisitor();
+
+        renderOffer();
+
+        expect(await screen.findByText(t('offers.apply.signInPrompt'))).toBeInTheDocument();
+        expect(screen.getByRole('link', {name: t('auth.signIn')}))
+            .toHaveAttribute('href', `/login?redirect=${encodeURIComponent(`/offers/${OFFER.id}`)}`);
+        expect(screen.getByRole('link', {name: t('auth.signUp')})).toHaveAttribute('href', '/register');
+    });
+
+    it('gets neither the apply form nor the lifecycle controls', async () => {
+        asVisitor();
+
+        renderOffer();
+        await screen.findByText(t('offers.apply.signInPrompt'));
+
+        expect(applyForm()).not.toBeInTheDocument();
+        expect(managePanel()).not.toBeInTheDocument();
+    });
+
+    // A visitor has no session, so the authenticated endpoint would 401 for them.
+    it('reads the offer from the public endpoint', async () => {
+        const requested: string[] = [];
+        server.events.on('request:start', ({request}) => {
+            const {pathname} = new URL(request.url);
+            if (pathname.startsWith('/api/')) requested.push(pathname);
+        });
+        asVisitor();
+
+        renderOffer();
+        await screen.findByRole('heading', {name: 'Senior Backend Engineer'});
+
+        expect(requested).toContain(`/api/public/jobs/${OFFER.id}`);
+        expect(requested).not.toContain(`/api/jobs/${OFFER.id}`);
+        server.events.removeAllListeners();
+    });
+});
+
 describe('a candidate', () => {
     it('gets the apply form instead of the sign-in prompt', async () => {
         asUser(['CANDIDATE']);
@@ -244,5 +308,55 @@ describe('a candidate', () => {
         expect(await screen.findByText(t('offers.apply.cvType'))).toBeInTheDocument();
         expect(calls).toEqual([]);
         server.events.removeAllListeners();
+    });
+});
+
+describe('staff', () => {
+    it('get the lifecycle controls and no apply form', async () => {
+        asUser(['HR_MANAGER']);
+
+        renderOffer();
+
+        expect(await screen.findByRole('heading', {name: t('offers.manage.heading')})).toBeInTheDocument();
+        expect(applyForm()).not.toBeInTheDocument();
+        expect(signInPrompt()).not.toBeInTheDocument();
+    });
+
+    // The panel mirrors the backend state machine: an open posting can be paused
+    // or closed, but publishing it again is not a transition the server accepts.
+    it('are offered only the transitions the posting allows', async () => {
+        asUser(['HR_MANAGER'], {}, OFFER);
+
+        renderOffer();
+        await screen.findByRole('heading', {name: t('offers.manage.heading')});
+
+        expect(screen.getByRole('button', {name: t('offers.manage.pause')})).toBeInTheDocument();
+        expect(screen.getByRole('button', {name: t('offers.manage.close')})).toBeInTheDocument();
+        expect(screen.queryByRole('button', {name: t('offers.manage.publish')})).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', {name: t('offers.manage.archive')})).not.toBeInTheDocument();
+    });
+
+    it('can reach a draft that visitors cannot', async () => {
+        const draft = anOffer({title: 'Unannounced Role', status: 'DRAFT'});
+        asUser(['HR_MANAGER'], {}, draft);
+
+        renderOffer(draft);
+
+        expect(await screen.findByRole('heading', {name: 'Unannounced Role'})).toBeInTheDocument();
+        expect(screen.getByRole('button', {name: t('offers.manage.publish')})).toBeInTheDocument();
+    });
+});
+
+describe('an interviewer', () => {
+    // Neither candidate nor staff: they read the posting and act on none of it.
+    it('reads the offer but is offered no actions at all', async () => {
+        asUser(['INTERVIEWER']);
+
+        renderOffer();
+
+        expect(await screen.findByRole('heading', {name: 'Senior Backend Engineer'})).toBeInTheDocument();
+        expect(applyForm()).not.toBeInTheDocument();
+        expect(managePanel()).not.toBeInTheDocument();
+        expect(signInPrompt()).not.toBeInTheDocument();
     });
 });

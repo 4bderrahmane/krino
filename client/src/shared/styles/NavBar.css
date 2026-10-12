@@ -93,6 +93,42 @@
     position: relative;
 }
 
+/* Signed-out counterpart to .navbar-user: the way in, not a user menu. */
+.navbar-auth {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.navbar-signin,
+.navbar-signup {
+    padding: 0.4rem 0.95rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background-color var(--transition), border-color var(--transition);
+}
+
+.navbar-signin {
+    border: 1px solid var(--color-line);
+    color: var(--color-ink);
+}
+
+.navbar-signin:hover {
+    background-color: var(--color-surface-sunken);
+}
+
+.navbar-signup {
+    border: 1px solid transparent;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+}
+
+.navbar-signup:hover {
+    background: var(--color-primary-hover);
+}
+
 .user-profile {
     display: flex;
     align-items: center;

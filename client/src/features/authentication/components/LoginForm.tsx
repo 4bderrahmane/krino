@@ -1,6 +1,6 @@
 import React, {useState, type FormEvent, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate, useSearchParams} from 'react-router-dom';
 import type {UserLoginDTO} from '@/features/authentication/types/api.types';
 import '@/features/authentication/styles/LoginForm.css';
 import {login, resendVerificationEmail} from "@/features/authentication/services/AuthenticationService.ts";
@@ -15,6 +15,16 @@ const LoginForm: React.FC = () => {
     const {t, i18n} = useTranslation();
     const navigate = useNavigate();
     const {login: authLogin} = useAuth();
+    const [searchParams] = useSearchParams();
+
+    // Only same-site paths are honoured: taking this straight from the query string
+    // would let a crafted link turn our own login screen into an open redirect.
+    const requestedRedirect = searchParams.get('redirect');
+    const redirectTarget =
+        requestedRedirect && requestedRedirect.startsWith('/') && !requestedRedirect.startsWith('//')
+            ? requestedRedirect
+            : '/dashboard';
+
 
     const [credentials, setCredentials] = useState<UserLoginDTO>({
         email: '',
@@ -68,8 +78,9 @@ const LoginForm: React.FC = () => {
             const data = await login(credentials);
             authLogin(data.user);
 
-            // Navigate immediately to dashboard where toast will appear
-            navigate('/dashboard');
+            // Back to whatever sent them here (a job they were reading, a guarded
+            // page), otherwise the dashboard, where the toast appears.
+            navigate(data.user.mustChangePassword ? '/settings/password' : redirectTarget);
         } catch (err: unknown) {
             console.error('Login failed:', err);
             setErrorMessage(resolveServerError(t, err, {context: 'login'}));

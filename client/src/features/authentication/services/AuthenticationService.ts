@@ -157,7 +157,12 @@ export const checkAuthStatus = async (): Promise<UserResponseDTO | null> => {
         return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
-            console.error("Auth status check failed:", error.response?.data || error.message);
+            // 401 is the ordinary answer for a visitor browsing the public catalogue,
+            // not a fault: every anonymous page load makes this call. Only genuine
+            // failures are worth a console error.
+            if (error.response?.status !== 401) {
+                console.error("Auth status check failed:", error.response?.data || error.message);
+            }
         } else {
             console.error("An unexpected error occurred during auth status check:", error);
         }
