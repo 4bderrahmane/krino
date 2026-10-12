@@ -30,7 +30,7 @@ export interface Interview {
     id: string;
     // The application being interviewed (immutable once set; determines candidate + offer).
     applicationId: string;
-    // The booked slot (drives interviewer + schedule); null only if data is incomplete.
+    // The booked slot; cancelled interviews release it and return null.
     slotId: string | null;
     offer: InterviewOffer | null;
     candidate: InterviewParticipant;

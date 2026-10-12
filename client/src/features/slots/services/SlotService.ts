@@ -1,5 +1,6 @@
 import api from '@/shared/services/api.ts';
 import type {Slot, SlotFormValues, SlotInterviewer, SlotPage} from '@/features/slots/types/slot.types.ts';
+import {toInstant, toLocalDate, toLocalTime} from '@/shared/utils/slotWindow.ts';
 
 // ---------------------------------------------------------------------------
 // Raw backend shapes, kept private to this module.
@@ -16,9 +17,9 @@ interface SlotResponseDTO {
     interviewer?: UserDTO | null;
     durationInMinutes?: number | null;
     available?: boolean | null;
-    interviewDate?: string | null;
-    startTime?: string | null;
-    endTime?: string | null;
+    // Absolute instants in UTC, e.g. 2026-06-25T08:00:00Z.
+    startAt?: string | null;
+    endAt?: string | null;
 }
 
 interface PageResponse<T> {
@@ -35,16 +36,14 @@ interface PageResponse<T> {
 // backend assigns the slot to the authenticated user.
 interface SlotRequestDTO {
     interviewerId?: string;
-    interviewDate: string;
-    startTime: string;
-    endTime: string;
+    startAt: string;
+    endAt: string;
 }
 
 // Mirrors SlotUpdateDTO (PUT/PATCH) — window only, no interviewer.
 interface SlotUpdateDTO {
-    interviewDate?: string;
-    startTime?: string;
-    endTime?: string;
+    startAt?: string;
+    endAt?: string;
 }
 
 const toInterviewer = (user: UserDTO | null | undefined): SlotInterviewer => ({
@@ -53,19 +52,21 @@ const toInterviewer = (user: UserDTO | null | undefined): SlotInterviewer => ({
     email: user?.email ?? '—',
 });
 
+// The window arrives as instants; the table and the form show it on the local clock.
 const toSlot = (dto: SlotResponseDTO): Slot => ({
     id: dto.id,
     interviewer: toInterviewer(dto.interviewer),
-    date: dto.interviewDate ?? null,
-    startTime: dto.startTime ?? null,
-    endTime: dto.endTime ?? null,
+    date: dto.startAt ? toLocalDate(dto.startAt) : null,
+    startTime: dto.startAt ? toLocalTime(dto.startAt) : null,
+    endTime: dto.endAt ? toLocalTime(dto.endAt) : null,
     durationInMinutes: dto.durationInMinutes ?? null,
     available: dto.available ?? true,
 });
 
-// The backend LocalTime accepts ISO_LOCAL_TIME; an <input type="time"> yields
-// "HH:mm", so we normalise to "HH:mm:ss" to stay unambiguous on the wire.
-const toApiTime = (value: string): string => (value.length === 5 ? `${value}:00` : value);
+const toWindow = (values: SlotFormValues) => ({
+    startAt: toInstant(values.date, values.startTime),
+    endAt: toInstant(values.date, values.endTime),
+});
 
 const SLOTS_ENDPOINT = '/slots';
 
@@ -79,11 +80,7 @@ export const getSlots = async (page = 0, size = 20): Promise<SlotPage> => {
 
 /** Create an availability slot. Requires CAN_CREATE_SLOT. */
 export const createSlot = async (values: SlotFormValues): Promise<Slot> => {
-    const payload: SlotRequestDTO = {
-        interviewDate: values.date,
-        startTime: toApiTime(values.startTime),
-        endTime: toApiTime(values.endTime),
-    };
+    const payload: SlotRequestDTO = toWindow(values);
     if (values.interviewerId) payload.interviewerId = values.interviewerId;
     const {data} = await api.post<SlotResponseDTO>(SLOTS_ENDPOINT, payload);
     return toSlot(data);
@@ -91,11 +88,7 @@ export const createSlot = async (values: SlotFormValues): Promise<Slot> => {
 
 /** Replace a slot's window (PUT). Requires CAN_UPDATE_SLOT. */
 export const updateSlot = async (id: string, values: SlotFormValues): Promise<Slot> => {
-    const payload: SlotUpdateDTO = {
-        interviewDate: values.date,
-        startTime: toApiTime(values.startTime),
-        endTime: toApiTime(values.endTime),
-    };
+    const payload: SlotUpdateDTO = toWindow(values);
     const {data} = await api.put<SlotResponseDTO>(`${SLOTS_ENDPOINT}/${id}`, payload);
     return toSlot(data);
 };

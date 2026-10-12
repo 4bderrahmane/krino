@@ -7,6 +7,7 @@ import type {
     InterviewRecommendation,
     InterviewStatus,
 } from '@/features/interviews/types/interview.types.ts';
+import {toLocalDate, toLocalTime} from '@/shared/utils/slotWindow.ts';
 
 // ---------------------------------------------------------------------------
 // Raw backend shapes, kept private to this module. (The backend still calls the
@@ -31,9 +32,9 @@ interface JobDTO {
 
 interface SlotDTO {
     id?: string | null;
-    interviewDate?: string | null;
-    startTime?: string | null;
-    endTime?: string | null;
+    // Absolute instants in UTC; shown on the local clock (see slotWindow).
+    startAt?: string | null;
+    endAt?: string | null;
 }
 
 interface InterviewResponseDTO {
@@ -53,7 +54,7 @@ interface InterviewResponseDTO {
 // Mirrors InterviewRequestDTO (POST / PUT / PATCH).
 interface InterviewRequestDTO {
     applicationId: string;
-    slotId: string;
+    slotId: string | null;
     status: InterviewStatus;
     recommendation: InterviewRecommendation | null;
     notes: string | null;
@@ -88,9 +89,9 @@ const toInterview = (dto: InterviewResponseDTO): Interview => ({
     interviewer: toParticipant(dto.interviewer),
     schedule: dto.slot
         ? {
-              date: dto.slot.interviewDate ?? null,
-              startTime: dto.slot.startTime ?? null,
-              endTime: dto.slot.endTime ?? null,
+              date: dto.slot.startAt ? toLocalDate(dto.slot.startAt) : null,
+              startTime: dto.slot.startAt ? toLocalTime(dto.slot.startAt) : null,
+              endTime: dto.slot.endAt ? toLocalTime(dto.slot.endAt) : null,
           }
         : null,
     status: dto.status ?? 'SCHEDULED',
@@ -104,7 +105,7 @@ const toInterview = (dto: InterviewResponseDTO): Interview => ({
 // it for any other status, so we drop it unless the interview is being completed.
 const toRequestDTO = (values: InterviewFormValues): InterviewRequestDTO => ({
     applicationId: values.applicationId,
-    slotId: values.slotId,
+    slotId: values.status === 'CANCELLED' ? null : values.slotId,
     status: values.status,
     recommendation: values.status === 'COMPLETED' ? values.recommendation : null,
     notes: values.notes?.trim() || null,
