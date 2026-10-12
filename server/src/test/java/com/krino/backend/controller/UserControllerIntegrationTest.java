@@ -6,6 +6,8 @@ import com.krino.backend.entity.User;
 import com.krino.backend.entity.enums.UserRole;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -232,10 +234,74 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
         createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
         Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
 
-        mockMvc.perform(withCsrf(delete("/api/users/me")).cookie(accessCookie))
+        mockMvc.perform(withCsrf(delete("/api/users/me")).cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"" + RAW_PASSWORD + "\"}"))
                 .andExpect(status().isNoContent());
 
         assertThat(userRepository.findByEmail(CANDIDATE_EMAIL)).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void selfDeletionRequiresPasswordOnBothRoutes(boolean useMeRoute) throws Exception
+    {
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+        String path = useMeRoute ? "/api/users/me" : "/api/users/" + candidate.getPublicId();
+
+        mockMvc.perform(withCsrf(delete(path)).cookie(accessCookie))
+                .andExpect(status().isBadRequest());
+        assertThat(userRepository.findByPublicId(candidate.getPublicId())).isPresent();
+
+        mockMvc.perform(withCsrf(delete(path)).cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"\"}"))
+                .andExpect(status().isBadRequest());
+        assertThat(userRepository.findByPublicId(candidate.getPublicId())).isPresent();
+
+        mockMvc.perform(withCsrf(delete(path)).cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"wrong-password\"}"))
+                .andExpect(status().isUnauthorized());
+        assertThat(userRepository.findByPublicId(candidate.getPublicId())).isPresent();
+
+        mockMvc.perform(withCsrf(delete(path)).cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"" + RAW_PASSWORD + "\"}"))
+                .andExpect(status().isNoContent());
+        assertThat(userRepository.findByPublicId(candidate.getPublicId())).isEmpty();
+    }
+
+    @Test
+    void administratorCanDeleteAnotherUserWithoutTheirPassword() throws Exception
+    {
+        createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
+
+        mockMvc.perform(withCsrf(delete("/api/users/" + candidate.getPublicId())).cookie(accessCookie))
+                .andExpect(status().isNoContent());
+
+        assertThat(userRepository.findByPublicId(candidate.getPublicId())).isEmpty();
+    }
+
+    @Test
+    void administratorMustConfirmTheirOwnPassword() throws Exception
+    {
+        User admin = createUser(ADMIN_EMAIL, true, UserRole.ADMIN);
+        createUser("second-admin@test.local", true, UserRole.ADMIN);
+        Cookie accessCookie = loginAndGetAccessCookie(ADMIN_EMAIL);
+
+        mockMvc.perform(withCsrf(delete("/api/users/" + admin.getPublicId())).cookie(accessCookie))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(withCsrf(delete("/api/users/" + admin.getPublicId())).cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"wrong-password\"}"))
+                .andExpect(status().isUnauthorized());
+
+        assertThat(userRepository.findByPublicId(admin.getPublicId())).isPresent();
     }
 
     @Test
@@ -340,7 +406,9 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest
 
         Cookie accessCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
 
-        mockMvc.perform(withCsrf(delete("/api/users/me")).cookie(accessCookie))
+        mockMvc.perform(withCsrf(delete("/api/users/me")).cookie(accessCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"" + RAW_PASSWORD + "\"}"))
                 .andExpect(status().isNoContent());
 
         assertThat(userRepository.findByEmail(CANDIDATE_EMAIL)).isEmpty();

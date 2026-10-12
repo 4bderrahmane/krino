@@ -351,13 +351,16 @@ class UserServiceTest
         User user = User.builder()
                 .id(42L)
                 .publicId(publicId)
+                .password("encoded")
                 .resumeObjectKey(objectKey)
                 .build();
         authenticateAs(publicId, UserRole.CANDIDATE);
         when(userRepository.findByPublicId(publicId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("correct-password", user.getPassword())).thenReturn(true);
 
-        userService.deleteUserByPublicId(publicId);
+        userService.deleteUserByPublicId(publicId, "correct-password");
 
+        verify(passwordEncoder).matches("correct-password", user.getPassword());
         verify(refreshTokenRepository).deleteAllByUserId(42L);
         verify(userRepository).delete(user);
         verify(resumeStorageService).deleteResumeAfterCommit(objectKey);
@@ -469,7 +472,9 @@ class UserServiceTest
         when(userRepository.findByPublicId(selfPublicId)).thenReturn(Optional.of(administrator));
         when(userRepository.countByRolesContainingAndIsApprovedTrueAndIdNot(UserRole.ADMIN, 7L)).thenReturn(0L);
 
-        assertThatThrownBy(() -> userService.deleteUserByPublicId(selfPublicId))
+        when(passwordEncoder.matches("correct-password", administrator.getPassword())).thenReturn(true);
+
+        assertThatThrownBy(() -> userService.deleteUserByPublicId(selfPublicId, "correct-password"))
                 .isInstanceOf(ResourceConflictException.class)
                 .hasMessageContaining("The last active administrator cannot be deleted");
 

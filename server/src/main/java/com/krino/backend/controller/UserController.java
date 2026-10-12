@@ -2,6 +2,7 @@ package com.krino.backend.controller;
 
 import com.krino.backend.dto.common.PageResponse;
 import com.krino.backend.dto.user.ApprovalUpdateDTO;
+import com.krino.backend.dto.user.DeleteAccountRequestDTO;
 import com.krino.backend.dto.user.UserResponseDTO;
 import com.krino.backend.dto.user.UserUpdateDTO;
 import com.krino.backend.dto.user.UserUpdatePasswordDTO;
@@ -120,16 +121,18 @@ public class UserController {
 
     @DeleteMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deleteMyAccount(Authentication authentication) {
+    public ResponseEntity<Void> deleteMyAccount(Authentication authentication,
+                                                @Valid @RequestBody DeleteAccountRequestDTO request) {
         CustomUserDetails customUserDetails = currentUser(authentication);
-        userService.deleteUserByPublicId(customUserDetails.getPublicId());
+        userService.deleteUserByPublicId(customUserDetails.getPublicId(), request.password());
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{publicId}")
     @PreAuthorize("hasRole('ADMIN') or #publicId == authentication.principal.publicId")
-    public ResponseEntity<Void> deleteUserByPublicId(@PathVariable UUID publicId) {
-        userService.deleteUserByPublicId(publicId);
+    public ResponseEntity<Void> deleteUserByPublicId(@PathVariable UUID publicId,
+                                                      @Valid @RequestBody(required = false) DeleteAccountRequestDTO request) {
+        userService.deleteUserByPublicId(publicId, request == null ? null : request.password());
         return ResponseEntity.noContent().build();
     }
 

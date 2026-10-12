@@ -25,6 +25,7 @@ import com.krino.backend.service.resume.ResumeDownload;
 import com.krino.backend.service.resume.ResumeStorageService;
 import com.krino.backend.utility.ErrorCode;
 import com.krino.backend.utility.SecurityUtilities;
+import org.jspecify.annotations.Nullable;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -253,12 +254,20 @@ public class UserService {
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public void deleteUserByPublicId(UUID publicId) {
+    public void deleteUserByPublicId(UUID publicId, @Nullable String password) {
         SecurityUtilities.requireCurrentUserOrAnyRole(publicId, UserRole.ADMIN);
         User userToDelete = userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), PUBLIC_ID, publicId));
 
         requireAdministratorPrivilegeForAdminTarget(userToDelete);
+        if (SecurityUtilities.requireCurrentCustomUser().getPublicId().equals(publicId)) {
+            if (!StringUtils.hasText(password)) {
+                throw new IllegalArgumentException("Password is required to delete your own account.");
+            }
+            if (!passwordEncoder.matches(password, userToDelete.getPassword())) {
+                throw new IncorrectPasswordException();
+            }
+        }
         requireAnotherAdministratorSurvives(userToDelete, "deleted");
 
         // Applications, interviews and slots keep the recruitment history; deleting a

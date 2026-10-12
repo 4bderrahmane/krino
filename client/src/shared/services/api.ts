@@ -1,4 +1,5 @@
 import axios, {type AxiosError, type InternalAxiosRequestConfig} from 'axios';
+import {getServerErrorCode} from '@/shared/services/errors';
 
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
     _retry?: boolean;
@@ -119,7 +120,10 @@ api.interceptors.response.use(
     async (error: AxiosError) => {
         const originalRequest = error.config as ExtendedAxiosRequestConfig | undefined;
 
-        if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+        // An incorrect current password is a form error, not an expired session. Refreshing
+        // it would revoke a restricted session before the user can correct their input.
+        if (error.response?.status === 401 && getServerErrorCode(error) !== 'INVALID_CREDENTIALS'
+            && originalRequest && !originalRequest._retry) {
             originalRequest._retry = true;
 
             const result = await runRefresh();
