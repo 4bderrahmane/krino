@@ -4,6 +4,7 @@ import {Link, useParams} from 'react-router-dom';
 import {useApplication} from '@/features/applications/hooks/useApplications.ts';
 import {useResumeDownload} from '@/features/applications/hooks/useResumeDownload.ts';
 import ApplicationStatusBadge from './ApplicationStatusBadge.tsx';
+import ApplicationActions from './ApplicationActions.tsx';
 import LoadingSpinner from '@/shared/components/LoadingSpinner.tsx';
 import '@/features/applications/styles/Applications.css';
 
@@ -128,6 +129,8 @@ const ApplicationDetailPage: React.FC = () => {
                         <p className="application-detail-empty">{t('applications.detail.noResume')}</p>
                     )}
                 </section>
+
+                <ApplicationActions application={application}/>
             </article>
         </div>
     );

@@ -22,7 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.AbstractMockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -132,11 +132,11 @@ abstract class AbstractControllerIntegrationTest extends AbstractIntegrationTest
         return cookie;
     }
 
-    protected MockHttpServletRequestBuilder withCsrf(MockHttpServletRequestBuilder request) throws Exception
+    protected <B extends AbstractMockHttpServletRequestBuilder<?>> B withCsrf(B request) throws Exception
     {
         CsrfExchange csrf = fetchCsrfToken();
-        return request.cookie(csrf.cookie())
-                .header(csrf.headerName(), csrf.token());
+        request.cookie(csrf.cookie()).header(csrf.headerName(), csrf.token());
+        return request;
     }
 
     private CsrfExchange fetchCsrfToken() throws Exception

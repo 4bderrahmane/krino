@@ -512,6 +512,21 @@
       "downloadResume": "Télécharger le CV",
       "noResume": "Aucun CV n'a été joint à cette candidature."
     },
+    "actions": {
+      "title": "Gérer la candidature",
+      "decision": "Décision",
+      "chooseDecision": "Choisir une décision",
+      "saveDecision": "Enregistrer la décision",
+      "decisionSuccess": "Statut de la candidature mis à jour.",
+      "replaceResume": "CV de la candidature",
+      "uploadResume": "Téléverser le PDF",
+      "useBaseResume": "Utiliser mon CV de profil",
+      "resumeSuccess": "CV de la candidature mis à jour.",
+      "deleteApplication": "Supprimer la candidature",
+      "deleteConfirm": "Supprimer cette candidature ? Cette action est irréversible.",
+      "confirmDelete": "Oui, supprimer la candidature",
+      "deleteSuccess": "Candidature supprimée."
+    },
     "status": {
       "PENDING": "En attente",
       "UNDER_REVIEW": "En cours d'examen",

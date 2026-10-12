@@ -107,6 +107,17 @@ export const createApplication = async (offerId: string): Promise<Application> =
     return toApplication(data);
 };
 
+/** HR records an application decision; the server checks staff permission. */
+export const updateApplicationStatus = async (id: string, status: ApplicationStatus): Promise<Application> => {
+    const {data} = await api.patch<ApplicationResponseDTO>(`${APPLICATIONS_ENDPOINT}/${id}`, {status});
+    return toApplication(data);
+};
+
+/** Withdraw an application; the server checks candidate ownership. */
+export const deleteApplication = async (id: string): Promise<void> => {
+    await api.delete(`${APPLICATIONS_ENDPOINT}/${id}`);
+};
+
 /** Attach a freshly uploaded PDF to an application. */
 export const uploadApplicationResume = async (applicationId: string, resume: File): Promise<Application> => {
     const formData = new FormData();

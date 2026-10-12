@@ -8,6 +8,8 @@ import com.krino.backend.entity.enums.UserRole;
 import com.krino.backend.support.TestJobs;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpMethod;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -15,8 +17,13 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 class ApplicationControllerIntegrationTest extends AbstractControllerIntegrationTest
 {
@@ -136,6 +143,83 @@ class ApplicationControllerIntegrationTest extends AbstractControllerIntegration
     {
         mockMvc.perform(get("/api/applications"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void hrDecisionIsReturnedAndPersisted() throws Exception
+    {
+        createUser("hr@test.local", true, UserRole.HR_MANAGER);
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        Application application = applicationRepository.save(applicationFor(openJob(), candidate));
+        Cookie hrCookie = loginAndGetAccessCookie("hr@test.local");
+
+        mockMvc.perform(withCsrf(patch("/api/applications/" + application.getPublicId()))
+                        .cookie(hrCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"ACCEPTED\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACCEPTED"));
+
+        mockMvc.perform(get("/api/applications/" + application.getPublicId()).cookie(hrCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACCEPTED"));
+    }
+
+    @Test
+    void candidateCannotChangeDecisionOrMutateAnotherCandidatesApplication() throws Exception
+    {
+        createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        User owner = createUser(OTHER_CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        Application application = applicationRepository.save(applicationFor(openJob(), owner));
+        Cookie candidateCookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+
+        mockMvc.perform(withCsrf(patch("/api/applications/" + application.getPublicId()))
+                        .cookie(candidateCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"ACCEPTED\"}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(withCsrf(delete("/api/applications/" + application.getPublicId()))
+                        .cookie(candidateCookie))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(withCsrf(multipart(HttpMethod.PUT, "/api/applications/" + application.getPublicId() + "/resume"))
+                        .file(pdf("other.pdf"))
+                        .cookie(candidateCookie))
+                .andExpect(status().isForbidden());
+
+        Cookie ownerCookie = loginAndGetAccessCookie(OTHER_CANDIDATE_EMAIL);
+        mockMvc.perform(withCsrf(patch("/api/applications/" + application.getPublicId()))
+                        .cookie(ownerCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"ACCEPTED\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    @Test
+    void ownerReplacesResumeThenDeletesApplication() throws Exception
+    {
+        User candidate = createUser(CANDIDATE_EMAIL, true, UserRole.CANDIDATE);
+        Application application = applicationRepository.save(applicationFor(openJob(), candidate));
+        Cookie cookie = loginAndGetAccessCookie(CANDIDATE_EMAIL);
+        String path = "/api/applications/" + application.getPublicId();
+
+        mockMvc.perform(withCsrf(multipart(HttpMethod.PUT, path + "/resume")).file(pdf("first.pdf")).cookie(cookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resume.originalFilename").value("first.pdf"));
+        mockMvc.perform(withCsrf(multipart(HttpMethod.PUT, path + "/resume")).file(pdf("replacement.pdf")).cookie(cookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resume.originalFilename").value("replacement.pdf"));
+        mockMvc.perform(get(path).cookie(cookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resume.originalFilename").value("replacement.pdf"));
+        mockMvc.perform(withCsrf(delete(path)).cookie(cookie))
+                .andExpect(status().isNoContent());
+        assertThat(applicationRepository.findByPublicId(application.getPublicId())).isEmpty();
+    }
+
+    private MockMultipartFile pdf(String filename)
+    {
+        return new MockMultipartFile("resume", filename, "application/pdf", "%PDF-1.4\ncontent".getBytes(UTF_8));
     }
 
     private Job openJob()

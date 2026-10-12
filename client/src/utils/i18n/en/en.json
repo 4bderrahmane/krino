@@ -512,6 +512,21 @@
       "downloadResume": "Download résumé",
       "noResume": "No résumé was attached to this application."
     },
+    "actions": {
+      "title": "Manage application",
+      "decision": "Decision",
+      "chooseDecision": "Choose a decision",
+      "saveDecision": "Save decision",
+      "decisionSuccess": "Application status updated.",
+      "replaceResume": "Application résumé",
+      "uploadResume": "Upload PDF",
+      "useBaseResume": "Use my profile CV",
+      "resumeSuccess": "Application résumé updated.",
+      "deleteApplication": "Delete application",
+      "deleteConfirm": "Delete this application? This cannot be undone.",
+      "confirmDelete": "Yes, delete application",
+      "deleteSuccess": "Application deleted."
+    },
     "status": {
       "PENDING": "Pending",
       "UNDER_REVIEW": "Under review",

@@ -376,3 +376,85 @@
         font-size: 1.6rem;
     }
 }
+
+/* Actions on an application detail page. */
+.application-actions {
+    display: grid;
+    gap: 14px;
+}
+
+.application-actions .application-detail-heading {
+    margin-bottom: 0;
+}
+
+.application-action-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.application-action-row label {
+    min-width: 130px;
+    font-weight: 600;
+}
+
+.application-action-row select,
+.application-action-row input[type='file'] {
+    flex: 1 1 230px;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid var(--color-line);
+    border-radius: 8px;
+    background: var(--color-surface);
+    color: var(--color-ink);
+}
+
+.application-action-row button,
+.application-action-secondary,
+.application-action-danger {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-on-primary, #fff);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.application-action-secondary {
+    width: fit-content;
+    background: transparent;
+    color: var(--color-primary);
+}
+
+.application-action-delete {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-line);
+}
+
+.application-action-delete p {
+    width: 100%;
+    margin: 0;
+}
+
+.application-action-danger {
+    border-color: var(--badge-red-fg);
+    background: var(--badge-red-fg);
+    color: var(--color-surface);
+}
+
+.application-actions button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.application-action-error {
+    margin: 0;
+    color: var(--badge-red-fg);
+}
