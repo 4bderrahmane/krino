@@ -54,6 +54,12 @@ export interface InterviewFormValues {
     meetingUrl: string | null;
 }
 
+export interface InterviewOutcomeValues {
+    status: InterviewStatus;
+    recommendation: InterviewRecommendation | null;
+    notes: string;
+}
+
 export interface InterviewPageMeta {
     number: number;
     size: number;

@@ -2,6 +2,7 @@ import api from '@/shared/services/api.ts';
 import type {
     Interview,
     InterviewFormValues,
+    InterviewOutcomeValues,
     InterviewPage,
     InterviewParticipant,
     InterviewRecommendation,
@@ -121,24 +122,26 @@ const toInterviewPage = (data: PageResponse<InterviewResponseDTO>): InterviewPag
 const INTERVIEWS_ENDPOINT = '/interviews';
 
 /** All interviews — staff only (ADMIN / HR_MANAGER). */
-export const getInterviews = async (page = 0, size = 20): Promise<InterviewPage> => {
+export const getInterviews = async (page = 0, size = 20, signal?: AbortSignal): Promise<InterviewPage> => {
     const {data} = await api.get<PageResponse<InterviewResponseDTO>>(INTERVIEWS_ENDPOINT, {
         params: {page, size},
+        signal,
     });
     return toInterviewPage(data);
 };
 
 /** Interviews the current user takes part in (as candidate or interviewer). */
-export const getMyInterviews = async (page = 0, size = 20): Promise<InterviewPage> => {
+export const getMyInterviews = async (page = 0, size = 20, signal?: AbortSignal): Promise<InterviewPage> => {
     const {data} = await api.get<PageResponse<InterviewResponseDTO>>(`${INTERVIEWS_ENDPOINT}/me`, {
         params: {page, size},
+        signal,
     });
     return toInterviewPage(data);
 };
 
 /** A single interview by id. Requires CAN_READ_INTERVIEW. */
-export const getInterview = async (id: string): Promise<Interview> => {
-    const {data} = await api.get<InterviewResponseDTO>(`${INTERVIEWS_ENDPOINT}/${id}`);
+export const getInterview = async (id: string, signal?: AbortSignal): Promise<Interview> => {
+    const {data} = await api.get<InterviewResponseDTO>(`${INTERVIEWS_ENDPOINT}/${id}`, {signal});
     return toInterview(data);
 };
 
@@ -151,6 +154,12 @@ export const createInterview = async (values: InterviewFormValues): Promise<Inte
 /** Full update (PUT) — reschedule / change status, outcome, mode. Requires CAN_UPDATE_INTERVIEW. */
 export const updateInterview = async (id: string, values: InterviewFormValues): Promise<Interview> => {
     const {data} = await api.put<InterviewResponseDTO>(`${INTERVIEWS_ENDPOINT}/${id}`, toRequestDTO(values));
+    return toInterview(data);
+};
+
+/** Record the assigned interviewer's notes and outcome without resending scheduling fields. */
+export const recordInterviewOutcome = async (id: string, values: InterviewOutcomeValues): Promise<Interview> => {
+    const {data} = await api.patch<InterviewResponseDTO>(`${INTERVIEWS_ENDPOINT}/${id}`, values);
     return toInterview(data);
 };
 

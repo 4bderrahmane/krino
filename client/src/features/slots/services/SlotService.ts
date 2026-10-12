@@ -71,9 +71,28 @@ const toWindow = (values: SlotFormValues) => ({
 const SLOTS_ENDPOINT = '/slots';
 
 /** All availability slots — staff only (ADMIN / HR_MANAGER). */
-export const getSlots = async (page = 0, size = 20): Promise<SlotPage> => {
+export const getSlots = async (page = 0, size = 20, signal?: AbortSignal): Promise<SlotPage> => {
     const {data} = await api.get<PageResponse<SlotResponseDTO>>(SLOTS_ENDPOINT, {
         params: {page, size},
+        signal,
+    });
+    return {slots: data.content.map(toSlot), page: data.page};
+};
+
+/** Search available slots for scheduling, one server page at a time. */
+export const getSchedulingSlots = async (page: number, search: string, signal?: AbortSignal): Promise<SlotPage> => {
+    const {data} = await api.get<PageResponse<SlotResponseDTO>>(`${SLOTS_ENDPOINT}/scheduling-options`, {
+        params: {page, size: 20, search},
+        signal,
+    });
+    return {slots: data.content.map(toSlot), page: data.page};
+};
+
+/** Availability owned by the current interviewer. */
+export const getMySlots = async (page = 0, size = 20, signal?: AbortSignal): Promise<SlotPage> => {
+    const {data} = await api.get<PageResponse<SlotResponseDTO>>(`${SLOTS_ENDPOINT}/me`, {
+        params: {page, size},
+        signal,
     });
     return {slots: data.content.map(toSlot), page: data.page};
 };

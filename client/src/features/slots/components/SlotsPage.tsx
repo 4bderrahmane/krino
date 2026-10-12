@@ -22,18 +22,17 @@ const formatTime = (value: string | null): string => (value ? value.slice(0, 5) 
 
 const SlotsPage: React.FC = () => {
     const {t, i18n} = useTranslation();
-    const {isStaff} = usePermissions();
+    const {isStaff, isInterviewer} = usePermissions();
     const {showSuccessToast} = useSuccessToast();
     const [page, setPage] = useState(0);
     const [showCreate, setShowCreate] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
 
-    const {data, isLoading, isError, refetch} = useSlots(page, isStaff);
+    const {data, isLoading, isError, refetch} = useSlots(page, isStaff ? 'all' : 'mine', isStaff || isInterviewer);
     const deleteSlot = useDeleteSlot();
 
-    // Listing slots is an ADMIN/HR-only endpoint; bounce anyone else who lands here.
-    if (!isStaff) {
+    if (!isStaff && !isInterviewer) {
         return <Navigate to="/dashboard" replace/>;
     }
 
@@ -73,7 +72,7 @@ const SlotsPage: React.FC = () => {
     return (
         <div className="slots-container">
             <header className="slots-header">
-                <h1 className="slots-title">{t('slots.title')}</h1>
+                <h1 className="slots-title">{t(isStaff ? 'slots.title' : 'slots.myTitle')}</h1>
                 <p className="slots-subtitle">{t('slots.count', {count: total})}</p>
             </header>
 

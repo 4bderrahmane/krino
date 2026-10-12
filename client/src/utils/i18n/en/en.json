@@ -443,6 +443,7 @@
     }
   },
   "slots": {
+    "myTitle": "My availability",
     "title": "Availability",
     "count_one": "{{count}} slot",
     "count_other": "{{count}} slots",
@@ -520,6 +521,12 @@
     }
   },
   "interviews": {
+    "outcome": {
+      "action": "Record outcome",
+      "title": "Record interview outcome",
+      "submit": "Save outcome",
+      "success": "Interview outcome saved."
+    },
     "title": "Interviews",
     "myTitle": "My Interviews",
     "count_one": "{{count}} interview",

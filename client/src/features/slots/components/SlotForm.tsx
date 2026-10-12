@@ -1,6 +1,7 @@
 import React, {useState, type FormEvent} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useSuccessToast} from '@/shared/hooks/useSuccessToast';
+import {usePermissions} from '@/shared/hooks/usePermissions';
 import {resolveServerError} from '@/shared/services/errors';
 import {useCreateSlot, useInterviewers, useUpdateSlot} from '@/features/slots/hooks/useSlots.ts';
 import type {Slot} from '@/features/slots/types/slot.types.ts';
@@ -17,13 +18,14 @@ const toInputTime = (value: string | null): string => (value ? value.slice(0, 5)
 const SlotForm: React.FC<SlotFormProps> = ({slot, onClose}) => {
     const {t} = useTranslation();
     const {showSuccessToast} = useSuccessToast();
+    const {isStaff} = usePermissions();
     const isEdit = Boolean(slot);
 
     const createSlot = useCreateSlot();
     const updateSlot = useUpdateSlot();
     // Only the create form needs the interviewer picker (the window-only update
     // DTO can't reassign an existing slot's owner).
-    const {data: interviewers, isLoading: interviewersLoading} = useInterviewers();
+    const {data: interviewers, isLoading: interviewersLoading} = useInterviewers(!isEdit && isStaff);
 
     const [interviewerId, setInterviewerId] = useState(slot?.interviewer.id ?? '');
     const [date, setDate] = useState(slot?.date ?? '');
@@ -39,7 +41,7 @@ const SlotForm: React.FC<SlotFormProps> = ({slot, onClose}) => {
         setErrorMessage(null);
         setFieldError(null);
 
-        if (!isEdit && !interviewerId) {
+        if (!isEdit && isStaff && !interviewerId) {
             setFieldError(t('slots.create.errors.interviewerRequired'));
             return;
         }
@@ -73,7 +75,7 @@ const SlotForm: React.FC<SlotFormProps> = ({slot, onClose}) => {
                 {isEdit ? t('slots.edit.title') : t('slots.create.title')}
             </h2>
 
-            {!isEdit && (
+            {!isEdit && isStaff && (
                 <label className="slot-field">
                     <span className="slot-field-label">{t('slots.create.interviewer')} *</span>
                     <select

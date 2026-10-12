@@ -8,6 +8,7 @@ import {
 import type {Interview, InterviewSchedule} from '@/features/interviews/types/interview.types.ts';
 import InterviewStatusBadge from './InterviewStatusBadge.tsx';
 import InterviewForm from './InterviewForm.tsx';
+import InterviewOutcomeForm from './InterviewOutcomeForm.tsx';
 import LoadingSpinner from '@/shared/components/LoadingSpinner.tsx';
 import {usePermissions} from '@/shared/hooks/usePermissions';
 import {useSuccessToast} from '@/shared/hooks/useSuccessToast';
@@ -33,9 +34,8 @@ const formatSchedule = (schedule: InterviewSchedule | null, locale: string): str
 const InterviewsPage: React.FC = () => {
     const {t, i18n} = useTranslation();
 
-    // Staff (ADMIN / HR_MANAGER) see every interview and can manage them; everyone
-    // else sees only their own, read-only.
-    const {isStaff} = usePermissions();
+    // Staff see every interview; interviewers and candidates see only their own.
+    const {isStaff, isInterviewer} = usePermissions();
     const scope: InterviewScope = isStaff ? 'all' : 'mine';
     const {showSuccessToast} = useSuccessToast();
 
@@ -87,10 +87,12 @@ const InterviewsPage: React.FC = () => {
                 <p className="interviews-subtitle">{t('interviews.count', {count: total})}</p>
             </header>
 
-            {isStaff && (
+            {(isStaff || (isInterviewer && editing)) && (
                 <div className="interviews-toolbar">
                     {editing ? (
-                        <InterviewForm interview={editing} onClose={() => setEditingId(null)}/>
+                        isStaff
+                            ? <InterviewForm interview={editing} onClose={() => setEditingId(null)}/>
+                            : <InterviewOutcomeForm interview={editing} onClose={() => setEditingId(null)}/>
                     ) : showCreate ? (
                         <InterviewForm onClose={() => setShowCreate(false)}/>
                     ) : (
@@ -120,7 +122,7 @@ const InterviewsPage: React.FC = () => {
                                 <th>{t('interviews.columns.when')}</th>
                                 <th>{t('interviews.columns.status')}</th>
                                 <th>{t('interviews.columns.mode')}</th>
-                                {isStaff && <th>{t('common.actions')}</th>}
+                                {(isStaff || isInterviewer) && <th>{t('common.actions')}</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -159,9 +161,10 @@ const InterviewsPage: React.FC = () => {
                                             t('interviews.inPerson')
                                         )}
                                     </td>
-                                    {isStaff && (
+                                    {(isStaff || isInterviewer) && (
                                         <td>
-                                            {confirmingDeleteId === interview.id ? (
+                                            {isStaff ? (
+                                                confirmingDeleteId === interview.id ? (
                                                 <div className="interview-row-actions">
                                                     <span className="cell-muted">{t('interviews.form.deleteConfirm')}</span>
                                                     <button
@@ -200,7 +203,16 @@ const InterviewsPage: React.FC = () => {
                                                         {t('common.delete')}
                                                     </button>
                                                 </div>
-                                            )}
+                                                )
+                                            ) : interview.status !== 'CANCELLED' ? (
+                                                <button
+                                                    type="button"
+                                                    className="interview-action"
+                                                    onClick={() => setEditingId(interview.id)}
+                                                >
+                                                    {t('interviews.outcome.action')}
+                                                </button>
+                                            ) : null}
                                         </td>
                                     )}
                                 </tr>

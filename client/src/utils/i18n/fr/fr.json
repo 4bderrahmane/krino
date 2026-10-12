@@ -443,6 +443,7 @@
     }
   },
   "slots": {
+    "myTitle": "Mes disponibilités",
     "title": "Disponibilité",
     "count_one": "{{count}} créneau",
     "count_other": "{{count}} créneaux",
@@ -520,6 +521,12 @@
     }
   },
   "interviews": {
+    "outcome": {
+      "action": "Saisir le résultat",
+      "title": "Saisir le résultat de l’entretien",
+      "submit": "Enregistrer le résultat",
+      "success": "Résultat de l’entretien enregistré."
+    },
     "title": "Entretiens",
     "myTitle": "Mes entretiens",
     "count_one": "{{count}} entretien",
