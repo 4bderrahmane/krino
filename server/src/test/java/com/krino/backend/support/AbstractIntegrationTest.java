@@ -32,7 +32,7 @@ public abstract class AbstractIntegrationTest {
 
     private static final MinIOContainer MINIO =
             new MinIOContainer(DockerImageName
-            .parse("quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z")
+                    .parse("ghcr.io/coollabsio/minio:RELEASE.2025-10-15T17-29-55Z")
                     .asCompatibleSubstituteFor("minio/minio"));
 
     private static final RedisContainer REDIS =
